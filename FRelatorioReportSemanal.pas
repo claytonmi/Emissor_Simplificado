@@ -230,15 +230,14 @@ begin
     with TRLDraw.Create(RLReport1) do
     begin
       Parent := RLReport1;
-      Left := CenterX - 10;
+      Left := CenterX - 40;
       Top := LinhaAtual;
-      Width := LarguraTabela + 20; // Largura da linha
+      Width := LarguraTabela + 80; // Largura da linha
       Height := 2; // Espessura da linha
       Pen.Width := 1;
       Pen.Color := clBlack; // Cor da linha
     end;
-
-    LinhaAtual := LinhaAtual + 10; // Espaço após a linha
+    LinhaAtual := LinhaAtual + 15; // Espaço após a linha
   end;
 
   // **Total Geral no Rodapé**

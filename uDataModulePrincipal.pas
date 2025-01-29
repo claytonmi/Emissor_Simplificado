@@ -9,7 +9,7 @@ uses
   FireDAC.Stan.Pool, FireDAC.Phys, FireDAC.Comp.UI, FireDAC.Stan.Error,
   FireDAC.Phys.Intf, FireDAC.Stan.ExprFuncs, FireDAC.Phys.SQLiteWrapper.Stat,
   Data.DB, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
-  FireDAC.Comp.DataSet, System.IOUtils, Vcl.Dialogs, SHFolder;
+  FireDAC.Comp.DataSet, System.IOUtils, Vcl.Forms, Vcl.Dialogs, Winapi.Windows, SHFolder;
 
 type
   TDataModulePrincipal = class(TDataModule)
@@ -23,13 +23,12 @@ type
     FDQueryPedido: TFDQuery;
     FDQueryItemPedido: TFDQuery;
     DataSourceItemPedido: TDataSource;
-    DataSourceRelatorio: TDataSource;
-    FDQueryRelatorio: TFDQuery;
     procedure DataModuleCreate(Sender: TObject);
     procedure CriarTabelas;
   private
     function TabelaExiste(const TabelaNome: string): Boolean;
     procedure ConfigurarConexao(const DatabasePath: string);
+    procedure CriarBancoDeDados(const DatabasePath: string; ComDadosTeste: Boolean);
   public
   end;
 
@@ -45,35 +44,41 @@ implementation
 procedure TDataModulePrincipal.DataModuleCreate(Sender: TObject);
 var
   BasePath, DatabasePath: string;
+  Resposta: Integer;
 begin
-  // Obtém o caminho do diretório "Documentos"
   BasePath := IncludeTrailingPathDelimiter(TPath.GetDocumentsPath) + 'MeuSistema\';
 
   if not TDirectory.Exists(BasePath) then
-    begin
-      try
-        TDirectory.CreateDirectory(BasePath);
-      except
-        on E: Exception do
-        begin
-          ShowMessage('Erro ao criar o diretório de dados: ' + E.Message);
-          Halt;
-        end;
+  begin
+    try
+      TDirectory.CreateDirectory(BasePath);
+    except
+      on E: Exception do
+      begin
+        ShowMessage('Erro ao criar o diretório de dados: ' + E.Message);
+        Halt;
       end;
     end;
+  end;
 
-  // Define o caminho completo para o banco de dados
   DatabasePath := BasePath + 'Vendas.db';
 
-  // Configura o FireDAC Connection
+  // Verifica se o banco existe
+  if not FileExists(DatabasePath) then
+  begin
+    // Pergunta ao usuário como deseja iniciar o sistema
+  Resposta := Application.MessageBox('Deseja iniciar com dados de teste?', 'Confirmação', MB_YESNO + MB_ICONQUESTION);
+
+  if Resposta = IDYES then
+      CriarBancoDeDados(DatabasePath, True)  // Banco com dados de teste
+    else
+      CriarBancoDeDados(DatabasePath, False); // Banco zerado
+  end;
+
+  // Configurar conexão e conectar
   ConfigurarConexao(DatabasePath);
-
   try
-    // Conecta ao banco de dados
     FDConnection.Connected := True;
-
-    // Cria as tabelas, se necessário
-    CriarTabelas;
 
     if FDConnection.Connected then
     begin
@@ -81,21 +86,19 @@ begin
       FDQueryPedido.Active := True;
       FDQueryCliente.Active := True;
       FDQueryProduto.Active := True;
-      FDQueryRelatorio.Active := True;
     end
     else
       ShowMessage('A conexão com o banco de dados não foi estabelecida.');
-
-
   except
     on E: Exception do
     begin
       ShowMessage('Erro ao conectar ou criar o banco de dados: ' + E.Message +
         sLineBreak + 'Caminho do banco de dados: ' + DatabasePath);
-      Halt; // Finaliza o programa em caso de erro crítico
+      Halt;
     end;
   end;
 end;
+
 
 procedure TDataModulePrincipal.ConfigurarConexao(const DatabasePath: string);
 begin
@@ -110,6 +113,45 @@ begin
   FDConnection.Params.Values['Charset'] := 'UTF-8';
   FDConnection.LoginPrompt := False; // Desabilita prompt de login
 end;
+
+procedure TDataModulePrincipal.CriarBancoDeDados(const DatabasePath: string; ComDadosTeste: Boolean);
+var
+  I: Integer;
+begin
+  ConfigurarConexao(DatabasePath);
+  FDConnection.Connected := True;
+
+  // Criação das tabelas
+  CriarTabelas;
+
+  // Se o usuário escolheu iniciar com dados de teste, insere os dados
+  if ComDadosTeste then
+  begin
+    if FDConnection.ExecSQLScalar('SELECT COUNT(*) FROM Produto') = 0 then
+    begin
+      FDConnection.StartTransaction;
+      try
+        for I := 1 to 50 do
+        begin
+          FDConnection.ExecSQL(
+            'INSERT INTO Produto (NomeProduto, Preco) VALUES (:NomeProduto, :Preco)',
+            ['Produto de testes ' + IntToStr(I), 0.07]
+          );
+
+          FDConnection.ExecSQL(
+            'INSERT INTO Cliente (Nome, Telefone, Email) VALUES (:Nome, :Telefone, :Email)',
+            ['Cliente de testes ' + IntToStr(I), '(48) 9 9999-9999', 'testes' + IntToStr(I) + '@teste.com']
+          );
+        end;
+        FDConnection.Commit;
+      except
+        FDConnection.Rollback;
+        raise;
+      end;
+    end;
+  end;
+end;
+
 
 procedure TDataModulePrincipal.CriarTabelas;
 begin
@@ -158,18 +200,6 @@ if not TabelaExiste('ItemPedido') then
       'IDProduto INTEGER PRIMARY KEY AUTOINCREMENT, ' +
       'NomeProduto TEXT, ' +
       'Preco REAL);'
-    );
-
-
- // Inserção de dados iniciais na tabela Produto, se não existir
-  if FDConnection.ExecSQLScalar('SELECT COUNT(*) FROM Produto WHERE NomeProduto = ''Produto de testes''') = 0 then
-   FDConnection.ExecSQL(
-      'INSERT INTO Produto (NomeProduto, Preco) VALUES (''Produto de testes'', 0.07);'
-    );
-  // Inserção de dados iniciais na tabela Cliente, se não existir
-  if FDConnection.ExecSQLScalar('SELECT COUNT(*) FROM Cliente WHERE Nome = ''Cliente de testes''') = 0 then
-    FDConnection.ExecSQL(
-      'INSERT INTO Cliente (Nome, Telefone, Email) VALUES (''Cliente de testes'', ''(48) 9 9999-9999'', ''testes@teste.com'');'
     );
 end;
 

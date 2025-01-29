@@ -25,7 +25,6 @@ type
     MNCadastroProduto: TMenuItem;
     MNCadastrodeCliente: TMenuItem;
     Relatrio1: TMenuItem;
-    MNSemanal: TMenuItem;
     Rodape: TPanel;
     RodaPeVersion: TPanel;
     RodaPeHora: TPanel;
@@ -64,7 +63,6 @@ type
     BtExcluirItem: TButton;
     procedure FormCreate(Sender: TObject);
     procedure MNCadastrodeClienteClick(Sender: TObject);
-    procedure MNSemanalClick(Sender: TObject);
     procedure MNCadastroProdutoClick(Sender: TObject);
     procedure BtNovoPedidoClick(Sender: TObject);
     procedure EdNomeCliente1Change(Sender: TObject);
@@ -81,6 +79,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtEditarPedidoClick(Sender: TObject);
     procedure CarregarPedidoEdicao(IDVenda: Integer);
+    procedure Relatrio1Click(Sender: TObject);
 
   private
     { Private declarations }
@@ -105,6 +104,8 @@ implementation
 {$R *.dfm}
 
 procedure TEmissorPrincipal.BtCancelarPedidoClick(Sender: TObject);
+var
+  PedidoCount: Integer;
 begin
   // Verifica se o pedido foi salvo (status 'A' - Ativo)
   if EdCodigoVenda.Text = '' then
@@ -157,24 +158,33 @@ begin
       BtExcluirItem.Enabled := False;
       CBEdNomeProduto.Enabled := False;
       BtFecharPedido.Enabled := False;
+      EdValorItem.Enabled := False;
+      EdQtdItem.Enabled := False;
 
       MNCadastroProduto.Enabled := True;
       MNCadastrodeCliente.Enabled := True;
       // Limpa os dados do StringGrid
       StringGridList.RowCount := 1; // Mantém apenas o cabeçalho
 
+      // Verifica se ainda existem pedidos na tabela
+      PedidoCount := DataModulePrincipal.FDConnection.ExecSQLScalar('SELECT COUNT(*) FROM Pedido');
+
       // Atualiza o estado dos botões
       BtNovoPedido.Enabled := True;
-      BtEditarPedido.Enabled := True;
+      BtEditarPedido.Enabled := PedidoCount > 0; // Habilita apenas se houver pedidos
       BtCancelarPedido.Enabled := False; // Desabilita o botão de cancelar após o pedido ser cancelado
 
       ShowMessage('Pedido cancelado com sucesso.');
     except
       on E: Exception do
+      begin
+        DataModulePrincipal.FDConnection.Rollback; // Rollback caso ocorra erro
         ShowMessage('Erro ao cancelar o pedido: ' + E.Message);
+      end;
     end;
   end;
 end;
+
 
 
 procedure TEmissorPrincipal.BtEditarItemClick(Sender: TObject);
@@ -298,7 +308,6 @@ begin
   BtEditarPedido.Enabled := True;
   MNCadastroProduto.Enabled := True;
   MNCadastrodeCliente.Enabled := true;
-
 end;
 
 procedure TEmissorPrincipal.BtGravarItemClick(Sender: TObject);
@@ -394,7 +403,7 @@ begin
   if (CBEdNomeProduto.Text = '') or (EdQtdItem.Text = '') or
     (EdValorItem.Text = '') then
   begin
-    ShowMessage('Preencha todos os campos para inserir o item.');
+    ShowMessage('Selecione um produto para inserir no pedido.');
     Exit;
   end;
 
@@ -434,6 +443,8 @@ begin
     EdValorItem.Clear;
     BtExcluirItem.Enabled := true;
     BtEditarItem.Enabled := true;
+    EdQtdItem.Enabled := false;
+    EdValorItem.Enabled := false;
   except
     on E: Exception do
       ShowMessage('Erro ao inserir item: ' + E.Message);
@@ -550,6 +561,7 @@ begin
   BtNovoPedido.Enabled := false;
   MNCadastroProduto.Enabled := false;
   MNCadastrodeCliente.Enabled := False;
+  BtEditarPedido.Enabled := false;
 end;
 
 procedure TEmissorPrincipal.BtSalvarClick(Sender: TObject);
@@ -605,6 +617,8 @@ begin
     BtSalvar.Enabled := false;
     BtCancelarPedido.Enabled := true;
     BtNovoPedido.Enabled := false;
+    CBEdNomeProduto.Color := clLime;
+
 
     CarregarProdutos;
   except
@@ -824,6 +838,14 @@ begin
 end;
 
 
+procedure TEmissorPrincipal.Relatrio1Click(Sender: TObject);
+begin
+  if not Assigned(RelatorioSemanal) then
+    RelatorioSemanal := TRelatorioSemanal.Create(Self);
+
+  RelatorioSemanal.Show;
+end;
+
 procedure TEmissorPrincipal.CarregarProdutos;
 begin
   if not Assigned(DataModulePrincipal) then
@@ -863,6 +885,7 @@ var
   PrecoProduto: Double;
   ProdutoID: Integer;
 begin
+  CBEdNomeProduto.Color := clWindow;
   try
     // Obtém o ID do produto selecionado no combo
     if CBEdNomeProduto.ItemIndex >= 0 then
@@ -892,7 +915,6 @@ begin
         EdQtdItem.Enabled := true;
         EdValorItem.Enabled := true;
         BtInserirItem.Enabled := true;
-
       end
       else
         raise Exception.Create('Produto não encontrado.');
@@ -959,14 +981,6 @@ begin
     NMCadastroProduto.Free;
     // Libera a memória do formulário após seu fechamento
   end;
-end;
-
-procedure TEmissorPrincipal.MNSemanalClick(Sender: TObject);
-begin
-  if not Assigned(RelatorioSemanal) then
-    RelatorioSemanal := TRelatorioSemanal.Create(Self);
-
-  RelatorioSemanal.Show;
 end;
 
 procedure TEmissorPrincipal.IniciarTransacao;

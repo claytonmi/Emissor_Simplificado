@@ -1,0 +1,35 @@
+object NMDePesquisaCliente: TNMDePesquisaCliente
+  Left = 0
+  Top = 0
+  Caption = 'Pesquisa Cliente'
+  ClientHeight = 67
+  ClientWidth = 343
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  OnCreate = FormCreate
+  TextHeight = 15
+  object LBSelecioneOCliente: TLabel
+    Left = 40
+    Top = 8
+    Width = 244
+    Height = 20
+    Caption = 'Selecione o cliente que deseja editar'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 20
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentFont = False
+  end
+  object DBComboBoxPesquisaCliente: TComboBox
+    Left = 8
+    Top = 34
+    Width = 321
+    Height = 23
+    TabOrder = 0
+  end
+end

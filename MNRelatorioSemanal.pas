@@ -14,6 +14,7 @@ type
     Label1: TLabel;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtImprimirClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
 
   private
     { Private declarations }
@@ -35,13 +36,11 @@ var
 begin
   // Obtém a data inicial do DateTimePicker
   DataInicial := DateTimePicker1.Date;
-
   // Instancia o formulário de relatório
   FormRelatorio := TNMRelatorioReport.Create(Self);
   try
     // Chama a procedure para gerar o relatório
     FormRelatorio.GerarRelatorio(DataInicial);
-
   finally
     // Libera o formulário da memória
     FormRelatorio.Free;
@@ -54,6 +53,11 @@ procedure TRelatorioSemanal.FormClose(Sender: TObject;
 begin
   Action := caFree; // Libera o formulário da memória
   RelatorioSemanal := nil; // Define o ponteiro como nulo
+end;
+
+procedure TRelatorioSemanal.FormCreate(Sender: TObject);
+begin
+  DateTimePicker1.Date:= now;
 end;
 
 end.

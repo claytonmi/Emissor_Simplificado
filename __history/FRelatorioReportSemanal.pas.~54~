@@ -1,0 +1,262 @@
+unit FRelatorioReportSemanal;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uDataModulePrincipal, RLReport, Vcl.ExtCtrls;
+
+type
+  TNMRelatorioReport = class(TForm)
+    RLReport1: TRLReport;
+    procedure GerarRelatorio(DataInicial: TDateTime);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  NMRelatorioReport: TNMRelatorioReport;
+
+implementation
+
+{$R *.dfm}
+
+
+procedure TNMRelatorioReport.GerarRelatorio(DataInicial: TDateTime);
+var
+  DataFinal: TDateTime;
+  TotalGeral, TotalPedido: Currency;
+  LinhaAtual, CenterX, WidthPage: Integer;
+  NovoLabel: TRLLabel;
+const
+  LarguraTabela = 400; // Largura estimada da tabela de itens
+begin
+  DataFinal := DataInicial + 6;
+  TotalGeral := 0;
+  LinhaAtual := 100; // Posição inicial para listar itens
+  WidthPage := RLReport1.Width;
+  CenterX := (WidthPage - LarguraTabela) div 2; // Para centralizar itens
+
+  // Consulta pedidos no intervalo de datas
+  DataModulePrincipal.FDQueryPedido.Close;
+  DataModulePrincipal.FDQueryPedido.SQL.Text :=
+    'SELECT IDVenda, NomeCliente, TelefoneCliente, Data ' +
+    'FROM Pedido ' +
+    'WHERE Data BETWEEN :DataInicial AND :DataFinal';
+  DataModulePrincipal.FDQueryPedido.ParamByName('DataInicial').AsDate := DataInicial;
+  DataModulePrincipal.FDQueryPedido.ParamByName('DataFinal').AsDate := DataFinal;
+  DataModulePrincipal.FDQueryPedido.Open;
+
+  if DataModulePrincipal.FDQueryPedido.IsEmpty then
+  begin
+    ShowMessage('Nenhum pedido encontrado no intervalo especificado.');
+    Exit;
+  end;
+
+  RLReport1.BeginDoc;
+
+  // **Cabeçalho do Relatório**
+  NovoLabel := TRLLabel.Create(RLReport1);
+  NovoLabel.Parent := RLReport1;
+  NovoLabel.Caption := 'Relatório de Vendas';
+  NovoLabel.Font.Size := 18;
+  NovoLabel.Font.Style := [fsBold];
+  NovoLabel.Top := 20;
+  NovoLabel.Left := (WidthPage - NovoLabel.Width) div 2; // **Centralizado**
+
+  NovoLabel := TRLLabel.Create(RLReport1);
+  NovoLabel.Parent := RLReport1;
+  NovoLabel.Caption := 'Período: ' + DateToStr(DataInicial) + ' a ' + DateToStr(DataFinal);
+  NovoLabel.Top :=  60;
+  NovoLabel.Font.Size := 10;
+  NovoLabel.Left := (WidthPage - NovoLabel.Width) div 2; // **Centralizado**
+
+  while not DataModulePrincipal.FDQueryPedido.Eof do
+  begin
+    // **Cabeçalho do Pedido**
+    NovoLabel := TRLLabel.Create(RLReport1);
+    NovoLabel.Parent := RLReport1;
+    NovoLabel.Caption := 'Cliente: ' + DataModulePrincipal.FDQueryPedido.FieldByName('NomeCliente').AsString;
+    NovoLabel.Top := LinhaAtual;
+    NovoLabel.Font.Size := 8;
+    NovoLabel.Left := CenterX - 5;
+
+    NovoLabel := TRLLabel.Create(RLReport1);
+    NovoLabel.Parent := RLReport1;
+    NovoLabel.Caption := 'Pedido Nº: ' + DataModulePrincipal.FDQueryPedido.FieldByName('IDVenda').AsString;
+    NovoLabel.Top := LinhaAtual;
+    NovoLabel.Font.Size := 8;
+    NovoLabel.Left := CenterX + 310;
+
+    LinhaAtual := LinhaAtual + 20;
+
+    NovoLabel := TRLLabel.Create(RLReport1);
+    NovoLabel.Parent := RLReport1;
+    NovoLabel.Caption := 'Telefone: ' + DataModulePrincipal.FDQueryPedido.FieldByName('TelefoneCliente').AsString;
+    NovoLabel.Top := LinhaAtual;
+    NovoLabel.Font.Size := 8;
+    NovoLabel.Left := CenterX - 5;
+
+    NovoLabel := TRLLabel.Create(RLReport1);
+    NovoLabel.Parent := RLReport1;
+    NovoLabel.Caption := 'Data: ' + DateToStr(DataModulePrincipal.FDQueryPedido.FieldByName('Data').AsDateTime);
+    NovoLabel.Top := LinhaAtual;
+    NovoLabel.Font.Size := 8;
+    NovoLabel.Left := CenterX + 310;
+
+    LinhaAtual := LinhaAtual + 40;
+
+    // **Itens do Pedido**
+    NovoLabel := TRLLabel.Create(RLReport1);
+    NovoLabel.Parent := RLReport1;
+    NovoLabel.Caption := 'Itens do Pedido:';
+    NovoLabel.Top := LinhaAtual;
+    NovoLabel.Left := CenterX;
+    NovoLabel.Font.Size := 10;
+    NovoLabel.Left := CenterX - 51;
+    NovoLabel.Font.Style := [fsBold];
+
+    LinhaAtual := LinhaAtual + 20;
+
+    // **Cabeçalho da Tabela**
+    NovoLabel := TRLLabel.Create(RLReport1);
+    NovoLabel.Parent := RLReport1;
+    NovoLabel.Caption := 'Produto';
+    NovoLabel.Top := LinhaAtual;
+    NovoLabel.Left := CenterX;
+    NovoLabel.Font.Size := 9;
+    NovoLabel.Left := CenterX - 50;
+
+    NovoLabel := TRLLabel.Create(RLReport1);
+    NovoLabel.Parent := RLReport1;
+    NovoLabel.Caption := 'Valor';
+    NovoLabel.Top := LinhaAtual;
+    NovoLabel.Font.Size := 9;
+    NovoLabel.Left := CenterX + 120;
+
+    NovoLabel := TRLLabel.Create(RLReport1);
+    NovoLabel.Parent := RLReport1;
+    NovoLabel.Caption := 'Quantidade';
+    NovoLabel.Top := LinhaAtual;
+    NovoLabel.Font.Size := 9;
+    NovoLabel.Left := CenterX + 200;
+
+    NovoLabel := TRLLabel.Create(RLReport1);
+    NovoLabel.Parent := RLReport1;
+    NovoLabel.Caption := 'Total';
+    NovoLabel.Top := LinhaAtual;
+    NovoLabel.Font.Size := 9;
+    NovoLabel.Left := CenterX + 300;
+
+    NovoLabel := TRLLabel.Create(RLReport1);
+    NovoLabel.Parent := RLReport1;
+    NovoLabel.Caption := 'Data Inserção';
+    NovoLabel.Top := LinhaAtual;
+    NovoLabel.Font.Size := 9;
+    NovoLabel.Left := CenterX + 400; // Ajuste a posição horizontal
+
+    LinhaAtual := LinhaAtual + 20;
+    TotalPedido := 0;
+
+    // **Lista os itens**
+    DataModulePrincipal.FDQueryItemPedido.Close;
+    DataModulePrincipal.FDQueryItemPedido.SQL.Text :=
+      'SELECT NomeProduto, Valor, Quantidade, Total, DataInsercao ' +
+      'FROM ItemPedido ' +
+      'WHERE IDVenda = :IDVenda';
+    DataModulePrincipal.FDQueryItemPedido.ParamByName('IDVenda').AsInteger :=
+      DataModulePrincipal.FDQueryPedido.FieldByName('IDVenda').AsInteger;
+    DataModulePrincipal.FDQueryItemPedido.Open;
+
+    while not DataModulePrincipal.FDQueryItemPedido.Eof do
+    begin
+      NovoLabel := TRLLabel.Create(RLReport1);
+      NovoLabel.Parent := RLReport1;
+      NovoLabel.Caption := DataModulePrincipal.FDQueryItemPedido.FieldByName('NomeProduto').AsString;
+      NovoLabel.Top := LinhaAtual;
+      NovoLabel.Left := CenterX;
+      NovoLabel.Font.Size := 8;
+      NovoLabel.Left := CenterX - 50;
+
+      NovoLabel := TRLLabel.Create(RLReport1);
+      NovoLabel.Parent := RLReport1;
+      NovoLabel.Caption := FormatFloat('0.00', DataModulePrincipal.FDQueryItemPedido.FieldByName('Valor').AsCurrency);
+      NovoLabel.Top := LinhaAtual;
+      NovoLabel.Font.Size := 8;
+      NovoLabel.Left := CenterX + 120;
+
+      NovoLabel := TRLLabel.Create(RLReport1);
+      NovoLabel.Parent := RLReport1;
+      NovoLabel.Caption := DataModulePrincipal.FDQueryItemPedido.FieldByName('Quantidade').AsString;
+      NovoLabel.Top := LinhaAtual;
+      NovoLabel.Font.Size := 8;
+      NovoLabel.Left := CenterX + 200;
+
+      NovoLabel := TRLLabel.Create(RLReport1);
+      NovoLabel.Parent := RLReport1;
+      NovoLabel.Caption := FormatFloat('0.00', DataModulePrincipal.FDQueryItemPedido.FieldByName('Total').AsCurrency);
+      NovoLabel.Top := LinhaAtual;
+      NovoLabel.Font.Size := 8;
+      NovoLabel.Left := CenterX + 300;
+
+      NovoLabel := TRLLabel.Create(RLReport1);
+      NovoLabel.Parent := RLReport1;
+      NovoLabel.Caption := DateToStr(DataModulePrincipal.FDQueryItemPedido.FieldByName('DataInsercao').AsDateTime);
+      NovoLabel.Top := LinhaAtual;
+      NovoLabel.Font.Size := 8;
+      NovoLabel.Left := CenterX + 400; // Nova coluna
+
+      TotalPedido := TotalPedido + DataModulePrincipal.FDQueryItemPedido.FieldByName('Total').AsCurrency;
+      LinhaAtual := LinhaAtual + 20;
+      DataModulePrincipal.FDQueryItemPedido.Next;
+    end;
+
+    // **Total do Pedido**
+    NovoLabel := TRLLabel.Create(RLReport1);
+    NovoLabel.Parent := RLReport1;
+    NovoLabel.Caption := 'Total: ' + FormatFloat('0.00', TotalPedido);
+    NovoLabel.Top := LinhaAtual;
+    NovoLabel.Font.Size := 9;
+    NovoLabel.Font.Style := [fsBold];
+    NovoLabel.Left := CenterX + 285;
+
+    TotalGeral := TotalGeral + TotalPedido;
+    LinhaAtual := LinhaAtual + 40;
+
+    DataModulePrincipal.FDQueryPedido.Next;
+    // Adiciona uma linha separadora entre os pedidos
+    with TRLDraw.Create(RLReport1) do
+    begin
+      Parent := RLReport1;
+      Left := CenterX - 30;
+      Top := LinhaAtual;
+      Width := LarguraTabela + 40; // Largura da linha
+      Height := 2; // Espessura da linha
+      Pen.Width := 1;
+      Pen.Color := clBlack; // Cor da linha
+    end;
+    LinhaAtual := LinhaAtual + 10; // Espaço após a linha
+  end;
+
+  // **Total Geral no Rodapé**
+  NovoLabel := TRLLabel.Create(RLReport1);
+  NovoLabel.Parent := RLReport1;
+  NovoLabel.Caption := 'Total Geral: ' + FormatFloat('0.00', TotalGeral);
+  NovoLabel.Top := LinhaAtual;
+  NovoLabel.Left := CenterX;
+  NovoLabel.Font.Size := 9;
+  NovoLabel.Font.Style := [fsBold];
+
+  RLReport1.EndDoc;
+  RLReport1.PreviewModal;
+
+  // Fecha as queries para liberar os locks no banco
+  DataModulePrincipal.FDQueryItemPedido.Close;
+  DataModulePrincipal.FDQueryPedido.Close;
+end;
+
+
+
+end.

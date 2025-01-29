@@ -1,0 +1,57 @@
+unit MNRelatorioSemanal;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, FRelatorioReportSemanal, uDataModulePrincipal, Vcl.ExtCtrls, RLReport, Vcl.ComCtrls,
+  Vcl.StdCtrls;
+
+type
+  TRelatorioSemanal = class(TForm)
+    BtImprimir: TButton;
+    DateTimePicker1: TDateTimePicker;
+    Label1: TLabel;
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure BtImprimirClick(Sender: TObject);
+
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  RelatorioSemanal: TRelatorioSemanal;
+
+implementation
+
+{$R *.dfm}
+
+procedure TRelatorioSemanal.BtImprimirClick(Sender: TObject);
+var
+  DataInicial: TDateTime;
+  FormRelatorio: TNMRelatorioReport;
+begin
+  // Obtém a data inicial do DateTimePicker
+  DataInicial := DateTimePicker1.Date;
+  // Instancia o formulário de relatório
+  FormRelatorio := TNMRelatorioReport.Create(Self);
+  try
+    // Chama a procedure para gerar o relatório
+    FormRelatorio.GerarRelatorio(DataInicial);
+  finally
+    // Libera o formulário da memória
+    FormRelatorio.Free;
+  end;
+
+end;
+
+procedure TRelatorioSemanal.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+begin
+  Action := caFree; // Libera o formulário da memória
+  RelatorioSemanal := nil; // Define o ponteiro como nulo
+end;
+
+end.
