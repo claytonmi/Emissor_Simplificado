@@ -290,6 +290,7 @@ begin
   EdValorItem.Clear;
   EdQtdItem.Clear;
   EdNomeCliente.ItemIndex := -1;
+  EdNomeCliente.Clear;
 
 
   // Limpa os dados do StringGrid
@@ -308,6 +309,9 @@ begin
   BtEditarPedido.Enabled := True;
   MNCadastroProduto.Enabled := True;
   MNCadastrodeCliente.Enabled := true;
+  CBEdNomeProduto.Enabled := false;
+  EdQtdItem.Enabled := false;
+  EdValorItem.Enabled := false;
 end;
 
 procedure TEmissorPrincipal.BtGravarItemClick(Sender: TObject);
@@ -1091,6 +1095,7 @@ begin
 
     Close;
   end;
+  CarregarProdutos;
 
   // Ativar/desativar botões e campos
   BtEditarItem.Enabled := True;

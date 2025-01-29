@@ -12,6 +12,8 @@ type
     BtImprimir: TButton;
     DateTimePicker1: TDateTimePicker;
     Label1: TLabel;
+    Label2: TLabel;
+    ComboBoxCliente: TComboBox;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtImprimirClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -32,21 +34,33 @@ implementation
 procedure TRelatorioSemanal.BtImprimirClick(Sender: TObject);
 var
   DataInicial: TDateTime;
+  NomeCliente: string;
   FormRelatorio: TNMRelatorioReport;
 begin
   // Obtém a data inicial do DateTimePicker
   DataInicial := DateTimePicker1.Date;
+
+  // Verifica se o cliente foi selecionado
+  if ComboBoxCliente.ItemIndex = -1 then
+  begin
+    ShowMessage('Selecione um cliente.');
+    Exit;
+  end;
+
+  // Obtém o nome do cliente selecionado
+  NomeCliente := ComboBoxCliente.Items[ComboBoxCliente.ItemIndex];
+
   // Instancia o formulário de relatório
   FormRelatorio := TNMRelatorioReport.Create(Self);
   try
     // Chama a procedure para gerar o relatório
-    FormRelatorio.GerarRelatorio(DataInicial);
+    FormRelatorio.GerarRelatorio(DataInicial, NomeCliente);
   finally
     // Libera o formulário da memória
     FormRelatorio.Free;
   end;
-
 end;
+
 
 procedure TRelatorioSemanal.FormClose(Sender: TObject;
   var Action: TCloseAction);
@@ -58,6 +72,21 @@ end;
 procedure TRelatorioSemanal.FormCreate(Sender: TObject);
 begin
   DateTimePicker1.Date:= now;
+  // Preenche o ComboBoxCliente com os nomes dos clientes
+  DataModulePrincipal.FDQueryPedido.Close;
+  DataModulePrincipal.FDQueryPedido.SQL.Text := 'SELECT DISTINCT NomeCliente FROM Pedido';
+  DataModulePrincipal.FDQueryPedido.Open;
+
+  ComboBoxCliente.Items.Clear;
+  while not DataModulePrincipal.FDQueryPedido.Eof do
+  begin
+    ComboBoxCliente.Items.Add(DataModulePrincipal.FDQueryPedido.FieldByName('NomeCliente').AsString);
+    DataModulePrincipal.FDQueryPedido.Next;
+  end;
+
+  // Caso queira selecionar o primeiro cliente por padrão
+  if ComboBoxCliente.Items.Count > 0 then
+    ComboBoxCliente.ItemIndex := 0;
 end;
 
 end.

@@ -4,7 +4,7 @@ object NMPesquisaDePedido: TNMPesquisaDePedido
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Pesquisa de pedido'
-  ClientHeight = 78
+  ClientHeight = 73
   ClientWidth = 382
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -271,9 +271,22 @@ object NMPesquisaDePedido: TNMPesquisaDePedido
   OnClose = FormClose
   OnCreate = FormCreate
   TextHeight = 15
+  object Label1: TLabel
+    Left = 24
+    Top = 19
+    Width = 215
+    Height = 15
+    Caption = 'Selecione um pedido e saia da pesquisa'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 15
+    Font.Name = 'Segoe UI'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
   object ComboBoxPesquisaDePedido: TComboBox
-    Left = 16
-    Top = 24
+    Left = 24
+    Top = 40
     Width = 337
     Height = 23
     TabOrder = 0

@@ -9,7 +9,7 @@ uses
 type
   TNMRelatorioReport = class(TForm)
     RLReport1: TRLReport;
-    procedure GerarRelatorio(DataInicial: TDateTime);
+    procedure GerarRelatorio(DataInicial: TDateTime;  NomeCliente: string);
   private
     { Private declarations }
   public
@@ -24,7 +24,7 @@ implementation
 {$R *.dfm}
 
 
-procedure TNMRelatorioReport.GerarRelatorio(DataInicial: TDateTime);
+procedure TNMRelatorioReport.GerarRelatorio(DataInicial: TDateTime; NomeCliente: string);
 var
   DataFinal: TDateTime;
   TotalGeral, TotalPedido: Currency;
@@ -39,19 +39,21 @@ begin
   WidthPage := RLReport1.Width;
   CenterX := (WidthPage - LarguraTabela) div 2; // Para centralizar itens
 
-  // Consulta pedidos no intervalo de datas
+  // Consulta pedidos no intervalo de datas e para o cliente específico
   DataModulePrincipal.FDQueryPedido.Close;
   DataModulePrincipal.FDQueryPedido.SQL.Text :=
     'SELECT IDVenda, NomeCliente, TelefoneCliente, Data ' +
     'FROM Pedido ' +
-    'WHERE Data BETWEEN :DataInicial AND :DataFinal';
+    'WHERE Data BETWEEN :DataInicial AND :DataFinal ' +
+    'AND NomeCliente = :NomeCliente';  // Filtro pelo nome do cliente
   DataModulePrincipal.FDQueryPedido.ParamByName('DataInicial').AsDate := DataInicial;
   DataModulePrincipal.FDQueryPedido.ParamByName('DataFinal').AsDate := DataFinal;
+  DataModulePrincipal.FDQueryPedido.ParamByName('NomeCliente').AsString := NomeCliente;
   DataModulePrincipal.FDQueryPedido.Open;
 
   if DataModulePrincipal.FDQueryPedido.IsEmpty then
   begin
-    ShowMessage('Nenhum pedido encontrado no intervalo especificado.');
+    ShowMessage('Nenhum pedido encontrado para o cliente no intervalo especificado.');
     Exit;
   end;
 
@@ -256,6 +258,7 @@ begin
   DataModulePrincipal.FDQueryItemPedido.Close;
   DataModulePrincipal.FDQueryPedido.Close;
 end;
+
 
 
 

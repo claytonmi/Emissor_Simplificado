@@ -9,6 +9,7 @@ uses
 type
   TNMPesquisaDePedido = class(TForm)
     ComboBoxPesquisaDePedido: TComboBox;
+    Label1: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private

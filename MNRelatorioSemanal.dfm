@@ -3,7 +3,7 @@ object RelatorioSemanal: TRelatorioSemanal
   Top = 0
   BorderStyle = bsSingle
   Caption = 'Relat'#243'rio semanal'
-  ClientHeight = 98
+  ClientHeight = 148
   ClientWidth = 275
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -272,7 +272,7 @@ object RelatorioSemanal: TRelatorioSemanal
   TextHeight = 8
   object Label1: TLabel
     Left = 40
-    Top = 9
+    Top = 63
     Width = 86
     Height = 17
     Caption = 'Data de in'#237'cio'
@@ -283,9 +283,22 @@ object RelatorioSemanal: TRelatorioSemanal
     Font.Style = [fsBold]
     ParentFont = False
   end
+  object Label2: TLabel
+    Left = 40
+    Top = 8
+    Width = 43
+    Height = 17
+    Caption = 'Cliente'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 18
+    Font.Name = 'Segoe UI'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
   object BtImprimir: TButton
     Left = 88
-    Top = 61
+    Top = 115
     Width = 89
     Height = 25
     Caption = 'Gerar relat'#243'rio'
@@ -300,7 +313,7 @@ object RelatorioSemanal: TRelatorioSemanal
   end
   object DateTimePicker1: TDateTimePicker
     Left = 40
-    Top = 32
+    Top = 86
     Width = 186
     Height = 23
     Date = 45676.000000000000000000
@@ -312,5 +325,18 @@ object RelatorioSemanal: TRelatorioSemanal
     Font.Style = []
     ParentFont = False
     TabOrder = 1
+  end
+  object ComboBoxCliente: TComboBox
+    Left = 40
+    Top = 31
+    Width = 186
+    Height = 23
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 15
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 2
   end
 end
