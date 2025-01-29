@@ -18,6 +18,6 @@ Projetado para ser simples e leve, o sistema oferece um desempenho eficiente, se
 - 📝 Emissão simplificada de orçamentos
 
   ## 📦 Como Instalar
-1. Baixe o arquivo `Emissor_Simplificado.exe`
+1. Baixe o arquivo [`Emissor_Simplificado.exe`](https://github.com/claytonmi/Emissor_Simplificado/raw/main/Instalador/EmissorSimplificado.exe)
 2. Execute no Windows
 3. Pronto! 🚀
