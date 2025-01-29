@@ -1,0 +1,18 @@
+program ProjetoPrincipal;
+
+uses
+  Vcl.Forms,
+  MNPrincipal in 'MNPrincipal.pas' {EmissorPrincipal},
+  MNRelatorioSemanal in 'MNRelatorioSemanal.pas' {RelatorioSemanal},
+  MNCadastroCliente in 'MNCadastroCliente.pas' {FCadastroCliente},
+  uDataModulePrincipal in 'uDataModulePrincipal.pas' {DataModulePrincipal: TDataModule};
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TEmissorPrincipal, EmissorPrincipal);
+  Application.CreateForm(TDataModulePrincipal, DataModulePrincipal);
+  Application.Run;
+end.

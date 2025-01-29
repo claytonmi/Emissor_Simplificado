@@ -1,0 +1,25 @@
+unit NMPesquisaCliente;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, uDataModulePrincipal,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.DBCtrls;
+
+type
+  TNMDePesquisaCliente = class(TForm)
+    DBComboBoxPesquisaCliente: TDBComboBox;
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  NMDePesquisaCliente: TNMDePesquisaCliente;
+
+implementation
+
+{$R *.dfm}
+
+end.

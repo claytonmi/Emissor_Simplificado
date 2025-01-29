@@ -1,0 +1,141 @@
+unit MNRelatorioSemanal;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uDataModulePrincipal, Vcl.ExtCtrls, RLReport, Vcl.ComCtrls,
+  Vcl.StdCtrls;
+
+type
+  TRelatorioSemanal = class(TForm)
+    RLReport1: TRLReport;
+    Orçamento: TPanel;
+    BtImprimir: TButton;
+    DateTimePicker1: TDateTimePicker;
+    Label1: TLabel;
+    RLGroupTitulo: TRLGroup;
+    RLGroupHeadRelatorio: TRLGroup;
+    RLGroupListaItens: TRLGroup;
+    RLLabel1: TRLLabel;
+    RLLabel2: TRLLabel;
+    RLLabel3: TRLLabel;
+    RLLabel4: TRLLabel;
+    RLLabel5: TRLLabel;
+    RLLabelNPedido: TRLLabel;
+    RLLabelDataPedido: TRLLabel;
+    RLLabelTelefone: TRLLabel;
+    RLLabelNomeCliente: TRLLabel;
+    RLImageRelatorio: TRLImage;
+    RLDetailGrid1: TRLDetailGrid;
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure BtImprimirClick(Sender: TObject);
+    procedure GerarRelatorio(DataInicial: TDateTime);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  RelatorioSemanal: TRelatorioSemanal;
+
+implementation
+
+{$R *.dfm}
+
+procedure TRelatorioSemanal.BtImprimirClick(Sender: TObject);
+begin
+  try
+    // Chama a impressão do relatório
+    RLReport1.Print;
+  except
+    on E: Exception do
+      ShowMessage('Erro ao imprimir o relatório: ' + E.Message);
+  end;
+end;
+
+procedure TRelatorioSemanal.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+begin
+  Action := caFree; // Libera o formulário da memória
+  RelatorioSemanal := nil; // Define o ponteiro como nulo
+end;
+
+procedure TRelatorioSemanal.GerarRelatorio(DataInicial: TDateTime);
+var
+  DataFinal: TDateTime;
+  TotalGeral: Currency;
+begin
+  DataFinal := DataInicial + 6;
+  TotalGeral := 0;
+
+  // Consulta pedidos no intervalo de datas
+  DataModulePrincipal.FDQueryPedido.Close;
+  DataModulePrincipal.FDQueryPedido.SQL.Text :=
+    'SELECT IDVenda, NomeCliente, TelefoneCliente, Data ' +
+    'FROM Pedido ' +
+    'WHERE Data BETWEEN :DataInicial AND :DataFinal';
+  DataModulePrincipal.FDQueryPedido.ParamByName('DataInicial').AsDate := DataInicial;
+  DataModulePrincipal.FDQueryPedido.ParamByName('DataFinal').AsDate := DataFinal;
+  DataModulePrincipal.FDQueryPedido.Open;
+
+  if DataModulePrincipal.FDQueryPedido.IsEmpty then
+  begin
+    ShowMessage('Nenhum pedido encontrado no intervalo especificado.');
+    Exit;
+  end;
+
+  // Configura cabeçalhos principais
+  RLLabel1.Caption := 'Relatório de Vendas';
+  RLLabel2.Caption := 'Período: ' + DateToStr(DataInicial) + ' a ' + DateToStr(DataFinal);
+
+  // Itera sobre os pedidos
+  while not DataModulePrincipal.FDQueryPedido.Eof do
+  begin
+    RLLabelNPedido.Caption := 'Pedido Nº: ' + DataModulePrincipal.FDQueryPedido.FieldByName('IDVenda').AsString;
+    RLLabelNomeCliente.Caption := 'Cliente: ' + DataModulePrincipal.FDQueryPedido.FieldByName('NomeCliente').AsString;
+    RLLabelTelefone.Caption := 'Telefone: ' + DataModulePrincipal.FDQueryPedido.FieldByName('TelefoneCliente').AsString;
+    RLLabelDataPedido.Caption := 'Data: ' + DateToStr(DataModulePrincipal.FDQueryPedido.FieldByName('Data').AsDateTime);
+
+    // Consulta os itens do pedido
+    DataModulePrincipal.FDQueryItemPedido.Close;
+    DataModulePrincipal.FDQueryItemPedido.SQL.Text :=
+      'SELECT NomeProduto, Valor, Quantidade, Total ' +
+      'FROM ItemPedido ' +
+      'WHERE IDVenda = :IDVenda';
+    DataModulePrincipal.FDQueryItemPedido.ParamByName('IDVenda').AsInteger :=
+      DataModulePrincipal.FDQueryPedido.FieldByName('IDVenda').AsInteger;
+    DataModulePrincipal.FDQueryItemPedido.Open;
+
+    // Configura os itens no detalhe do pedido
+    while not DataModulePrincipal.FDQueryItemPedido.Eof do
+    begin
+      with RLDetailGrid1 do
+      begin
+        InsertRecord;
+        FieldByName('Produto').AsString := DataModulePrincipal.FDQueryItemPedido.FieldByName('NomeProduto').AsString;
+        FieldByName('Valor').AsString := FormatFloat('0.00', DataModulePrincipal.FDQueryItemPedido.FieldByName('Valor').AsCurrency);
+        FieldByName('Quantidade').AsString := DataModulePrincipal.FDQueryItemPedido.FieldByName('Quantidade').AsString;
+        FieldByName('Total').AsString := FormatFloat('0.00', DataModulePrincipal.FDQueryItemPedido.FieldByName('Total').AsCurrency);
+        Post;
+      end;
+
+      // Calcula o total geral
+      TotalGeral := TotalGeral + DataModulePrincipal.FDQueryItemPedido.FieldByName('Total').AsCurrency;
+      DataModulePrincipal.FDQueryItemPedido.Next;
+    end;
+
+    DataModulePrincipal.FDQueryPedido.Next;
+  end;
+
+  // Total Geral no Rodapé
+  RLLabel5.Caption := 'Total Geral: ' + FormatFloat('0.00', TotalGeral);
+
+  // Mostra o relatório
+  RLReport1.PreviewModal;
+end;
+
+
+
+end.

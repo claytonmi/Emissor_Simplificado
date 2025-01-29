@@ -1,0 +1,30 @@
+unit NMCadastroDeProduto;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, uDataModulePrincipal, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons;
+
+type
+  TNMCadastroProduto = class(TForm)
+    EdNomeProduto: TEdit;
+    EdPreco: TEdit;
+    Label1: TLabel;
+    Label2: TLabel;
+    BtSalvar: TBitBtn;
+    BtEditar: TBitBtn;
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  NMCadastroProduto: TNMCadastroProduto;
+
+implementation
+
+{$R *.dfm}
+
+end.

@@ -1,0 +1,46 @@
+unit NMPesquisaDeProduto;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, uDataModulePrincipal,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.DBCtrls;
+
+type
+  TNMPesquisaProduto = class(TForm)
+    DBComboBoxPesquisaProduto: TComboBox;
+    procedure FormShow(Sender: TObject);
+  private
+    FSelecionadoID: Integer;
+  public
+    property SelecionadoID: Integer read FSelecionadoID;
+  end;
+
+var
+  NMPesquisaProduto: TNMPesquisaProduto;
+
+implementation
+
+{$R *.dfm}
+
+procedure TNMPesquisaProduto.FormShow(Sender: TObject);
+begin
+  DBComboBoxPesquisaProduto.Items.Clear;
+
+  DataModulePrincipal.FDQueryProduto.SQL.Text := 'SELECT IDProduto, NomeProduto FROM Produto';
+  DataModulePrincipal.FDQueryProduto.Open;
+
+  while not DataModulePrincipal.FDQueryProduto.Eof do
+  begin
+    DBComboBoxPesquisaProduto.Items.AddObject(
+      DataModulePrincipal.FDQueryProduto.FieldByName('NomeProduto').AsString,
+      TObject(DataModulePrincipal.FDQueryProduto.FieldByName('IDProduto').AsInteger)
+    );
+    DataModulePrincipal.FDQueryProduto.Next;
+  end;
+
+  DataModulePrincipal.FDQueryProduto.Close;
+end;
+
+end.
+

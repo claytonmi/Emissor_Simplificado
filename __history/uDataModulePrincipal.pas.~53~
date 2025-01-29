@@ -1,0 +1,189 @@
+unit uDataModulePrincipal;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, FireDAC.Comp.Client, FireDAC.Stan.Def,
+  FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef,
+  FireDAC.DApt, FireDAC.UI.Intf, FireDAC.VCLUI.Wait, FireDAC.Stan.Async,
+  FireDAC.Stan.Pool, FireDAC.Phys, FireDAC.Comp.UI, FireDAC.Stan.Error,
+  FireDAC.Phys.Intf, FireDAC.Stan.ExprFuncs, FireDAC.Phys.SQLiteWrapper.Stat,
+  Data.DB, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
+  FireDAC.Comp.DataSet, System.IOUtils, Vcl.Dialogs, SHFolder;
+
+type
+  TDataModulePrincipal = class(TDataModule)
+    FDConnection: TFDConnection;
+    FDPhysSQLiteDriverLink: TFDPhysSQLiteDriverLink;
+    DataSourceCliente: TDataSource;
+    FDQueryCliente: TFDQuery;
+    DataSourceProduto: TDataSource;
+    FDQueryProduto: TFDQuery;
+    DataSourcePedido: TDataSource;
+    FDQueryPedido: TFDQuery;
+    FDQueryItemPedido: TFDQuery;
+    DataSourceItemPedido: TDataSource;
+    procedure DataModuleCreate(Sender: TObject);
+    procedure CriarTabelas;
+  private
+    function TabelaExiste(const TabelaNome: string): Boolean;
+    procedure ConfigurarConexao(const DatabasePath: string);
+  public
+  end;
+
+var
+  DataModulePrincipal: TDataModulePrincipal;
+
+implementation
+
+{%CLASSGROUP 'Vcl.Controls.TControl'}
+
+{$R *.dfm}
+
+procedure TDataModulePrincipal.DataModuleCreate(Sender: TObject);
+var
+  BasePath, DatabasePath: string;
+begin
+  // Obtém o caminho do diretório "Documentos"
+  BasePath := IncludeTrailingPathDelimiter(TPath.GetDocumentsPath) + 'MeuSistema\';
+
+  if not TDirectory.Exists(BasePath) then
+    begin
+      try
+        TDirectory.CreateDirectory(BasePath);
+      except
+        on E: Exception do
+        begin
+          ShowMessage('Erro ao criar o diretório de dados: ' + E.Message);
+          Halt;
+        end;
+      end;
+    end;
+
+  // Define o caminho completo para o banco de dados
+  DatabasePath := BasePath + 'Vendas.db';
+
+  // Configura o FireDAC Connection
+  ConfigurarConexao(DatabasePath);
+
+  try
+    // Conecta ao banco de dados
+    FDConnection.Connected := True;
+
+    // Cria as tabelas, se necessário
+    CriarTabelas;
+
+    if FDConnection.Connected then
+    begin
+      FDQueryItemPedido.Active := True;
+      FDQueryPedido.Active := True;
+      FDQueryCliente.Active := True;
+      FDQueryProduto.Active := True;
+    end
+    else
+      ShowMessage('A conexão com o banco de dados não foi estabelecida.');
+
+
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Erro ao conectar ou criar o banco de dados: ' + E.Message +
+        sLineBreak + 'Caminho do banco de dados: ' + DatabasePath);
+      Halt; // Finaliza o programa em caso de erro crítico
+    end;
+  end;
+end;
+
+procedure TDataModulePrincipal.ConfigurarConexao(const DatabasePath: string);
+begin
+  FDConnection.Params.Clear; // Limpa os parâmetros para evitar conflitos
+  FDConnection.Params.DriverID := 'SQLite';
+  FDConnection.Params.Database := DatabasePath;
+  FDConnection.Params.Values['LockingMode'] := 'Exclusive';
+  FDConnection.Params.Values['Timeout'] := '30';
+  FDConnection.Params.Values['SharedCache'] := 'True';
+  FDConnection.Params.Values['Charset'] := 'UTF-8';
+  FDConnection.LoginPrompt := False; // Desabilita prompt de login
+end;
+
+procedure TDataModulePrincipal.CriarTabelas;
+begin
+  // Criação da tabela Pedido
+ if not TabelaExiste('Pedido') then
+  FDConnection.ExecSQL(
+    'CREATE TABLE IF NOT EXISTS Pedido (' +
+    'IDVenda INTEGER PRIMARY KEY AUTOINCREMENT, ' +
+    'IDCliente INTEGER, ' +
+    'NomeCliente TEXT, ' +
+    'TelefoneCliente TEXT, ' +
+    'EmailCliente TEXT, ' +
+    'FlStatus char(1)DEFAULT ''A'', '+
+    'Data DATE DEFAULT (CURRENT_DATE));'
+  );
+
+  // Criação da tabela ItemPedido
+if not TabelaExiste('ItemPedido') then
+    FDConnection.ExecSQL(
+      'CREATE TABLE IF NOT EXISTS ItemPedido (' +
+      'IDItem INTEGER PRIMARY KEY, ' +
+      'IDVenda INTEGER, ' +
+      'IDProduto INTEGER, ' +
+      'NomeProduto TEXT, ' +
+      'Valor REAL, ' +
+      'Quantidade INTEGER, ' +
+      'Total REAL, ' +
+      'DataInsercao DATE DEFAULT (CURRENT_DATE), ' +  // Data de inserção do item no pedido especifico para um fluxo de um cliente
+      'FOREIGN KEY(IDVenda) REFERENCES Pedido(IDVenda));'
+    );
+
+  // Criação da tabela Cliente
+ if not TabelaExiste('Cliente') then
+    FDConnection.ExecSQL(
+      'CREATE TABLE IF NOT EXISTS Cliente (' +
+      'IDCliente INTEGER PRIMARY KEY AUTOINCREMENT, ' +
+      'Nome TEXT, ' +
+      'Telefone TEXT, ' +
+      'Email TEXT);'
+    );
+
+  // Verifica e cria a tabela Produto
+  if not TabelaExiste('Produto') then
+    FDConnection.ExecSQL(
+      'CREATE TABLE IF NOT EXISTS Produto (' +
+      'IDProduto INTEGER PRIMARY KEY AUTOINCREMENT, ' +
+      'NomeProduto TEXT, ' +
+      'Preco REAL);'
+    );
+
+ // Inserção de dados iniciais na tabela Produto, se não existir
+  if FDConnection.ExecSQLScalar('SELECT COUNT(*) FROM Produto WHERE NomeProduto = ''Produto de testes''') = 0 then
+   FDConnection.ExecSQL(
+      'INSERT INTO Produto (NomeProduto, Preco) VALUES (''Produto de testes'', 0.07);'
+    );
+
+  // Inserção de dados iniciais na tabela Cliente, se não existir
+  if FDConnection.ExecSQLScalar('SELECT COUNT(*) FROM Cliente WHERE Nome = ''Cliente de testes''') = 0 then
+    FDConnection.ExecSQL(
+      'INSERT INTO Cliente (Nome, Telefone, Email) VALUES (''Cliente de testes'', ''(48) 9 9999-9999'', ''testes@teste.com'');'
+    );
+end;
+
+function TDataModulePrincipal.TabelaExiste(const TabelaNome: string): Boolean;
+var
+  QueryTemp: TFDQuery;
+begin
+  Result := False;
+  QueryTemp := TFDQuery.Create(nil);
+  try
+    QueryTemp.Connection := FDConnection;
+    QueryTemp.SQL.Text := 'SELECT name FROM sqlite_master WHERE type="table" AND name="' + TabelaNome + '"';
+    QueryTemp.Open;
+    Result := not QueryTemp.IsEmpty;
+  finally
+    QueryTemp.Free;
+  end;
+end;
+
+
+end.
+

@@ -1,0 +1,28 @@
+object NMRelatorioReport: TNMRelatorioReport
+  Left = 0
+  Top = 0
+  AutoSize = True
+  Caption = 'NMRelatorioReport'
+  ClientHeight = 1062
+  ClientWidth = 794
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  TextHeight = 15
+  object RLReport1: TRLReport
+    Left = 0
+    Top = 0
+    Width = 794
+    Height = 1123
+    Background.Arrange = baCenter
+    DataSource = DataModulePrincipal.DataSourcePedido
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -7
+    Font.Name = 'Arial'
+    Font.Style = []
+  end
+end

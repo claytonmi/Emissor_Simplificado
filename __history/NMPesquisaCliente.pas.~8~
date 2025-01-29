@@ -1,0 +1,45 @@
+unit NMPesquisaCliente;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, uDataModulePrincipal,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.DBCtrls;
+
+type
+  TNMDePesquisaCliente = class(TForm)
+    DBComboBoxPesquisaCliente: TDBComboBox;
+    LBSelecioneOCliente: TLabel;
+    procedure FormCreate(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  NMDePesquisaCliente: TNMDePesquisaCliente;
+
+implementation
+
+{$R *.dfm}
+
+procedure TNMDePesquisaCliente.FormCreate(Sender: TObject);
+begin
+  // Preenche o combo com os clientes
+  DataModulePrincipal.FDQueryCliente.SQL.Text := 'SELECT IDCliente, nome FROM Cliente';
+  DataModulePrincipal.FDQueryCliente.Open;
+  // Limpa os itens anteriores do ComboBox
+  DBComboBoxPesquisaCliente.Clear;
+  // Preenche o ComboBox com os dados dos clientes
+  while not DataModulePrincipal.FDQueryCliente.Eof do
+  begin
+    DBComboBoxPesquisaCliente.Items.AddObject(
+      DataModulePrincipal.FDQueryCliente.FieldByName('nome').AsString,
+      TObject(DataModulePrincipal.FDQueryCliente.FieldByName('IDCliente').AsInteger)
+    );
+    DataModulePrincipal.FDQueryCliente.Next;
+  end;
+end;
+
+end.

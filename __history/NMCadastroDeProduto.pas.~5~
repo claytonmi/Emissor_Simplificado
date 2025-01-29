@@ -1,0 +1,108 @@
+unit NMCadastroDeProduto;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, uDataModulePrincipal,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, NMPesquisaDeProduto;
+
+type
+  TNMCadastroProduto = class(TForm)
+    EdNomeProduto: TEdit;
+    EdPreco: TEdit;
+    Label1: TLabel;
+    Label2: TLabel;
+    BtSalvar: TBitBtn;
+    BtEditar: TBitBtn;
+    procedure BtSalvarClick(Sender: TObject);
+    procedure BtEditarClick(Sender: TObject);
+  private
+    FProdutoID: Integer; // Armazena o ID do produto selecionado para edição
+    procedure LimparCampos;
+    procedure CarregarProduto(ID: Integer);
+  public
+    { Public declarations }
+  end;
+
+var
+  NMCadastroProduto: TNMCadastroProduto;
+
+implementation
+
+{$R *.dfm}
+
+procedure TNMCadastroProduto.BtSalvarClick(Sender: TObject);
+begin
+  if Trim(EdNomeProduto.Text) = '' then
+    raise Exception.Create('O nome do produto é obrigatório.');
+
+  if Trim(EdPreco.Text) = '' then
+    raise Exception.Create('O preço do produto é obrigatório.');
+
+  try
+    if FProdutoID = 0 then
+    begin
+      // Inserindo novo produto
+      DataModulePrincipal.FDQueryProduto.SQL.Text := 'INSERT INTO Produto (NomeProduto, Preco) VALUES (:NomeProduto, :Preco)';
+      DataModulePrincipal.FDQueryProduto.ParamByName('Nome').AsString := EdNomeProduto.Text;
+      DataModulePrincipal.FDQueryProduto.ParamByName('Preco').AsFloat := StrToFloat(EdPreco.Text);
+    end
+    else
+    begin
+      // Editando produto existente
+      DataModulePrincipal.FDQueryProduto.SQL.Text :=
+        'UPDATE Produto SET NomeProduto = :NomeProduto, Preco = :Preco WHERE IDProduto = :IDProduto';
+      DataModulePrincipal.FDQueryProduto.ParamByName('NomeProduto').AsString := EdNomeProduto.Text;
+      DataModulePrincipal.FDQueryProduto.ParamByName('Preco').AsFloat := StrToFloat(EdPreco.Text);
+      DataModulePrincipal.FDQueryProduto.ParamByName('IDProduto').AsInteger := FProdutoID;
+    end;
+
+    DataModulePrincipal.FDQueryProduto.ExecSQL;
+
+    ShowMessage('Produto salvo com sucesso!');
+    LimparCampos;
+    FProdutoID := 0;
+  except
+    on E: Exception do
+      ShowMessage('Erro ao salvar o produto: ' + E.Message);
+  end;
+end;
+
+procedure TNMCadastroProduto.BtEditarClick(Sender: TObject);
+begin
+  NMPesquisaProduto := TNMPesquisaProduto.Create(Self);
+  try
+    if NMPesquisaProduto.ShowModal = mrOk then
+    begin
+      // Carregar os dados do produto selecionado
+      FProdutoID := NMPesquisaProduto.SelecionadoID;
+      CarregarProduto(FProdutoID);
+    end;
+  finally
+    NMPesquisaProduto.Free;
+  end;
+end;
+
+procedure TNMCadastroProduto.CarregarProduto(ID: Integer);
+begin
+  DataModulePrincipal.FDQueryProduto.SQL.Text := 'SELECT NomeProduto, Preco FROM Produto WHERE IDProduto = :IDProduto';
+  DataModulePrincipal.FDQueryProduto.ParamByName('IDProduto').AsInteger := ID;
+  DataModulePrincipal.FDQueryProduto.Open;
+
+  if not DataModulePrincipal.FDQueryProduto.IsEmpty then
+  begin
+    EdNomeProduto.Text := DataModulePrincipal.FDQueryProduto.FieldByName('NomeProduto').AsString;
+    EdPreco.Text := DataModulePrincipal.FDQueryProduto.FieldByName('Preco').AsString;
+  end;
+
+  DataModulePrincipal.FDQueryProduto.Close;
+end;
+
+procedure TNMCadastroProduto.LimparCampos;
+begin
+  EdNomeProduto.Clear;
+  EdPreco.Clear;
+end;
+
+end.
+
