@@ -3,7 +3,7 @@ object EmissorPrincipal: TEmissorPrincipal
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
-  Caption = 'Sistema B'#225'sico de Emiss'#227'o de Vendas'
+  Caption = 'Sistema B'#225'sico de Emiss'#227'o de Or'#231'amentos'
   ClientHeight = 595
   ClientWidth = 542
   Color = clBtnFace
