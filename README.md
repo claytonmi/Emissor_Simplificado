@@ -19,9 +19,9 @@ Projetado para ser leve e eficiente, sendo ideal para até 50 clientes e 50 prod
 - ⚠️ Não emite nota fiscal
 
 ## 💻 Requisitos
-Sistema Operacional: Windows 10 ou superior
-Armazenamento: Apenas alguns MB
-Banco de Dados: Nenhum banco externo necessário (uso de SQLite)
+- Sistema Operacional: Windows 10 ou superior
+- Armazenamento: Apenas alguns MB
+- Banco de Dados: Nenhum banco externo necessário (uso de SQLite)
 
   ## 📦 Como Instalar
 1. Baixe o arquivo [`Emissor_Simplificado.exe`](https://github.com/claytonmi/Emissor_Simplificado/raw/main/Instalador/EmissorSimplificado.exe)
