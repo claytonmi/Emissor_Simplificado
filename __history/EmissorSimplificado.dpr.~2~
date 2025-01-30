@@ -1,0 +1,26 @@
+program EmissorSimplificado;
+
+uses
+  Vcl.Forms,
+  MNPrincipal in 'MNPrincipal.pas' {EmissorPrincipal},
+  MNRelatorioSemanal in 'MNRelatorioSemanal.pas' {RelatorioSemanal},
+  MNCadastroCliente in 'MNCadastroCliente.pas' {FCadastroCliente},
+  uDataModulePrincipal in 'uDataModulePrincipal.pas' {DataModulePrincipal: TDataModule},
+  NMPesquisaCliente in 'NMPesquisaCliente.pas' {NMDePesquisaCliente},
+  NMInformacoes in 'NMInformacoes.pas' {FInformações},
+  NMCadastroDeProduto in 'NMCadastroDeProduto.pas' {NMCadastroProduto},
+  NMPesquisaDeProduto in 'NMPesquisaDeProduto.pas' {NMPesquisaProduto},
+  NMPesquisaPedido in 'NMPesquisaPedido.pas' {NMPesquisaDePedido},
+  FRelatorioReportSemanal in 'FRelatorioReportSemanal.pas' {NMRelatorioReport},
+  Vcl.Themes,
+  Vcl.Styles;
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TDataModulePrincipal, DataModulePrincipal);
+  Application.CreateForm(TEmissorPrincipal, EmissorPrincipal);
+  Application.Run;
+end.
