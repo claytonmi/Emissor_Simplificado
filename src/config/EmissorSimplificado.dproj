@@ -146,6 +146,14 @@
             <Form>NMRelatorioReport</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="..\forms\NMCadastroDeEmpresa.pas">
+            <Form>FCadastroDeEmpresa</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\forms\NMPesquisaDeEmpresas.pas">
+            <Form>NMPesquisaDeEmpresa</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

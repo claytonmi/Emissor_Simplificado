@@ -3,8 +3,8 @@ object RelatorioSemanal: TRelatorioSemanal
   Top = 0
   BorderStyle = bsSingle
   Caption = 'Relat'#243'rio semanal'
-  ClientHeight = 148
-  ClientWidth = 275
+  ClientHeight = 213
+  ClientWidth = 276
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -272,10 +272,10 @@ object RelatorioSemanal: TRelatorioSemanal
   TextHeight = 8
   object Label1: TLabel
     Left = 40
-    Top = 63
-    Width = 86
+    Top = 120
+    Width = 133
     Height = 17
-    Caption = 'Data de in'#237'cio'
+    Caption = 'Data de in'#237'cio Pedido'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = 18
@@ -285,7 +285,7 @@ object RelatorioSemanal: TRelatorioSemanal
   end
   object Label2: TLabel
     Left = 40
-    Top = 8
+    Top = 65
     Width = 43
     Height = 17
     Caption = 'Cliente'
@@ -296,9 +296,22 @@ object RelatorioSemanal: TRelatorioSemanal
     Font.Style = [fsBold]
     ParentFont = False
   end
+  object Label3: TLabel
+    Left = 40
+    Top = 8
+    Width = 52
+    Height = 17
+    Caption = 'Empresa'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 18
+    Font.Name = 'Segoe UI'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
   object BtImprimir: TButton
-    Left = 88
-    Top = 115
+    Left = 84
+    Top = 180
     Width = 89
     Height = 25
     Caption = 'Gerar relat'#243'rio'
@@ -313,7 +326,7 @@ object RelatorioSemanal: TRelatorioSemanal
   end
   object DateTimePicker1: TDateTimePicker
     Left = 40
-    Top = 86
+    Top = 143
     Width = 186
     Height = 23
     Date = 45676.000000000000000000
@@ -328,7 +341,7 @@ object RelatorioSemanal: TRelatorioSemanal
   end
   object ComboBoxCliente: TComboBox
     Left = 40
-    Top = 31
+    Top = 88
     Width = 186
     Height = 23
     Font.Charset = DEFAULT_CHARSET
@@ -338,5 +351,18 @@ object RelatorioSemanal: TRelatorioSemanal
     Font.Style = []
     ParentFont = False
     TabOrder = 2
+  end
+  object ComboBoxNomeEmpresa: TComboBox
+    Left = 40
+    Top = 31
+    Width = 186
+    Height = 23
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 15
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 3
   end
 end

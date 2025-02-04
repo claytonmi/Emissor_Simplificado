@@ -1,0 +1,107 @@
+﻿object DataModulePrincipal: TDataModulePrincipal
+  OnCreate = DataModuleCreate
+  Height = 580
+  Width = 312
+  object FDConnection: TFDConnection
+    Params.Strings = (
+      'Database=C:\Users\clayt\OneDrive\Documentos\MeuSistema\Vendas.db'
+      'DriverID=SQLite')
+    FetchOptions.AssignedValues = [evAutoClose]
+    ResourceOptions.AssignedValues = [rvCmdExecTimeout]
+    ResourceOptions.CmdExecTimeout = 30
+    LoginPrompt = False
+    Left = 56
+    Top = 24
+  end
+  object FDPhysSQLiteDriverLink: TFDPhysSQLiteDriverLink
+    Left = 176
+    Top = 24
+  end
+  object DataSourceCliente: TDataSource
+    DataSet = FDQueryCliente
+    Left = 56
+    Top = 128
+  end
+  object FDQueryCliente: TFDQuery
+    Connection = FDConnection
+    SQL.Strings = (
+      'select * from cliente;')
+    Left = 160
+    Top = 128
+  end
+  object DataSourceProduto: TDataSource
+    DataSet = FDQueryProduto
+    Left = 56
+    Top = 192
+  end
+  object FDQueryProduto: TFDQuery
+    Connection = FDConnection
+    SQL.Strings = (
+      'select * from Produto;')
+    Left = 160
+    Top = 192
+  end
+  object DataSourcePedido: TDataSource
+    DataSet = FDQueryPedido
+    Left = 56
+    Top = 256
+  end
+  object FDQueryPedido: TFDQuery
+    Connection = FDConnection
+    SQL.Strings = (
+      'select * from Pedido;')
+    Left = 160
+    Top = 256
+  end
+  object FDQueryItemPedido: TFDQuery
+    Connection = FDConnection
+    SQL.Strings = (
+      'SELECT * FROM itemPedido')
+    Left = 160
+    Top = 328
+  end
+  object DataSourceItemPedido: TDataSource
+    DataSet = FDQueryItemPedido
+    Left = 56
+    Top = 328
+  end
+  object FDQuerySistema: TFDQuery
+    Connection = FDConnection
+    SQL.Strings = (
+      'select * from Sistema'
+      '')
+    Left = 160
+    Top = 384
+  end
+  object DataSourceSistema: TDataSource
+    DataSet = FDQuerySistema
+    Left = 56
+    Top = 384
+  end
+  object DataSourceEmpresa: TDataSource
+    DataSet = FDQueryEmpresa
+    Left = 56
+    Top = 448
+  end
+  object FDQueryEmpresa: TFDQuery
+    Connection = FDConnection
+    SQL.Strings = (
+      'select * from Empresa'
+      '')
+    Left = 160
+    Top = 448
+  end
+  object DataSource1: TDataSource
+    DataSet = FDQueryRelatórioDePedidos
+    Left = 56
+    Top = 512
+  end
+  object FDQueryRelatórioDePedidos: TFDQuery
+    Connection = FDConnection
+    SQL.Strings = (
+      'select * from Empresa'
+      '')
+    Left = 160
+    Top = 512
+  end
+end

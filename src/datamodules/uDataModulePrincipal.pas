@@ -23,23 +23,40 @@ type
     FDQueryPedido: TFDQuery;
     FDQueryItemPedido: TFDQuery;
     DataSourceItemPedido: TDataSource;
+    FDQuerySistema: TFDQuery;
+    DataSourceSistema: TDataSource;
+    DataSourceEmpresa: TDataSource;
+    FDQueryEmpresa: TFDQuery;
+    DataSourceRelatorioDePedidos: TDataSource;
+    FDQueryRelatorioDePedidos: TFDQuery;
     procedure DataModuleCreate(Sender: TObject);
     procedure CriarTabelas;
+
   private
     function TabelaExiste(const TabelaNome: string): Boolean;
     procedure ConfigurarConexao(const DatabasePath: string);
     procedure CriarBancoDeDados(const DatabasePath: string; ComDadosTeste: Boolean);
+    function VerificarOuCriarColuna(const Tabela, Coluna, Tipo: string): Boolean;
+    function VerificarAtualizacaoSistema(VersaoAtual: string): Boolean;
   public
+    function  VersaoAtual: string;
   end;
 
 var
   DataModulePrincipal: TDataModulePrincipal;
+const
+  VERSAO_ATUAL = '1.0';
 
 implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
+
+function  TDataModulePrincipal.VersaoAtual: string;
+begin
+  Result := VERSAO_ATUAL;
+end;
 
 procedure TDataModulePrincipal.DataModuleCreate(Sender: TObject);
 var
@@ -80,12 +97,17 @@ begin
   try
     FDConnection.Connected := True;
 
+    CriarTabelas;
+
     if FDConnection.Connected then
     begin
       FDQueryItemPedido.Active := True;
       FDQueryPedido.Active := True;
       FDQueryCliente.Active := True;
       FDQueryProduto.Active := True;
+      FDQuerySistema.Active := True;
+      FDQueryEmpresa.Active := True;
+      FDQueryRelatorioDePedidos.Active := True;
     end
     else
       ShowMessage('A conexão com o banco de dados não foi estabelecida.');
@@ -97,6 +119,16 @@ begin
       Halt;
     end;
   end;
+
+ // Verifica se a versão do banco de dados é a mesma que a do sistema
+  if not VerificarAtualizacaoSistema(VERSAO_ATUAL) then
+  begin
+    // Adiciona novas colunas se necessário
+    VerificarOuCriarColuna('Pedido', 'Observacao', 'TEXT');
+    VerificarOuCriarColuna('Pedido', 'TotalPedido', 'REAL');
+    VerificarOuCriarColuna('ItemPedido', 'Desc', 'REAL');
+  end;
+
 end;
 
 
@@ -165,6 +197,8 @@ begin
     'TelefoneCliente TEXT, ' +
     'EmailCliente TEXT, ' +
     'FlStatus char(1)DEFAULT ''A'', '+
+    'Observacao TEXT,'+
+    'TotalPedido REAL,'+
     'Data DATE DEFAULT (CURRENT_DATE));'
   );
 
@@ -177,6 +211,7 @@ if not TabelaExiste('ItemPedido') then
       'IDProduto INTEGER, ' +
       'NomeProduto TEXT, ' +
       'Valor REAL, ' +
+      'Desc REAL, ' +
       'Quantidade INTEGER, ' +
       'Total REAL, ' +
       'DataInsercao DATE DEFAULT (CURRENT_DATE), ' +  // Data de inserção do item no pedido especifico para um fluxo de um cliente
@@ -201,7 +236,116 @@ if not TabelaExiste('ItemPedido') then
       'NomeProduto TEXT, ' +
       'Preco REAL);'
     );
+
+  if not TabelaExiste('Empresa') then
+    FDConnection.ExecSQL(
+      'CREATE TABLE IF NOT EXISTS Empresa (' +
+      'IDEmpresa INTEGER PRIMARY KEY AUTOINCREMENT, ' +
+      'NomeEmpresa TEXT, ' +
+      'Telefone TEXT, ' +
+      'NomeFantasia TEXT, ' +
+      'CNPJ TEXT, ' +
+      'Endereco TEXT, ' +
+      'Bairro TEXT, ' +
+      'Cidade TEXT, ' +
+      'Estado TEXT, ' +
+      'ImgLogo BLOB, ' +
+      'FlDefault char(1)DEFAULT ''S'');'
+    );
+
+  if not TabelaExiste('Sistema') then
+  begin
+    FDConnection.ExecSQL(
+      'CREATE TABLE IF NOT EXISTS Sistema (' +
+      'IDSistema INTEGER PRIMARY KEY AUTOINCREMENT, ' +
+      'VersaoSistema TEXT, ' +
+      'FlPrimeiroAcesso char(1)DEFAULT ''P'');'
+    );
+
+    FDConnection.ExecSQL('INSERT INTO Sistema (VersaoSistema) VALUES (''0.0'');');
+  end;
 end;
+
+function TDataModulePrincipal.VerificarAtualizacaoSistema(VersaoAtual: string): Boolean;
+var
+  VersaoBanco: string;
+begin
+  Result := False;
+  // Obtém a versão do banco de dados
+  FDQuerySistema.SQL.Text := 'SELECT VersaoSistema FROM Sistema LIMIT 1';
+  FDQuerySistema.Open;
+
+  if not FDQuerySistema.IsEmpty then
+  begin
+    VersaoBanco := FDQuerySistema.FieldByName('VersaoSistema').AsString;
+
+    // Se a versão do banco for igual à versão do sistema, retorna verdadeiro
+    if VersaoBanco = VersaoAtual then
+    begin
+      Result := True;
+    end
+    else if (VersaoBanco < VersaoAtual) then
+    begin
+      ShowMessage('Uma atualização está disponível! O sistema precisa ser atualizado para funcionar corretamente.');
+      FDQuerySistema.Close;  // Certifique-se de fechar o query após o uso
+      // Atualiza a versão no banco de dados
+      FDConnection.ExecSQL('UPDATE Sistema SET VersaoSistema = '''+VersaoAtual+''';');
+
+      try
+        Result := False;  // Retorna verdadeiro após a atualização bem-sucedida
+      except
+        on E: Exception do
+        begin
+          ShowMessage('Erro ao atualizar a versão do sistema: ' + E.Message);
+          Result := True;
+        end;
+      end;
+    end;
+  end
+  else
+  begin
+    ShowMessage('Tabela "Sistema" está vazia ou não foi encontrada.');
+  end;
+
+
+end;
+
+
+function TDataModulePrincipal.VerificarOuCriarColuna(const Tabela, Coluna, Tipo: string): Boolean;
+var
+  Query: TFDQuery;
+  ColunaExiste: Boolean;
+begin
+  ColunaExiste := False;
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FDConnection;
+    Query.SQL.Text := 'PRAGMA table_info(' + Tabela + ');';
+    Query.Open;
+
+    // Percorre as colunas da tabela para verificar se já existe
+    while not Query.Eof do
+    begin
+      if Query.FieldByName('name').AsString = Coluna then
+      begin
+        ColunaExiste := True;
+        Break;
+      end;
+      Query.Next;
+    end;
+
+    // Se a coluna não existir, adiciona
+    if not ColunaExiste then
+    begin
+      FDConnection.ExecSQL('ALTER TABLE ' + Tabela + ' ADD COLUMN ' + Coluna + ' ' + Tipo + ';');
+    end;
+
+    Result := not ColunaExiste; // Retorna True se criou a coluna, False se já existia
+  finally
+    Query.Free;
+  end;
+end;
+
 
 function TDataModulePrincipal.TabelaExiste(const TabelaNome: string): Boolean;
 var

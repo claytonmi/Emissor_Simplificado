@@ -4,8 +4,8 @@ object EmissorPrincipal: TEmissorPrincipal
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Sistema B'#225'sico de Emiss'#227'o de Or'#231'amentos'
-  ClientHeight = 594
-  ClientWidth = 538
+  ClientHeight = 677
+  ClientWidth = 716
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -274,8 +274,8 @@ object EmissorPrincipal: TEmissorPrincipal
   TextHeight = 15
   object Rodape: TPanel
     Left = 0
-    Top = 569
-    Width = 538
+    Top = 652
+    Width = 716
     Height = 25
     Align = alBottom
     BorderStyle = bsSingle
@@ -286,8 +286,8 @@ object EmissorPrincipal: TEmissorPrincipal
     Font.Style = []
     ParentFont = False
     TabOrder = 0
-    ExplicitTop = 568
-    ExplicitWidth = 534
+    ExplicitTop = 651
+    ExplicitWidth = 712
     object RodaPeVersion: TPanel
       Left = 1
       Top = 1
@@ -304,7 +304,7 @@ object EmissorPrincipal: TEmissorPrincipal
       TabOrder = 0
     end
     object RodaPeHora: TPanel
-      Left = 348
+      Left = 526
       Top = 1
       Width = 185
       Height = 19
@@ -317,69 +317,76 @@ object EmissorPrincipal: TEmissorPrincipal
       Font.Style = []
       ParentFont = False
       TabOrder = 1
-      ExplicitLeft = 344
+      ExplicitLeft = 522
     end
   end
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 538
-    Height = 569
+    Width = 716
+    Height = 652
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 534
-    ExplicitHeight = 568
+    ExplicitWidth = 712
+    ExplicitHeight = 651
     object Label1: TLabel
-      Left = 50
-      Top = 59
+      Left = 41
+      Top = 50
       Width = 57
       Height = 15
       Caption = 'N'#186' Pedido:'
     end
     object Label2: TLabel
-      Left = 255
-      Top = 59
+      Left = 31
+      Top = 79
       Width = 67
       Height = 15
       Caption = 'Data Pedido:'
     end
     object Label3: TLabel
-      Left = 39
-      Top = 88
+      Left = 408
+      Top = 50
       Width = 68
       Height = 15
       Caption = 'Cod. Cliente:'
     end
     object Label4: TLabel
-      Left = 286
-      Top = 88
+      Left = 440
+      Top = 80
       Width = 36
       Height = 15
       Caption = 'Nome:'
     end
     object Label5: TLabel
-      Left = 59
-      Top = 117
+      Left = 428
+      Top = 138
       Width = 47
       Height = 15
       Caption = 'Telefone:'
     end
     object Label6: TLabel
-      Left = 285
-      Top = 117
+      Left = 439
+      Top = 109
       Width = 37
       Height = 15
       Caption = 'E-mail:'
     end
+    object LabObs: TLabel
+      Left = 33
+      Top = 109
+      Width = 65
+      Height = 15
+      Caption = 'Observa'#231#227'o:'
+    end
     object PNButoes: TPanel
       Left = 1
-      Top = 486
-      Width = 536
-      Height = 82
+      Top = 563
+      Width = 714
+      Height = 88
       Align = alBottom
       TabOrder = 0
-      ExplicitTop = 485
-      ExplicitWidth = 532
+      ExplicitTop = 562
+      ExplicitWidth = 710
       object BtNovoPedido: TButton
         Left = 16
         Top = 24
@@ -410,7 +417,7 @@ object EmissorPrincipal: TEmissorPrincipal
         OnClick = BtCancelarPedidoClick
       end
       object BtFecharPedido: TButton
-        Left = 441
+        Left = 609
         Top = 24
         Width = 92
         Height = 41
@@ -431,18 +438,18 @@ object EmissorPrincipal: TEmissorPrincipal
     end
     object PanelListaItens: TPanel
       Left = 1
-      Top = 305
-      Width = 536
-      Height = 181
+      Top = 302
+      Width = 714
+      Height = 197
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 304
-      ExplicitWidth = 532
+      ExplicitTop = 301
+      ExplicitWidth = 710
       object StringGridList: TStringGrid
         Left = 1
         Top = 1
-        Width = 534
-        Height = 179
+        Width = 712
+        Height = 195
         Align = alClient
         ColCount = 6
         DefaultColWidth = 90
@@ -450,43 +457,50 @@ object EmissorPrincipal: TEmissorPrincipal
         FixedRows = 0
         TabOrder = 0
         OnDrawCell = StringGridListDrawCell
-        ExplicitWidth = 530
+        ExplicitWidth = 708
         RowHeights = (
           24)
       end
     end
     object Panel4: TPanel
       Left = 1
-      Top = 191
-      Width = 536
-      Height = 114
+      Top = 198
+      Width = 714
+      Height = 104
       Align = alBottom
       TabOrder = 2
-      ExplicitTop = 190
-      ExplicitWidth = 532
+      ExplicitTop = 197
+      ExplicitWidth = 710
       object Label7: TLabel
-        Left = 24
+        Left = 93
         Top = 49
-        Width = 46
+        Width = 43
         Height = 15
-        Caption = 'Produto:'
+        Caption = 'Produto'
       end
       object Label8: TLabel
-        Left = 450
+        Left = 532
         Top = 50
-        Width = 23
+        Width = 20
         Height = 15
-        Caption = 'Qtd:'
+        Caption = 'Qtd'
       end
       object Label9: TLabel
-        Left = 342
+        Left = 334
         Top = 50
-        Width = 33
+        Width = 30
         Height = 15
-        Caption = 'Pre'#231'o:'
+        Caption = 'Pre'#231'o'
+      end
+      object Label11: TLabel
+        Left = 437
+        Top = 50
+        Width = 63
+        Height = 15
+        Caption = 'Desconto %'
       end
       object BtInserirItem: TButton
-        Left = 112
+        Left = 192
         Top = 8
         Width = 82
         Height = 27
@@ -496,9 +510,9 @@ object EmissorPrincipal: TEmissorPrincipal
         OnClick = BtInserirItemClick
       end
       object EdQtdItem: TEdit
-        Left = 445
+        Left = 527
         Top = 71
-        Width = 83
+        Width = 75
         Height = 23
         Enabled = False
         TabOrder = 1
@@ -507,9 +521,9 @@ object EmissorPrincipal: TEmissorPrincipal
         OnKeyPress = EdQtdItemKeyPress
       end
       object EdValorItem: TEdit
-        Left = 342
+        Left = 334
         Top = 71
-        Width = 97
+        Width = 83
         Height = 23
         Enabled = False
         TabOrder = 2
@@ -517,15 +531,15 @@ object EmissorPrincipal: TEmissorPrincipal
         OnKeyPress = EdValorItemKeyPress
       end
       object CBEdNomeProduto: TComboBox
-        Left = 24
+        Left = 93
         Top = 70
-        Width = 312
+        Width = 225
         Height = 23
         TabOrder = 3
         OnChange = CBEdNomeProdutoChange
       end
       object BtEditarItem: TBitBtn
-        Left = 288
+        Left = 368
         Top = 10
         Width = 80
         Height = 27
@@ -535,7 +549,7 @@ object EmissorPrincipal: TEmissorPrincipal
         OnClick = BtEditarItemClick
       end
       object BtGravarItem: TButton
-        Left = 200
+        Left = 280
         Top = 9
         Width = 82
         Height = 27
@@ -545,7 +559,7 @@ object EmissorPrincipal: TEmissorPrincipal
         OnClick = BtGravarItemClick
       end
       object BtExcluirItem: TButton
-        Left = 374
+        Left = 454
         Top = 9
         Width = 82
         Height = 27
@@ -554,18 +568,29 @@ object EmissorPrincipal: TEmissorPrincipal
         TabOrder = 6
         OnClick = BtExcluirItemClick
       end
+      object EdDescItem: TEdit
+        Left = 437
+        Top = 71
+        Width = 75
+        Height = 23
+        Enabled = False
+        TabOrder = 7
+        TextHint = 'Qtd'
+        OnExit = EdDescItemExit
+        OnKeyPress = EdDescItemKeyPress
+      end
     end
     object EdCodigoVenda: TEdit
-      Left = 113
-      Top = 56
+      Left = 104
+      Top = 47
       Width = 70
       Height = 23
       Enabled = False
       TabOrder = 3
     end
     object EdCodigoCliente: TEdit
-      Left = 113
-      Top = 85
+      Left = 482
+      Top = 47
       Width = 57
       Height = 23
       Enabled = False
@@ -573,8 +598,8 @@ object EmissorPrincipal: TEmissorPrincipal
       TextHint = 'C'#243'digo Cliente'
     end
     object EdTelefoneCliente: TEdit
-      Left = 113
-      Top = 114
+      Left = 482
+      Top = 135
       Width = 121
       Height = 23
       Enabled = False
@@ -582,26 +607,18 @@ object EmissorPrincipal: TEmissorPrincipal
       TextHint = 'Fone'
     end
     object EdEmail: TEdit
-      Left = 328
-      Top = 114
+      Left = 482
+      Top = 106
       Width = 177
       Height = 23
       Enabled = False
       TabOrder = 6
       TextHint = 'E-mail'
     end
-    object EdDataPedido: TEdit
-      Left = 328
-      Top = 56
-      Width = 129
-      Height = 23
-      Enabled = False
-      TabOrder = 7
-    end
     object Panel2: TPanel
       Left = 1
       Top = 1
-      Width = 536
+      Width = 714
       Height = 40
       Align = alTop
       BorderStyle = bsSingle
@@ -612,16 +629,99 @@ object EmissorPrincipal: TEmissorPrincipal
       Font.Name = 'Segoe UI'
       Font.Style = [fsBold]
       ParentFont = False
-      TabOrder = 8
-      ExplicitWidth = 532
+      TabOrder = 7
+      ExplicitWidth = 710
     end
     object EdNomeCliente: TComboBox
-      Left = 328
-      Top = 85
+      Left = 482
+      Top = 77
       Width = 177
       Height = 23
-      TabOrder = 9
+      TabOrder = 8
       OnChange = EdNomeCliente1Change
+    end
+    object PanelObs: TPanel
+      Left = 1
+      Top = 499
+      Width = 714
+      Height = 64
+      Align = alBottom
+      TabOrder = 9
+      ExplicitTop = 498
+      ExplicitWidth = 710
+      object LabTotal: TLabel
+        Left = 527
+        Top = 30
+        Width = 114
+        Height = 17
+        Caption = 'Total de Produtos:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = 18
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+      object LabValorTotal: TLabel
+        Left = 647
+        Top = 31
+        Width = 24
+        Height = 17
+        Caption = '0,00'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = 18
+        Font.Name = 'Segoe UI'
+        Font.Style = []
+        ParentFont = False
+      end
+      object Label10: TLabel
+        Left = 519
+        Top = 6
+        Width = 122
+        Height = 17
+        Caption = 'Desconto dos itens:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = 18
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+      object LabDescItens: TLabel
+        Left = 647
+        Top = 6
+        Width = 24
+        Height = 17
+        Caption = '0,00'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = 18
+        Font.Name = 'Segoe UI'
+        Font.Style = []
+        ParentFont = False
+      end
+    end
+    object MemoOBS: TMemo
+      Left = 104
+      Top = 106
+      Width = 298
+      Height = 73
+      Enabled = False
+      ScrollBars = ssVertical
+      TabOrder = 10
+      OnChange = MemoOBSChange
+      OnKeyPress = MemoOBSKeyPress
+    end
+    object EdDataPedido: TDateTimePicker
+      Left = 104
+      Top = 76
+      Width = 129
+      Height = 23
+      Date = 45690.000000000000000000
+      Time = 0.590973078702518300
+      Enabled = False
+      TabOrder = 11
     end
   end
   object MainMenu1: TMainMenu
@@ -634,6 +734,13 @@ object EmissorPrincipal: TEmissorPrincipal
       object MNCadastrodeCliente: TMenuItem
         Caption = 'Cadastro de Cliente'
         OnClick = MNCadastrodeClienteClick
+      end
+      object N1: TMenuItem
+        Caption = '-'
+      end
+      object NMCadastrodeEmpresas: TMenuItem
+        Caption = 'Cadastro de Empresa'
+        OnClick = NMCadastrodeEmpresasClick
       end
     end
     object Relatrio1: TMenuItem

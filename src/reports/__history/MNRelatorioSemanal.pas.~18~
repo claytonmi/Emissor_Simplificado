@@ -1,0 +1,139 @@
+unit MNRelatorioSemanal;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, FRelatorioReportSemanal, uDataModulePrincipal, Vcl.ExtCtrls, RLReport, Vcl.ComCtrls,
+  Vcl.StdCtrls, System.StrUtils;
+
+type
+  TRelatorioSemanal = class(TForm)
+    BtImprimir: TButton;
+    DateTimePicker1: TDateTimePicker;
+    Label1: TLabel;
+    Label2: TLabel;
+    ComboBoxCliente: TComboBox;
+    Label3: TLabel;
+    ComboBoxNomeEmpresa: TComboBox;
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure BtImprimirClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+
+  private
+    function CarregarClientes: string;
+    function CarregarEmpresas: string;
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  RelatorioSemanal: TRelatorioSemanal;
+
+implementation
+
+{$R *.dfm}
+
+procedure TRelatorioSemanal.BtImprimirClick(Sender: TObject);
+var
+  DataInicial: TDateTime;
+  NomeCliente, IDEmpresa: string;
+  FormRelatorio: TNMRelatorioReport;
+begin
+  // Obtém a data inicial do DateTimePicker
+  DataInicial := DateTimePicker1.Date;
+
+  // Verifica se o cliente foi selecionado
+  if ComboBoxCliente.ItemIndex = -1 then
+  begin
+    ShowMessage('Selecione um cliente.');
+    Exit;
+  end;
+
+  // Obtém o nome do cliente selecionado
+  NomeCliente := ComboBoxCliente.Items[ComboBoxCliente.ItemIndex];
+
+  // Obtém o ID da empresa caso tenha sido selecionada
+  if ComboBoxNomeEmpresa.ItemIndex <> -1 then
+    IDEmpresa := Trim(ExtractDelimited(1, ComboBoxNomeEmpresa.Items[ComboBoxNomeEmpresa.ItemIndex], ['-']))
+  else
+    IDEmpresa := ''; // Se nenhuma empresa for selecionada, passa uma string vazia
+
+  // Instancia o formulário de relatório
+  FormRelatorio := TNMRelatorioReport.Create(Self);
+  try
+    // Chama a procedure para gerar o relatório passando o ID da empresa (ou vazio)
+    FormRelatorio.GerarRelatorio(DataInicial, NomeCliente, IDEmpresa);
+  finally
+    // Libera o formulário da memória
+    FormRelatorio.Free;
+  end;
+end;
+
+
+procedure TRelatorioSemanal.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+begin
+  Action := caFree; // Libera o formulário da memória
+  RelatorioSemanal := nil; // Define o ponteiro como nulo
+end;
+
+procedure TRelatorioSemanal.FormCreate(Sender: TObject);
+begin
+  DateTimePicker1.Date := Now;
+  CarregarClientes;
+  CarregarEmpresas;
+end;
+
+function TRelatorioSemanal.CarregarClientes: string;
+begin
+  DataModulePrincipal.FDQueryPedido.Close;
+  DataModulePrincipal.FDQueryPedido.SQL.Text := 'SELECT DISTINCT NomeCliente FROM Pedido';
+  DataModulePrincipal.FDQueryPedido.Open;
+  ComboBoxCliente.Items.Clear;
+
+  while not DataModulePrincipal.FDQueryPedido.Eof do
+  begin
+    ComboBoxCliente.Items.Add(DataModulePrincipal.FDQueryPedido.FieldByName('NomeCliente').AsString);
+    DataModulePrincipal.FDQueryPedido.Next;
+  end;
+
+  if ComboBoxCliente.Items.Count > 0 then
+  begin
+    ComboBoxCliente.ItemIndex := 0;
+    Result := ComboBoxCliente.Items[0]; // Retorna o primeiro cliente como padrão
+  end
+  else
+    Result := '';
+end;
+
+function TRelatorioSemanal.CarregarEmpresas: string;
+var
+  IDEmpresa, NomeEmpresa: string;
+begin
+  DataModulePrincipal.FDQueryEmpresa.Close;
+  DataModulePrincipal.FDQueryEmpresa.SQL.Text := 'SELECT DISTINCT IDEmpresa, NomeEmpresa FROM Empresa';
+  DataModulePrincipal.FDQueryEmpresa.Open;
+  ComboBoxNomeEmpresa.Items.Clear;
+
+  while not DataModulePrincipal.FDQueryEmpresa.Eof do
+  begin
+    IDEmpresa := DataModulePrincipal.FDQueryEmpresa.FieldByName('IDEmpresa').AsString;
+    NomeEmpresa := DataModulePrincipal.FDQueryEmpresa.FieldByName('NomeEmpresa').AsString;
+    ComboBoxNomeEmpresa.Items.Add(IDEmpresa + ' - ' + NomeEmpresa);
+    DataModulePrincipal.FDQueryEmpresa.Next;
+  end;
+
+  if ComboBoxNomeEmpresa.Items.Count > 0 then
+  begin
+    ComboBoxNomeEmpresa.ItemIndex := 0;
+    Result := ComboBoxNomeEmpresa.Items[0]; // Retorna a primeira empresa como padrão
+  end
+  else
+    Result := '';
+end;
+
+
+
+end.

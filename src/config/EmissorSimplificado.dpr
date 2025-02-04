@@ -13,7 +13,9 @@ uses
   NMPesquisaPedido in '..\forms\NMPesquisaPedido.pas' {NMPesquisaDePedido},
   FRelatorioReportSemanal in '..\reports\FRelatorioReportSemanal.pas' {NMRelatorioReport},
   Vcl.Themes,
-  Vcl.Styles;
+  Vcl.Styles,
+  NMCadastroDeEmpresa in '..\forms\NMCadastroDeEmpresa.pas' {FCadastroDeEmpresa},
+  NMPesquisaDeEmpresas in '..\forms\NMPesquisaDeEmpresas.pas' {NMPesquisaDeEmpresa};
 
 {$R *.res}
 
@@ -22,5 +24,6 @@ begin
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TDataModulePrincipal, DataModulePrincipal);
   Application.CreateForm(TEmissorPrincipal, EmissorPrincipal);
+  Application.CreateForm(TNMPesquisaDeEmpresa, NMPesquisaDeEmpresa);
   Application.Run;
 end.

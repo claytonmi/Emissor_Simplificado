@@ -1,0 +1,207 @@
+unit FRelatorioReportSemanal;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uDataModulePrincipal, RLReport,
+  Vcl.ExtCtrls, Data.DB,
+  Vcl.StdCtrls;
+
+type
+  TNMRelatorioReport = class(TForm)
+    RLReport1: TRLReport;
+    RLBandCabecalho: TRLBand;
+    RLBandTitulo: TRLBand;
+    RLBandTituloDasColunas: TRLBand;
+    RLBandRodape: TRLBand;
+    RLLabelTitulo: TRLLabel;
+    RLLabelPeriodo: TRLLabel;
+    RLLabelEmpresa: TRLLabel;
+    RLLabelEmpresaFantasia: TRLLabel;
+    RLLabelEmpresaCNPJ: TRLLabel;
+    RLLabelEmpresaEndereco: TRLLabel;
+    RLLabelTelefone: TRLLabel;
+    RLDBImage1: TRLDBImage;
+    RLLabelProduto: TRLLabel;
+    RLLabelQuantidade: TRLLabel;
+    RLLabelValor: TRLLabel;
+    RLLabelDataDeInsercao: TRLLabel;
+    RLLabelTotal: TRLLabel;
+    RLLabelTotalGeral: TRLLabel;
+    RLBandDetail: TRLBand;
+    RLDBTextQuantidade: TRLDBText;
+    RLDBTextValor: TRLDBText;
+    RLDBTextData: TRLDBText;
+    RLDBTextTotal: TRLDBText;
+    RLBandSubTotalPedido: TRLBand;
+    RLDBTextProduto: TRLDBText;
+    RLGroupPedidos: TRLGroup;
+    LabelNomeCliente: TRLDBText;
+    LabelTelefoneCliente: TRLDBText;
+    LabelIDVenda: TRLDBText;
+    LabelData: TRLDBText;
+    RLLabel1: TRLLabel;
+    RLLabel2: TRLLabel;
+    RLLabel3: TRLLabel;
+    RLLabel4: TRLLabel;
+    RLDBResult1: TRLDBResult;
+    RLLabel5: TRLLabel;
+    RLLabel6: TRLLabel;
+    RLSystemInfo1: TRLSystemInfo;
+    RLDBMemo1: TRLDBMemo;
+    RLLabel7: TRLLabel;
+    procedure GerarRelatorio(DataInicial: TDateTime; NomeCliente: string;
+      IDEmpresa: Integer);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  NMRelatorioReport: TNMRelatorioReport;
+  NovoLabel: TRLLabel;
+
+implementation
+
+{$R *.dfm}
+
+procedure TNMRelatorioReport.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+begin
+  DataModulePrincipal.FDQueryItemPedido.Close;
+  DataModulePrincipal.FDQueryPedido.Close;
+end;
+
+procedure TNMRelatorioReport.GerarRelatorio(DataInicial: TDateTime;
+  NomeCliente: string; IDEmpresa: Integer);
+var
+  DataFinal: TDateTime;
+  TotalGeral, TotalPedido: Currency;
+  LinhaAtual, CenterX, WidthPage: Integer;
+  NovoLabel: TRLLabel;
+  EmpresaNome, EmpresaFantasia, EmpresaCNPJ, EmpresaEndereco,
+    EmpresaTelefone: string;
+  LogoEmpresa: TRLImage;
+  LogoStream: TMemoryStream;
+begin
+  DataFinal := DataInicial + 6;
+  TotalGeral := 0;
+  // Se a empresa for especificada, buscar dados da empresa
+  if IDEmpresa > 0 then
+  begin
+    DataModulePrincipal.FDQueryEmpresa.Close;
+    DataModulePrincipal.FDQueryEmpresa.SQL.Text :=
+      'SELECT NomeEmpresa, NomeFantasia, CNPJ, Endereco, Telefone, ImgLogo ' +
+      'FROM Empresa WHERE IDEmpresa = :IDEmpresa';
+    DataModulePrincipal.FDQueryEmpresa.ParamByName('IDEmpresa').AsInteger :=
+      IDEmpresa;
+    DataModulePrincipal.FDQueryEmpresa.Open;
+
+    if not DataModulePrincipal.FDQueryEmpresa.IsEmpty then
+    begin
+      EmpresaNome := DataModulePrincipal.FDQueryEmpresa.FieldByName
+        ('NomeEmpresa').AsString;
+      EmpresaFantasia := DataModulePrincipal.FDQueryEmpresa.FieldByName
+        ('NomeFantasia').AsString;
+      EmpresaCNPJ := DataModulePrincipal.FDQueryEmpresa.FieldByName
+        ('CNPJ').AsString;
+      EmpresaEndereco := DataModulePrincipal.FDQueryEmpresa.FieldByName
+        ('Endereco').AsString;
+      EmpresaTelefone := DataModulePrincipal.FDQueryEmpresa.FieldByName
+        ('Telefone').AsString;
+    end;
+        RLBandTitulo.Top:= 169;
+        RLBandCabecalho.Visible := True;
+  end
+  else
+  begin
+    RLBandTitulo.Top := 38;
+    RLBandCabecalho.Visible := False;
+  end;
+
+  // Consulta pedidos no intervalo de datas e para o cliente específico
+  DataModulePrincipal.FDQueryRelatorioDePedidos.Close;
+  DataModulePrincipal.FDQueryRelatorioDePedidos.SQL.Text :=
+  'SELECT ' +
+  '    p.IDVenda, ' +
+  '    p.NomeCliente, ' +
+  '    p.TelefoneCliente, ' +
+  '    p.Data AS DataPedido, ' +
+  '    p.Observacao, ' +
+  '    p.TotalPedido, ' +
+  '    i.NomeProduto, ' +
+  '    i.Quantidade, ' +
+  '    i.Valor, ' +
+  '    i.DataInsercao, ' +
+  '    i.Total, ' +
+  '    (SELECT SUM(i2.Total) ' +
+  '     FROM ItemPedido i2 ' +
+  '     INNER JOIN Pedido p2 ON i2.IDVenda = p2.IDVenda ' +
+  '     WHERE p2.Data BETWEEN :DataInicial AND :DataFinal ' +
+  '     AND p2.NomeCliente = :NomeCliente) AS TotalGeral ' +
+  'FROM ' +
+  '    Pedido p ' +
+  'INNER JOIN ' +
+  '    ItemPedido i ON p.IDVenda = i.IDVenda ' +
+  'WHERE ' +
+  '    p.Data BETWEEN :DataInicial AND :DataFinal ' +
+  '    AND p.NomeCliente = :NomeCliente ' +
+  'ORDER BY ' +
+  '    p.IDVenda, i.DataInsercao';
+
+  DataModulePrincipal.FDQueryRelatorioDePedidos.ParamByName('DataInicial').AsDate := DataInicial;
+  DataModulePrincipal.FDQueryRelatorioDePedidos.ParamByName('DataFinal').AsDate := DataFinal;
+  DataModulePrincipal.FDQueryRelatorioDePedidos.ParamByName('NomeCliente').AsString := NomeCliente;
+  DataModulePrincipal.FDQueryRelatorioDePedidos.Open;
+
+  if DataModulePrincipal.FDQueryRelatorioDePedidos.IsEmpty then
+  begin
+    ShowMessage
+      ('Nenhum pedido encontrado para o cliente no intervalo especificado.');
+    Exit;
+  end;
+
+  // **Cabeçalho do Relatório**
+  if IDEmpresa > 0 then
+  begin
+    // Nome Fantasia da Empresa (Destacado)
+    RLLabelEmpresaFantasia.Caption := EmpresaFantasia;
+    RLLabelEmpresaFantasia.Font.Size := 14;
+    RLLabelEmpresaFantasia.Font.Style := [fsBold];
+    // Nome Empresarial
+    RLLabelEmpresa.Caption := EmpresaNome;
+    RLLabelEmpresa.Font.Size := 10;
+    // CNPJ da Empresa
+    RLLabelEmpresaCNPJ.Caption := 'CNPJ: ' + EmpresaCNPJ;
+    RLLabelEmpresaCNPJ.Font.Size := 10;
+    // Endereço da Empresa
+    RLLabelEmpresaEndereco.Caption := EmpresaEndereco;
+    RLLabelEmpresaEndereco.Font.Size := 10;
+    // Telefone da Empresa
+    RLLabelTelefone.Caption := 'Telefone: ' + EmpresaTelefone;
+    RLLabelTelefone.Font.Size := 10;
+
+  end;
+
+  // Pega o Total Geral da consulta
+  TotalGeral := DataModulePrincipal.FDQueryRelatorioDePedidos.FieldByName('TotalGeral').AsCurrency;
+  // Atualiza o label no relatório com o Total Geral
+  RLLabelTotalGeral.Caption := 'Total Geral: R$ ' + FormatFloat('0.00', TotalGeral);
+  RLLabelTotalGeral.Font.Size := 9;
+  RLLabelTotalGeral.Font.Style := [fsBold];
+
+
+  // **Cabeçalho do Relatório**
+  RLLabelTitulo.Caption := 'Relatório de Vendas Semanal';
+  RLLabelPeriodo.Caption := 'Período: ' + DateToStr(DataInicial) + ' a ' +
+    DateToStr(DataFinal);
+
+
+    RLReport1.PreviewModal;
+end;
+
+end.
