@@ -25,8 +25,13 @@ type
     DataSourceItemPedido: TDataSource;
     FDQuerySistema: TFDQuery;
     DataSourceSistema: TDataSource;
+    DataSourceEmpresa: TDataSource;
+    FDQueryEmpresa: TFDQuery;
+    DataSourceRelatorioDePedidos: TDataSource;
+    FDQueryRelatorioDePedidos: TFDQuery;
     procedure DataModuleCreate(Sender: TObject);
     procedure CriarTabelas;
+
   private
     function TabelaExiste(const TabelaNome: string): Boolean;
     procedure ConfigurarConexao(const DatabasePath: string);
@@ -34,6 +39,7 @@ type
     function VerificarOuCriarColuna(const Tabela, Coluna, Tipo: string): Boolean;
     function VerificarAtualizacaoSistema(VersaoAtual: string): Boolean;
   public
+    function  VersaoAtual: string;
   end;
 
 var
@@ -46,6 +52,11 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
+
+function  TDataModulePrincipal.VersaoAtual: string;
+begin
+  Result := VERSAO_ATUAL;
+end;
 
 procedure TDataModulePrincipal.DataModuleCreate(Sender: TObject);
 var
@@ -88,6 +99,15 @@ begin
 
     CriarTabelas;
 
+     // Verifica se a versão do banco de dados é a mesma que a do sistema
+  if not VerificarAtualizacaoSistema(VERSAO_ATUAL) then
+  begin
+    // Adiciona novas colunas se necessário
+    VerificarOuCriarColuna('Pedido', 'Observacao', 'TEXT');
+    VerificarOuCriarColuna('Pedido', 'TotalPedido', 'REAL');
+    VerificarOuCriarColuna('ItemPedido', 'Desc', 'REAL');
+  end;
+
     if FDConnection.Connected then
     begin
       FDQueryItemPedido.Active := True;
@@ -95,6 +115,8 @@ begin
       FDQueryCliente.Active := True;
       FDQueryProduto.Active := True;
       FDQuerySistema.Active := True;
+      FDQueryEmpresa.Active := True;
+      FDQueryRelatorioDePedidos.Active := True;
     end
     else
       ShowMessage('A conexão com o banco de dados não foi estabelecida.');
@@ -105,15 +127,6 @@ begin
         sLineBreak + 'Caminho do banco de dados: ' + DatabasePath);
       Halt;
     end;
-  end;
-
- // Verifica se a versão do banco de dados é a mesma que a do sistema
-  if not VerificarAtualizacaoSistema(VERSAO_ATUAL) then
-  begin
-    // Adiciona novas colunas se necessário
-    VerificarOuCriarColuna('Pedido', 'Observacao', 'TEXT');
-    VerificarOuCriarColuna('Pedido', 'TotalPedido', 'REAL');
-    VerificarOuCriarColuna('ItemPedido', 'Desc', 'REAL');
   end;
 
 end;

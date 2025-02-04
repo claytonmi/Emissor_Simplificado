@@ -68,8 +68,7 @@ object DataModulePrincipal: TDataModulePrincipal
   object FDQuerySistema: TFDQuery
     Connection = FDConnection
     SQL.Strings = (
-      'select * from Sistema'
-      '')
+      'select * from sistema')
     Left = 160
     Top = 384
   end

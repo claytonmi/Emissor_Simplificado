@@ -91,16 +91,32 @@ object DataModulePrincipal: TDataModulePrincipal
     Left = 160
     Top = 448
   end
-  object DataSource1: TDataSource
-    DataSet = FDQuery1
+  object DataSourceRelatorioDePedidos: TDataSource
+    DataSet = FDQueryRelatorioDePedidos
     Left = 56
     Top = 512
   end
-  object FDQuery1: TFDQuery
+  object FDQueryRelatorioDePedidos: TFDQuery
     Connection = FDConnection
     SQL.Strings = (
-      'select * from Empresa'
-      '')
+      'SELECT '
+      '    p.IDVenda, '
+      '    p.NomeCliente, '
+      '    p.TelefoneCliente, '
+      '    p.Data AS DataPedido, '
+      '    p.Observacao,'
+      '    p.TotalPedido, '
+      '    i.NomeProduto, '
+      '    i.Quantidade, '
+      '    i.Valor, '
+      '    i.DataInsercao, '
+      '    i.Total'
+      'FROM '
+      '    Pedido p'
+      'INNER JOIN '
+      '    ItemPedido i ON p.IDVenda = i.IDVenda'
+      'ORDER BY '
+      '    p.IDVenda, i.DataInsercao')
     Left = 160
     Top = 512
   end

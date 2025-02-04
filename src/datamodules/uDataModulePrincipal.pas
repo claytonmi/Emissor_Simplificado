@@ -99,6 +99,16 @@ begin
 
     CriarTabelas;
 
+     // Verifica se a versão do banco de dados é a mesma que a do sistema
+
+    if not VerificarAtualizacaoSistema(VERSAO_ATUAL) then
+    begin
+      // Adiciona novas colunas se necessário
+      VerificarOuCriarColuna('Pedido', 'Observacao', 'TEXT');
+      VerificarOuCriarColuna('Pedido', 'TotalPedido', 'REAL');
+      VerificarOuCriarColuna('ItemPedido', 'Desc', 'REAL');
+    end;
+
     if FDConnection.Connected then
     begin
       FDQueryItemPedido.Active := True;
@@ -118,15 +128,6 @@ begin
         sLineBreak + 'Caminho do banco de dados: ' + DatabasePath);
       Halt;
     end;
-  end;
-
- // Verifica se a versão do banco de dados é a mesma que a do sistema
-  if not VerificarAtualizacaoSistema(VERSAO_ATUAL) then
-  begin
-    // Adiciona novas colunas se necessário
-    VerificarOuCriarColuna('Pedido', 'Observacao', 'TEXT');
-    VerificarOuCriarColuna('Pedido', 'TotalPedido', 'REAL');
-    VerificarOuCriarColuna('ItemPedido', 'Desc', 'REAL');
   end;
 
 end;
