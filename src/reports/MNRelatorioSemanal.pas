@@ -10,12 +10,14 @@ uses
 type
   TRelatorioSemanal = class(TForm)
     BtImprimir: TButton;
-    DateTimePicker1: TDateTimePicker;
+    DateTimePickerInicial: TDateTimePicker;
     Label1: TLabel;
     Label2: TLabel;
     ComboBoxCliente: TComboBox;
     Label3: TLabel;
     ComboBoxNomeEmpresa: TComboBox;
+    DateTimePickerFinal: TDateTimePicker;
+    Label4: TLabel;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtImprimirClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -37,14 +39,15 @@ implementation
 
 procedure TRelatorioSemanal.BtImprimirClick(Sender: TObject);
 var
-  DataInicial: TDateTime;
+  DataInicial, DataFim: TDateTime;
   NomeCliente, IDEmpresa: string;
   FormRelatorio: TNMRelatorioReport;
   PosicaoHifen: Integer;
   ID: Integer;
 begin
   // Obtém a data inicial do DateTimePicker
-  DataInicial := DateTimePicker1.Date;
+  DataInicial := DateTimePickerInicial.Date;
+  DataFim :=  DateTimePickerFinal.Date;
 
   // Verifica se o cliente foi selecionado
   if ComboBoxCliente.ItemIndex = -1 then
@@ -89,7 +92,7 @@ begin
   FormRelatorio := TNMRelatorioReport.Create(Self);
   try
     // Chama a procedure para gerar o relatório passando o ID da empresa (ou 0 caso não tenha sido selecionada)
-    FormRelatorio.GerarRelatorio(DataInicial, NomeCliente, ID);
+    FormRelatorio.GerarRelatorio(DataInicial, DataFim, NomeCliente, ID);
   finally
     // Libera o formulário da memória
     FormRelatorio.Free;
@@ -108,7 +111,8 @@ end;
 
 procedure TRelatorioSemanal.FormCreate(Sender: TObject);
 begin
-  DateTimePicker1.Date := Now;
+  DateTimePickerInicial.Date := Now;
+  DateTimePickerFinal.Date := Now + 1;
   CarregarClientes;
   CarregarEmpresas;
 end;

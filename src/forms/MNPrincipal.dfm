@@ -271,6 +271,7 @@ object EmissorPrincipal: TEmissorPrincipal
   Menu = MainMenu1
   OnClose = FormClose
   OnCreate = FormCreate
+  OnShortCut = FormShortCut
   TextHeight = 15
   object Rodape: TPanel
     Left = 0
@@ -378,6 +379,20 @@ object EmissorPrincipal: TEmissorPrincipal
       Height = 15
       Caption = 'Observa'#231#227'o:'
     end
+    object LabelContador: TLabel
+      Left = 355
+      Top = 177
+      Width = 47
+      Height = 12
+      Alignment = taRightJustify
+      Caption = '0 / 500'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = 12
+      Font.Name = 'Segoe UI'
+      Font.Style = []
+      ParentFont = False
+    end
     object PNButoes: TPanel
       Left = 1
       Top = 563
@@ -403,7 +418,7 @@ object EmissorPrincipal: TEmissorPrincipal
         Height = 41
         Caption = 'Gravar Pedido'
         Enabled = False
-        TabOrder = 1
+        TabOrder = 3
         OnClick = BtSalvarClick
       end
       object BtCancelarPedido: TButton
@@ -413,7 +428,7 @@ object EmissorPrincipal: TEmissorPrincipal
         Height = 41
         Caption = 'Cancelar Pedido'
         Enabled = False
-        TabOrder = 2
+        TabOrder = 1
         OnClick = BtCancelarPedidoClick
       end
       object BtFecharPedido: TButton
@@ -423,7 +438,7 @@ object EmissorPrincipal: TEmissorPrincipal
         Height = 41
         Caption = 'Fechar Pedido'
         Enabled = False
-        TabOrder = 3
+        TabOrder = 2
         OnClick = BtFecharPedidoClick
       end
       object BtEditarPedido: TButton
@@ -442,7 +457,7 @@ object EmissorPrincipal: TEmissorPrincipal
       Width = 714
       Height = 197
       Align = alBottom
-      TabOrder = 1
+      TabOrder = 3
       ExplicitTop = 301
       ExplicitWidth = 710
       object StringGridList: TStringGrid
@@ -468,7 +483,7 @@ object EmissorPrincipal: TEmissorPrincipal
       Width = 714
       Height = 104
       Align = alBottom
-      TabOrder = 2
+      TabOrder = 4
       ExplicitTop = 197
       ExplicitWidth = 710
       object Label7: TLabel
@@ -500,13 +515,13 @@ object EmissorPrincipal: TEmissorPrincipal
         Caption = 'Desconto %'
       end
       object BtInserirItem: TButton
-        Left = 192
-        Top = 8
-        Width = 82
+        Left = 142
+        Top = 9
+        Width = 100
         Height = 27
-        Caption = 'Novo Item'
+        Caption = 'F1 - Novo Item'
         Enabled = False
-        TabOrder = 0
+        TabOrder = 7
         OnClick = BtInserirItemClick
       end
       object EdQtdItem: TEdit
@@ -515,7 +530,7 @@ object EmissorPrincipal: TEmissorPrincipal
         Width = 75
         Height = 23
         Enabled = False
-        TabOrder = 1
+        TabOrder = 6
         TextHint = 'Qtd'
         OnExit = EdQtdItemExit
         OnKeyPress = EdQtdItemKeyPress
@@ -526,7 +541,7 @@ object EmissorPrincipal: TEmissorPrincipal
         Width = 83
         Height = 23
         Enabled = False
-        TabOrder = 2
+        TabOrder = 3
         TextHint = '0,00'
         OnKeyPress = EdValorItemKeyPress
       end
@@ -535,37 +550,37 @@ object EmissorPrincipal: TEmissorPrincipal
         Top = 70
         Width = 225
         Height = 23
-        TabOrder = 3
+        TabOrder = 0
         OnChange = CBEdNomeProdutoChange
       end
       object BtEditarItem: TBitBtn
-        Left = 368
-        Top = 10
-        Width = 80
+        Left = 354
+        Top = 9
+        Width = 100
         Height = 27
-        Caption = 'Alterar Item'
+        Caption = 'F3 - Alterar Item'
         Enabled = False
-        TabOrder = 4
+        TabOrder = 1
         OnClick = BtEditarItemClick
       end
       object BtGravarItem: TButton
-        Left = 280
+        Left = 248
         Top = 9
-        Width = 82
+        Width = 100
         Height = 27
-        Caption = 'Gravar Item'
+        Caption = 'F2 - Gravar Item'
         Enabled = False
-        TabOrder = 5
+        TabOrder = 2
         OnClick = BtGravarItemClick
       end
       object BtExcluirItem: TButton
-        Left = 454
+        Left = 460
         Top = 9
-        Width = 82
+        Width = 100
         Height = 27
-        Caption = 'Excluir Item'
+        Caption = 'F4 - Excluir Item'
         Enabled = False
-        TabOrder = 6
+        TabOrder = 5
         OnClick = BtExcluirItemClick
       end
       object EdDescItem: TEdit
@@ -574,7 +589,7 @@ object EmissorPrincipal: TEmissorPrincipal
         Width = 75
         Height = 23
         Enabled = False
-        TabOrder = 7
+        TabOrder = 4
         TextHint = 'Qtd'
         OnExit = EdDescItemExit
         OnKeyPress = EdDescItemKeyPress
@@ -586,7 +601,7 @@ object EmissorPrincipal: TEmissorPrincipal
       Width = 70
       Height = 23
       Enabled = False
-      TabOrder = 3
+      TabOrder = 5
     end
     object EdCodigoCliente: TEdit
       Left = 482
@@ -594,7 +609,7 @@ object EmissorPrincipal: TEmissorPrincipal
       Width = 57
       Height = 23
       Enabled = False
-      TabOrder = 4
+      TabOrder = 6
       TextHint = 'C'#243'digo Cliente'
     end
     object EdTelefoneCliente: TEdit
@@ -603,7 +618,7 @@ object EmissorPrincipal: TEmissorPrincipal
       Width = 121
       Height = 23
       Enabled = False
-      TabOrder = 5
+      TabOrder = 7
       TextHint = 'Fone'
     end
     object EdEmail: TEdit
@@ -612,7 +627,7 @@ object EmissorPrincipal: TEmissorPrincipal
       Width = 177
       Height = 23
       Enabled = False
-      TabOrder = 6
+      TabOrder = 8
       TextHint = 'E-mail'
     end
     object Panel2: TPanel
@@ -629,7 +644,7 @@ object EmissorPrincipal: TEmissorPrincipal
       Font.Name = 'Segoe UI'
       Font.Style = [fsBold]
       ParentFont = False
-      TabOrder = 7
+      TabOrder = 9
       ExplicitWidth = 710
     end
     object EdNomeCliente: TComboBox
@@ -637,7 +652,7 @@ object EmissorPrincipal: TEmissorPrincipal
       Top = 77
       Width = 177
       Height = 23
-      TabOrder = 8
+      TabOrder = 1
       OnChange = EdNomeCliente1Change
     end
     object PanelObs: TPanel
@@ -646,7 +661,7 @@ object EmissorPrincipal: TEmissorPrincipal
       Width = 714
       Height = 64
       Align = alBottom
-      TabOrder = 9
+      TabOrder = 10
       ExplicitTop = 498
       ExplicitWidth = 710
       object LabTotal: TLabel
@@ -704,13 +719,20 @@ object EmissorPrincipal: TEmissorPrincipal
     end
     object MemoOBS: TMemo
       Left = 104
-      Top = 106
-      Width = 298
+      Top = 105
+      Width = 305
       Height = 73
       Enabled = False
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = 14
+      Font.Name = 'Segoe UI'
+      Font.Style = []
+      ParentFont = False
       ScrollBars = ssVertical
-      TabOrder = 10
+      TabOrder = 2
       OnChange = MemoOBSChange
+      OnExit = MemoOBSExit
       OnKeyPress = MemoOBSKeyPress
     end
     object EdDataPedido: TDateTimePicker

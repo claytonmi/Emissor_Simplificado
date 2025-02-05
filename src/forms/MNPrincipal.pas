@@ -72,6 +72,7 @@ type
     N1: TMenuItem;
     NMCadastrodeEmpresas: TMenuItem;
     EdDataPedido: TDateTimePicker;
+    LabelContador: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure MNCadastrodeClienteClick(Sender: TObject);
     procedure MNCadastroProdutoClick(Sender: TObject);
@@ -99,11 +100,14 @@ type
     procedure MemoOBSKeyPress(Sender: TObject; var Key: Char);
     procedure MemoOBSChange(Sender: TObject);
     procedure NMCadastrodeEmpresasClick(Sender: TObject);
+    procedure FormShortCut(var Msg: TWMKey; var Handled: Boolean);
+    procedure MemoOBSExit(Sender: TObject);
 
   private
     { Private declarations }
     BasePath: string; // Variável para o caminho base do sistema
     FValorOriginal: Double;
+    FUpdatingMemo: Boolean;
     procedure CarregarClientes;
     procedure AtualizarGridItens;
     procedure CarregarProdutos;
@@ -113,6 +117,7 @@ type
     procedure CarregarUltimoPedido;
     function PedidoTemItens(PedidoID: Integer): Boolean;
     function ObterPrecoProduto(idProduto: Integer): Double;
+    function QuebrarTextoMemo(const Texto: string; TamanhoLinha: Integer): string;
   public
     { Public declarations }
   end;
@@ -123,6 +128,24 @@ var
 implementation
 
 {$R *.dfm}
+
+function TEmissorPrincipal.QuebrarTextoMemo(const Texto: string; TamanhoLinha: Integer): string;
+var
+  i, PosInicio: Integer;
+begin
+  Result := '';
+  PosInicio := 1;
+
+  while PosInicio <= Length(Texto) do
+  begin
+    i := PosInicio + TamanhoLinha - 1;
+    if i > Length(Texto) then
+      i := Length(Texto);
+
+    Result := Result + Copy(Texto, PosInicio, i - PosInicio + 1) + sLineBreak;
+    PosInicio := i + 1;
+  end;
+end;
 
 procedure TEmissorPrincipal.BtCancelarPedidoClick(Sender: TObject);
 var
@@ -185,6 +208,7 @@ begin
       MemoOBS.Clear;
       MemoOBS.Enabled := false;
       CBEdNomeProduto.Color := clWindow;
+      LabelContador.Caption := '0/500';
 
       MNCadastroProduto.Enabled := True;
       MNCadastrodeCliente.Enabled := True;
@@ -331,6 +355,7 @@ begin
   EdDataPedido.Enabled := false;
   LabDescItens.Caption := '0.00';
   LabValorTotal.Caption := '0.00';
+  LabelContador.Caption := '0/500';
 
 
   // Limpa os dados do StringGrid
@@ -911,6 +936,35 @@ begin
 
 end;
 
+procedure TEmissorPrincipal.FormShortCut(var Msg: TWMKey; var Handled: Boolean);
+begin
+   case Msg.CharCode of
+    VK_F1: // Simular clique no botão "Novo Item"
+    begin
+      BtInserirItem.Click;
+      Handled := True; // Indica que a tecla foi tratada
+    end;
+
+    VK_F2: // Simular clique no botão "Remover Item"
+    begin
+      BtGravarItem.Click;
+      Handled := True;
+    end;
+
+    VK_F3: // Simular clique no botão "Salvar Orçamento"
+    begin
+      BtEditarItem.Click;
+      Handled := True;
+    end;
+
+    VK_F4: // Simular clique no botão "Salvar Orçamento"
+    begin
+      BtExcluirItem.Click;
+      Handled := True;
+    end;
+  end;
+end;
+
 procedure TEmissorPrincipal.CarregarUltimoPedido;
 var
   PedidoID: Integer;
@@ -1142,10 +1196,80 @@ begin
 end;
 
 procedure TEmissorPrincipal.MemoOBSChange(Sender: TObject);
+var
+  TotalCaracteres: Integer;
 begin
-  if Length(MemoOBS.Text) > 500 then
-    MemoOBS.Text := Copy(MemoOBS.Text, 1, 500); // Corta o excesso
+  TotalCaracteres := Length(MemoOBS.Text);
+
+  // Atualiza o label com a contagem de caracteres
+  LabelContador.Caption := Format(' %d / 500', [TotalCaracteres]);
+
+  // Impede que ultrapasse 500 caracteres
+  if TotalCaracteres > 500 then
+    MemoOBS.Text := Copy(MemoOBS.Text, 1, 500);
 end;
+
+
+procedure TEmissorPrincipal.MemoOBSExit(Sender: TObject);
+var
+  Texto, NovaTexto, Linha: string;
+  i, CharCount: Integer;
+begin
+  Texto := Trim(MemoOBS.Text); // Remove espaços e quebras extras no início e fim
+  NovaTexto := '';
+  Linha := '';
+  CharCount := 0;
+
+  i := 1;
+  while i <= Length(Texto) do
+  begin
+    // Se encontrar uma quebra de linha manual, processa corretamente
+    if (Texto[i] = #13) or (Texto[i] = #10) then
+    begin
+      // Adiciona a linha atual ao resultado antes da quebra
+      if Linha <> '' then
+      begin
+        NovaTexto := NovaTexto + Linha + sLineBreak;
+        Linha := '';
+        CharCount := 0;
+      end;
+
+      // Pula caracteres extras de quebra de linha (para evitar linhas duplas)
+      while (i <= Length(Texto)) and ((Texto[i] = #13) or (Texto[i] = #10)) do
+        Inc(i);
+
+      Continue; // Evita processamento duplo
+    end;
+
+    // Adiciona caracteres à linha atual
+    Linha := Linha + Texto[i];
+    Inc(CharCount);
+
+    // Quebra a linha exatamente a cada 47 caracteres
+    if CharCount = 47 then
+    begin
+      NovaTexto := NovaTexto + Linha + sLineBreak;
+      Linha := '';
+      CharCount := 0;
+    end;
+
+    Inc(i);
+  end;
+
+  // Adiciona a última linha, se houver texto restante
+  if Linha <> '' then
+    NovaTexto := NovaTexto + Linha;
+
+  // Remove quebras de linha extras no final
+  NovaTexto := TrimRight(NovaTexto);
+
+  // Apenas altera se necessário para evitar reprocessamento desnecessário
+  if MemoOBS.Text <> NovaTexto then
+    MemoOBS.Text := NovaTexto;
+end;
+
+
+
 
 procedure TEmissorPrincipal.MemoOBSKeyPress(Sender: TObject; var Key: Char);
 begin

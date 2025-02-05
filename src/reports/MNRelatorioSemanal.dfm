@@ -4,7 +4,7 @@ object RelatorioSemanal: TRelatorioSemanal
   BorderStyle = bsSingle
   Caption = 'Relat'#243'rio semanal'
   ClientHeight = 213
-  ClientWidth = 276
+  ClientWidth = 296
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -273,9 +273,9 @@ object RelatorioSemanal: TRelatorioSemanal
   object Label1: TLabel
     Left = 40
     Top = 120
-    Width = 133
+    Width = 86
     Height = 17
-    Caption = 'Data de in'#237'cio Pedido'
+    Caption = 'Data de in'#237'cio'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = 18
@@ -309,8 +309,21 @@ object RelatorioSemanal: TRelatorioSemanal
     Font.Style = [fsBold]
     ParentFont = False
   end
+  object Label4: TLabel
+    Left = 151
+    Top = 120
+    Width = 75
+    Height = 17
+    Caption = 'Data de Fim'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 18
+    Font.Name = 'Segoe UI'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
   object BtImprimir: TButton
-    Left = 84
+    Left = 100
     Top = 180
     Width = 89
     Height = 25
@@ -324,10 +337,10 @@ object RelatorioSemanal: TRelatorioSemanal
     TabOrder = 0
     OnClick = BtImprimirClick
   end
-  object DateTimePicker1: TDateTimePicker
+  object DateTimePickerInicial: TDateTimePicker
     Left = 40
     Top = 143
-    Width = 186
+    Width = 105
     Height = 23
     Date = 45676.000000000000000000
     Time = 0.445948865737591400
@@ -342,7 +355,7 @@ object RelatorioSemanal: TRelatorioSemanal
   object ComboBoxCliente: TComboBox
     Left = 40
     Top = 88
-    Width = 186
+    Width = 216
     Height = 23
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -355,7 +368,7 @@ object RelatorioSemanal: TRelatorioSemanal
   object ComboBoxNomeEmpresa: TComboBox
     Left = 40
     Top = 31
-    Width = 186
+    Width = 216
     Height = 23
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -364,5 +377,20 @@ object RelatorioSemanal: TRelatorioSemanal
     Font.Style = []
     ParentFont = False
     TabOrder = 3
+  end
+  object DateTimePickerFinal: TDateTimePicker
+    Left = 151
+    Top = 143
+    Width = 105
+    Height = 23
+    Date = 45676.000000000000000000
+    Time = 0.445948865737591400
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 15
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 4
   end
 end

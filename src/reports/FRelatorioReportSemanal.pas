@@ -53,7 +53,7 @@ type
     RLLabelValor: TRLLabel;
     RLLabelDataDeInsercao: TRLLabel;
     RLLabelTotal: TRLLabel;
-    procedure GerarRelatorio(DataInicial: TDateTime; NomeCliente: string;
+    procedure GerarRelatorio(DataInicial: TDateTime; DataFim: TDateTime; NomeCliente: string;
       IDEmpresa: Integer);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
@@ -77,7 +77,7 @@ begin
   DataModulePrincipal.FDQueryPedido.Close;
 end;
 
-procedure TNMRelatorioReport.GerarRelatorio(DataInicial: TDateTime;
+procedure TNMRelatorioReport.GerarRelatorio(DataInicial: TDateTime; DataFim: TDateTime;
   NomeCliente: string; IDEmpresa: Integer);
 var
   DataFinal: TDateTime;
@@ -89,7 +89,7 @@ var
   LogoEmpresa: TRLImage;
   LogoStream: TMemoryStream;
 begin
-  DataFinal := DataInicial + 6;
+  DataFinal := DataFim;
   TotalGeral := 0;
   // Se a empresa for especificada, buscar dados da empresa
   if IDEmpresa > 0 then
@@ -197,7 +197,7 @@ begin
 
 
   // **Cabeçalho do Relatório**
-  RLLabelTitulo.Caption := 'Relatório de Vendas Semanal';
+  RLLabelTitulo.Caption := 'Relatório de Vendas';
   RLLabelPeriodo.Caption := 'Período: ' + DateToStr(DataInicial) + ' a ' +
     DateToStr(DataFinal);
 
