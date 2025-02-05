@@ -2,7 +2,7 @@ object RelatorioSemanal: TRelatorioSemanal
   Left = 0
   Top = 0
   BorderStyle = bsSingle
-  Caption = 'Relat'#243'rio semanal'
+  Caption = 'Relat'#243'rio Peri'#243'dico'
   ClientHeight = 213
   ClientWidth = 296
   Color = clBtnFace
@@ -267,6 +267,7 @@ object RelatorioSemanal: TRelatorioSemanal
     00000000000000000000001000000000000000100000C000000000300000C000
     000000300000E000000000700000F000000000F00000F800000001F00000FC00
     000003F00000FE0000000FF00000FF8000001FF00000FF8000003FF00000}
+  Position = poScreenCenter
   OnClose = FormClose
   OnCreate = FormCreate
   TextHeight = 8

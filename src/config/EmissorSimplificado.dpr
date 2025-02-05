@@ -1,4 +1,4 @@
-program EmissorSimplificado;
+ï»¿program EmissorSimplificado;
 
 uses
   Vcl.Forms,
@@ -7,7 +7,7 @@ uses
   MNCadastroCliente in '..\forms\MNCadastroCliente.pas' {FCadastroCliente},
   uDataModulePrincipal in '..\datamodules\uDataModulePrincipal.pas' {DataModulePrincipal: TDataModule},
   NMPesquisaCliente in '..\forms\NMPesquisaCliente.pas' {NMDePesquisaCliente},
-  NMInformacoes in '..\forms\NMInformacoes.pas' {FInformações},
+  NMInformacoes in '..\forms\NMInformacoes.pas' {FInformaÃ§Ãµes},
   NMCadastroDeProduto in '..\forms\NMCadastroDeProduto.pas' {NMCadastroProduto},
   NMPesquisaDeProduto in '..\forms\NMPesquisaDeProduto.pas' {NMPesquisaProduto},
   NMPesquisaPedido in '..\forms\NMPesquisaPedido.pas' {NMPesquisaDePedido},
@@ -15,15 +15,17 @@ uses
   Vcl.Themes,
   Vcl.Styles,
   NMCadastroDeEmpresa in '..\forms\NMCadastroDeEmpresa.pas' {FCadastroDeEmpresa},
-  NMPesquisaDeEmpresas in '..\forms\NMPesquisaDeEmpresas.pas' {NMPesquisaDeEmpresa};
+  NMPesquisaDeEmpresas in '..\forms\NMPesquisaDeEmpresas.pas' {NMPesquisaDeEmpresa},
+  FrmSplashArt in '..\forms\FrmSplashArt.pas' {FrmSplash};
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TDataModulePrincipal, DataModulePrincipal);
-  Application.CreateForm(TEmissorPrincipal, EmissorPrincipal);
-  Application.CreateForm(TNMPesquisaDeEmpresa, NMPesquisaDeEmpresa);
-  Application.Run;
+  Application.CreateForm(TFrmSplash, FrmSplash);
+  FrmSplash.Show;
+  Application.Run;  // Exibe o Splash e executa o loop de eventos
 end.
+
+
