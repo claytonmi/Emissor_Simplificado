@@ -1,0 +1,30 @@
+Emissor Simplificado de Pedido – Licença de Uso
+
+Copyright (c) 2025 Clayton Machado
+
+Este software, denominado "Emissor Simplificado de Pedido", é disponibilizado sob os seguintes termos:
+
+1. Permissão de Uso
+O software pode ser utilizado exclusivamente para uso pessoal e interno. O usuário tem permissão para:
+- Instalar e utilizar o software em seus dispositivos.
+- Modificar o software para fins pessoais, sem distribuição pública.
+
+2. Restrições
+É **estritamente proibido**, sem a permissão explícita do autor:
+- Vender, alugar, sublicenciar ou obter qualquer vantagem comercial com este software.
+- Redistribuir cópias, modificadas ou não, de qualquer forma.
+- Publicar este software, total ou parcialmente, em qualquer plataforma ou repositório público.
+
+Apenas o autor, **Clayton Machado**, pode distribuir e comercializar este software ou conceder autorização para tal.
+
+3. Obtenção de Licença Comercial ou de Distribuição
+Para obter permissão para distribuição ou comercialização, é necessário um contrato formal com o autor. Interessados devem entrar em contato para negociações.
+
+4. Revogação de Licença
+O uso do software está condicionado à conformidade com esta licença. Qualquer violação destes termos resultará na **revogação automática da licença**, podendo o autor tomar medidas legais cabíveis.
+
+5. Isenção de Responsabilidade
+Este software é fornecido "como está", sem garantias de qualquer tipo, expressas ou implícitas. O autor não se responsabiliza por quaisquer danos diretos ou indiretos decorrentes do uso deste software.
+
+Clayton Machado  
+Data de criação do projeto: 29 de janeiro de 2025
