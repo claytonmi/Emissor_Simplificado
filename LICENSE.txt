@@ -10,12 +10,12 @@ O software pode ser utilizado exclusivamente para uso pessoal e interno. O usuá
 - Modificar o software para fins pessoais, sem distribuição pública.
 
 2. Restrições
-É **estritamente proibido**, sem a permissão explícita do autor:
+É estritamente proibido, sem a permissão explícita do autor:
 - Vender, alugar, sublicenciar ou obter qualquer vantagem comercial com este software.
 - Redistribuir cópias, modificadas ou não, de qualquer forma.
 - Publicar este software, total ou parcialmente, em qualquer plataforma ou repositório público.
 
-Apenas o autor, **Clayton Machado**, pode distribuir e comercializar este software ou conceder autorização para tal.
+Apenas o autor, Clayton Machado, pode distribuir e comercializar este software ou conceder autorização para tal.
 
 3. Obtenção de Licença Comercial ou de Distribuição
 Para obter permissão para distribuição ou comercialização, é necessário um contrato formal com o autor. Interessados devem entrar em contato para negociações.
