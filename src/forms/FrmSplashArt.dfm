@@ -21,8 +21,7 @@ object FrmSplash: TFrmSplash
     Align = alBottom
     Alignment = taCenter
     Caption = 'LblStatus'
-    ExplicitTop = 187
-    ExplicitWidth = 448
+    ExplicitWidth = 48
   end
   object ImageLogo: TImage
     Left = 0
@@ -1059,8 +1058,6 @@ object FrmSplash: TFrmSplash
     Height = 17
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 186
-    ExplicitWidth = 460
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer

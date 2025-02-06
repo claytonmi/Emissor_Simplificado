@@ -56,7 +56,7 @@ object DataModulePrincipal: TDataModulePrincipal
   object FDQueryItemPedido: TFDQuery
     Connection = FDConnection
     SQL.Strings = (
-      'SELECT * FROM itemPedido')
+      'SELECT IDProduto FROM ItemPedido  where IDItem = 7')
     Left = 160
     Top = 328
   end

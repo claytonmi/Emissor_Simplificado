@@ -108,6 +108,9 @@ type
     BasePath: string; // Variável para o caminho base do sistema
     FValorOriginal: Double;
     FUpdatingMemo: Boolean;
+    FValorItemAlterado: Boolean;
+    FDescItemAlterado: Boolean;
+    FQtdItemAlterado: Boolean;
     procedure CarregarClientes;
     procedure AtualizarGridItens;
     procedure CarregarProdutos;
@@ -116,8 +119,10 @@ type
     procedure FinalizarTransacao(Sucesso: Boolean);
     procedure CarregarUltimoPedido;
     function PedidoTemItens(PedidoID: Integer): Boolean;
+    function ObterIDProduto(IDProduto: Integer): Integer;
     function ObterPrecoProduto(idProduto: Integer): Double;
     function QuebrarTextoMemo(const Texto: string; TamanhoLinha: Integer): string;
+
   public
     { Public declarations }
   end;
@@ -401,47 +406,62 @@ end;
 
 procedure TEmissorPrincipal.SalvarEdicaoItem;
 var
-  Desconto, Diferenca, ValorAtual: Double;
-var
   ProdutoNome: string;
-  Qtd: Integer;
-  ValorUnitario, EdDesc, ValorTotal: Double;
-  IDItem: Integer;
+  IDProduto, Qtd, IDItem: Integer;
+  ValorUnitario, EdDesc, ValorTotal, ValorOriginal, ValorDigitado: Double;
 begin
-  // Verifica se o item foi selecionado no grid
   if StringGridList.Row < 1 then
   begin
     ShowMessage('Selecione um item para editar.');
     Exit;
   end;
 
-  // Obtém o ID do item selecionado na grid
   IDItem := StrToInt(StringGridList.Cells[0, StringGridList.Row]);
+  IDProduto := ObterIDProduto(IDItem);
+  ValorOriginal := ObterPrecoProduto(IDProduto);
 
-  // Recupera os valores atualizados dos campos de edição
   ProdutoNome := CBEdNomeProduto.Text;
-  EdDesc := StrToFloat(EdDescItem.Text);
-  Qtd := StrToInt(EdQtdItem.Text);
-  ValorUnitario := StrToFloat(EdValorItem.Text);
-  if EdDesc > 0 then
+  EdDesc := StrToFloatDef(EdDescItem.Text, 0);
+  Qtd := StrToIntDef(EdQtdItem.Text, 1);
+  ValorDigitado := StrToFloatDef(EdValorItem.Text, 0);
+
+  // Define o ValorUnitario conforme a alteração do usuário
+  if FValorItemAlterado then
   begin
-    ValorUnitario := ValorUnitario - (ValorUnitario * (EdDesc/100));
+    if EdDesc > 0 then
+     begin
+       ValorUnitario := ValorDigitado - (ValorDigitado * (EdDesc / 100));
+     end
+      else
+     begin
+         ValorUnitario := ValorDigitado;
+     end;
+  end
+  else if FDescItemAlterado  then
+  begin
+   if EdDesc > 0 then
+   begin
+      ValorUnitario := ValorOriginal - (ValorOriginal * (EdDesc / 100));
+   end
+   else
+   begin
+      ValorUnitario := ValorOriginal;
+   end;
   end
   else
   begin
-     ValorUnitario := ObterPrecoProduto(IDItem);
+    ValorUnitario := ValorDigitado;
   end;
 
   ValorTotal := Qtd * ValorUnitario;
 
-
-  // Atualiza o item na tabela ItemPedido
+  // Atualiza no banco de dados
   with DataModulePrincipal.FDQueryItemPedido do
   begin
     Close;
     SQL.Text := 'UPDATE ItemPedido ' +
-      'SET NomeProduto = :NomeProduto, Quantidade = :Quantidade, Valor = :Valor, Desc = :Desc, Total = :Total '
-      + 'WHERE IDItem = :IDItem';
+      'SET NomeProduto = :NomeProduto, Quantidade = :Quantidade, Valor = :Valor, Desc = :Desc, Total = :Total ' +
+      'WHERE IDItem = :IDItem';
     ParamByName('NomeProduto').AsString := ProdutoNome;
     ParamByName('Quantidade').AsInteger := Qtd;
     ParamByName('Valor').AsFloat := ValorUnitario;
@@ -450,22 +470,41 @@ begin
     ParamByName('IDItem').AsInteger := IDItem;
     ExecSQL;
   end;
-  DataModulePrincipal.FDConnection.Commit;
 
-  // Atualiza o grid para exibir os dados atualizados
+  DataModulePrincipal.FDConnection.Commit;
   AtualizarGridItens;
 
-
-  // Limpa os campos de edição
+  // Limpa os campos e reseta as flags
   CBEdNomeProduto.ItemIndex := -1;
   CBEdNomeProduto.Clear;
   EdQtdItem.Clear;
   EdDescItem.Clear;
   EdValorItem.Clear;
-  BtSalvar.Enabled := false; // Desabilita o botão de salvar
-  BtInserirItem.Enabled := true; // Habilita o botão de inserir
+  BtSalvar.Enabled := False;
+  BtInserirItem.Enabled := True;
+  FValorItemAlterado := False;
+  FDescItemAlterado := False;
   CarregarProdutos;
 end;
+
+function TEmissorPrincipal.ObterIDProduto(IDProduto: Integer): Integer;
+begin
+  Result := 0; // Valor padrão caso não encontre o produto
+
+  with DataModulePrincipal.FDQueryItemPedido do
+  begin
+    DataModulePrincipal.FDQueryItemPedido.Close;
+    DataModulePrincipal.FDQueryItemPedido.SQL.Text := 'SELECT IDProduto FROM ItemPedido  where IDItem = :IDProduto';
+    DataModulePrincipal.FDQueryItemPedido.ParamByName('IDProduto').AsInteger := IDProduto;
+    DataModulePrincipal.FDQueryItemPedido.Open;
+
+    if not IsEmpty then
+      Result := DataModulePrincipal.FDQueryItemPedido.FieldByName('IDProduto').AsInteger;
+  end;
+end;
+
+
+
 
 function TEmissorPrincipal.ObterPrecoProduto(idProduto: Integer): Double;
 begin
@@ -474,7 +513,7 @@ begin
 
   // Execute a consulta para buscar o preço do produto
   DataModulePrincipal.FDQueryProduto.Close;
-  DataModulePrincipal.FDQueryProduto.SQL.Text := 'SELECT Preco FROM Produto WHERE idProduto = :idProduto';
+  DataModulePrincipal.FDQueryProduto.SQL.Text := 'SELECT Preco FROM Produto WHERE IDProduto = :idProduto';
   DataModulePrincipal.FDQueryProduto.ParamByName('idProduto').AsInteger := idProduto;
   DataModulePrincipal.FDQueryProduto.Open;
 
@@ -509,12 +548,11 @@ end;
 
 procedure TEmissorPrincipal.BtInserirItemClick(Sender: TObject);
 var
+  IDProduto, IDVenda, Qtd: Integer;
   ProdutoNome: string;
-  IDVenda, Qtd: Integer;
-  ValorUnitario, ValorAtual, Diferenca, EdDesc, ValorTotal: Double;
+  ValorUnitario, ValorTotal, EdDesc: Double;
 begin
-  // Verifica se os campos obrigatórios estão preenchidos
-  if (CBEdNomeProduto.Text = '') or (EdQtdItem.Text = '') or
+  if (CBEdNomeProduto.ItemIndex = -1) or (EdQtdItem.Text = '') or
     (EdValorItem.Text = '') then
   begin
     ShowMessage('Selecione um produto para inserir no pedido.');
@@ -522,34 +560,42 @@ begin
   end;
 
   try
-    // Recupera os valores preenchidos
     ProdutoNome := CBEdNomeProduto.Text;
+
+    // Obtém o IDProduto diretamente do ComboBox
+    IDProduto := Integer(CBEdNomeProduto.Items.Objects[CBEdNomeProduto.ItemIndex]);
+
+    // Remove o IDProduto e o traço para obter apenas o NomeProduto
+    Delete(ProdutoNome, 1, Pos(' - ', ProdutoNome) + 2);
     Qtd := StrToInt(EdQtdItem.Text);
     ValorUnitario := StrToFloat(EdValorItem.Text);
     IDVenda := StrToInt(EdCodigoVenda.Text);
-    EdDesc := StrToFloat(EdDescItem.Text);
+    EdDesc := StrToFloatDef(EdDescItem.Text, 0);
+
     if EdDesc > 0 then
-    begin
-      ValorUnitario := ValorUnitario - (ValorUnitario * (EdDesc/100));
-    end;
+      ValorUnitario := ValorUnitario - (ValorUnitario * (EdDesc / 100));
+
+    // Obtém o IDProduto diretamente do ComboBox
+    IDProduto := Integer(CBEdNomeProduto.Items.Objects[CBEdNomeProduto.ItemIndex]);
 
     // Calcula o valor total
     ValorTotal := Qtd * ValorUnitario;
 
-    // Insere os dados na tabela `ItensPedido`
+    // Insere os dados na tabela `ItemPedido`
     with DataModulePrincipal.FDQueryItemPedido do
     begin
       Close;
       SQL.Text :=
-        'INSERT INTO ItemPedido (IDVenda, NomeProduto, Quantidade, Valor, Total, Desc, DataInsercao) '
-        + 'VALUES (:IDVenda, :NomeProduto, :Quantidade, :Valor, :Total, :Desc, :DataInsercao)';
+        'INSERT INTO ItemPedido (IDVenda, IDProduto, NomeProduto, Quantidade, Valor, Total, Desc, DataInsercao) ' +
+        'VALUES (:IDVenda, :IDProduto, :NomeProduto, :Quantidade, :Valor, :Total, :Desc, :DataInsercao)';
       ParamByName('IDVenda').AsInteger := IDVenda;
+      ParamByName('IDProduto').AsInteger := IDProduto;
       ParamByName('NomeProduto').AsString := ProdutoNome;
       ParamByName('Quantidade').AsInteger := Qtd;
       ParamByName('Valor').AsFloat := ValorUnitario;
       ParamByName('Total').AsFloat := ValorTotal;
       ParamByName('Desc').AsFloat := EdDesc;
-      ParamByName('DataInsercao').AsDate := Now;
+      ParamByName('DataInsercao').AsDateTime := Now;
       ExecSQL;
     end;
     DataModulePrincipal.FDConnection.Commit;
@@ -557,20 +603,21 @@ begin
     // Atualiza o grid para exibir o item inserido
     AtualizarGridItens;
 
-     EdDescItem.clear;
-  // Limpa os campos para nova inserção
+    // Limpa os campos para nova inserção
+    EdDescItem.Clear;
     CBEdNomeProduto.ItemIndex := -1;
     EdQtdItem.Clear;
     EdValorItem.Clear;
-    BtExcluirItem.Enabled := true;
-    BtEditarItem.Enabled := true;
-    EdQtdItem.Enabled := false;
-    EdValorItem.Enabled := false;
+    BtExcluirItem.Enabled := True;
+    BtEditarItem.Enabled := True;
+    EdQtdItem.Enabled := False;
+    EdValorItem.Enabled := False;
   except
     on E: Exception do
       ShowMessage('Erro ao inserir item: ' + E.Message);
   end;
 end;
+
 
 procedure TEmissorPrincipal.AtualizarGridItens;
 var
@@ -780,6 +827,10 @@ begin
     Key := #0; // Cancela a entrada do caractere inválido
     Exit;
   end;
+
+
+  // Se algo foi digitado, marca que o usuário alterou o campo
+  FDescItemAlterado := True;
 end;
 
 procedure TEmissorPrincipal.EdNomeCliente1Change(Sender: TObject);
@@ -853,6 +904,8 @@ procedure TEmissorPrincipal.EdQtdItemKeyPress(Sender: TObject; var Key: Char);
 begin
 if not (Key in ['0'..'9', #8]) then
     Key := #0;  // Bloqueia qualquer caractere que não seja número ou Backspace
+
+FQtdItemAlterado := true;
 end;
 
 procedure TEmissorPrincipal.EdValorItemKeyPress(Sender: TObject; var Key: Char);
@@ -860,15 +913,17 @@ begin
   // Permite números, vírgula, ponto e Backspace
   if not (Key in ['0'..'9', ',', '.', #8]) then
     Key := #0;
-  // Impede que o usuário digite mais de um ponto ou vírgula
+
+  // Impede mais de um ponto ou vírgula
   if (Key in [',', '.']) and (Pos(Key, EdValorItem.Text) > 0) then
     Key := #0;
-  // Impede a inserção do sinal de menos '-'
+
+  // Impede inserção do sinal de menos '-'
   if Key = '-' then
     Key := #0;
-  // Impede a digitação se o valor for negativo
-  if (Key = '0') and (EdValorItem.Text = '') then
-    Key := #0;
+
+  // Se algo foi digitado, marca que o usuário alterou o campo
+  FValorItemAlterado := True;
 end;
 
 procedure TEmissorPrincipal.FormClose(Sender: TObject;
@@ -897,7 +952,6 @@ begin
 
     if Assigned(FrmSplash) then
     FrmSplash.Release;
-
   // Termina a aplicação após fechar o formulário principal
   Application.Terminate;
 
@@ -1085,7 +1139,7 @@ begin
     raise Exception.Create('DataModulePrincipal não está inicializado.');
 
   if not DataModulePrincipal.FDConnection.Connected then
-    DataModulePrincipal.FDConnection.Connected := true;
+    DataModulePrincipal.FDConnection.Connected := True;
 
   DataModulePrincipal.FDQueryProduto.Close;
   DataModulePrincipal.FDQueryProduto.SQL.Text :=
@@ -1097,21 +1151,21 @@ begin
     CBEdNomeProduto.Items.Clear;
     while not DataModulePrincipal.FDQueryProduto.EOF do
     begin
-      // Adiciona o nome do produto e associa o ID ao TObject
-      CBEdNomeProduto.Items.AddObject
-        (DataModulePrincipal.FDQueryProduto.FieldByName('NomeProduto').AsString,
-        TObject(DataModulePrincipal.FDQueryProduto.FieldByName('IDProduto')
-        .AsInteger));
+      CBEdNomeProduto.Items.AddObject(
+        Format('%d - %s', [DataModulePrincipal.FDQueryProduto.FieldByName('IDProduto').AsInteger,
+        DataModulePrincipal.FDQueryProduto.FieldByName('NomeProduto').AsString]),
+        TObject(DataModulePrincipal.FDQueryProduto.FieldByName('IDProduto').AsInteger));
+
       DataModulePrincipal.FDQueryProduto.Next;
     end;
 
-    // Configurações adicionais, se necessário
     CBEdNomeProduto.ItemIndex := -1; // Nenhum produto selecionado inicialmente
   except
     on E: Exception do
       raise Exception.Create('Erro ao carregar produtos: ' + E.Message);
   end;
 end;
+
 
 procedure TEmissorPrincipal.CBEdNomeProdutoChange(Sender: TObject);
 var

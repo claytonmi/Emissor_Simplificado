@@ -54,31 +54,25 @@ begin
   ProgressBar1.Position := 0;
   Timer1.Enabled := True;
 end;
-
 procedure TFrmSplash.Timer1Timer(Sender: TObject);
 begin
   Timer1.Enabled := False;
   IniciarSistema;
 end;
-
 procedure TFrmSplash.IniciarSistema;
 begin
   labEdit('Verificando Banco de Dados...');
   processCout(20);
   Application.ProcessMessages;
-
   try
     DataModulePrincipal := TDataModulePrincipal.Create(nil);
     Application.ProcessMessages;
-
     labEdit('Carregamento concluído!');
     FrmSplashArt.FrmSplash.processCout(100);
     Application.ProcessMessages;
-
     Sleep(500);
     // Esconde o splash
     FrmSplash.Hide;
-
     Application.MainFormOnTaskbar := True;
     // Cria o formulário principal e exibe
     Application.CreateForm(TEmissorPrincipal, EmissorPrincipal);
