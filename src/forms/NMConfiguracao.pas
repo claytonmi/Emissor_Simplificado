@@ -14,18 +14,22 @@ type
     Panel2: TPanel;
     BtSalvarConfig: TButton;
     BtZerarConfig: TButton;
-    GroupBox1: TGroupBox;
+    GroupBoxRelatorio: TGroupBox;
     CheckBoxDataDeInsercaoDoItemRelatorio: TCheckBox;
-    GroupBox2: TGroupBox;
+    GroupBoxTelaOrcamento: TGroupBox;
     CheckBoxDataInsercaoDoItem: TCheckBox;
     CheckBoxEmpresaVisivelNoCabecalho: TCheckBox;
-    Label1: TLabel;
+    LabelCaminhoBackup: TLabel;
     EditCaminhoBackup: TEdit;
     ButtonSelecionarCaminhoBackup: TBitBtn;
     SpinEditQtdDiasLimpar: TSpinEdit;
     LbDiasBackup: TLabel;
     BalloonHint: TBalloonHint;
     BtInfo: TBitBtn;
+    ComboBoxMoedaUtilizada: TComboBox;
+    Label2: TLabel;
+    ComboBoxIdioma: TComboBox;
+    Label1: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure BtZerarConfigClick(Sender: TObject);
     procedure BtSalvarConfigClick(Sender: TObject);
@@ -133,6 +137,16 @@ begin
     DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'UPDATE Configuracao SET QtdDias = :QtdDiasLimpa WHERE NomeConfiguracao = ''QtdDiasParaLimparBanco''';
     DataModulePrincipal.FDQueryConfiguracao.ParamByName('QtdDiasLimpa').AsInteger := SpinEditQtdDiasLimpar.Value;
     DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
+    // Atualiza MoedaApresentadaNoRelatorio
+    DataModulePrincipal.FDQueryConfiguracao.Close;
+    DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'UPDATE Configuracao SET UsarMoeda = :Moeda WHERE NomeConfiguracao = ''MoedaApresentadaNoRelatorio''';
+    DataModulePrincipal.FDQueryConfiguracao.ParamByName('Moeda').AsString := ComboBoxMoedaUtilizada.Text; // Salva o valor selecionado no ComboBox
+    DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
+    // Atualiza UsaIdiomaNoRelatorio
+    DataModulePrincipal.FDQueryConfiguracao.Close;
+    DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'UPDATE Configuracao SET Idioma = :idioma WHERE NomeConfiguracao = ''UsaIdiomaNoRelatorio''';
+    DataModulePrincipal.FDQueryConfiguracao.ParamByName('idioma').AsString := ComboBoxIdioma.Text; // Salva o valor selecionado no ComboBox
+    DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
     // Confirma a transação
     DataModulePrincipal.FDConnection.Commit;
     ShowMessage('Configurações salvas com sucesso!');
@@ -161,6 +175,23 @@ begin
   CheckBoxEmpresaVisivelNoCabecalho.Checked := True;
   EditCaminhoBackup.Text := 'C:\Users\Default\Downloads';
   SpinEditQtdDiasLimpar.Value := 0;
+
+  // Limpa as opções existentes no ComboBox
+  ComboBoxMoedaUtilizada.Clear;
+  // Adiciona as opções de moedas (essas opções podem ser carregadas de uma tabela ou definidas manualmente)
+  ComboBoxMoedaUtilizada.Items.Add('Real Brasileiro');
+  ComboBoxMoedaUtilizada.Items.Add('Dólar Americano');
+  ComboBoxMoedaUtilizada.Items.Add('Euro');
+  ComboBoxMoedaUtilizada.Items.Add('Dólar Canadense');
+  // Agora, selecione o valor padrão (Real Brasileiro)
+  ComboBoxMoedaUtilizada.ItemIndex := ComboBoxMoedaUtilizada.Items.IndexOf('Real Brasileiro');
+
+  ComboBoxIdioma.Clear;
+  // Adiciona as opções de moedas (essas opções podem ser carregadas de uma tabela ou definidas manualmente)
+  ComboBoxIdioma.Items.Add('Português');
+  ComboBoxIdioma.Items.Add('Inglês');
+  // Agora, selecione o valor padrão (Real Brasileiro)
+  ComboBoxIdioma.ItemIndex := ComboBoxIdioma.Items.IndexOf('Português');
 end;
 
 
@@ -172,24 +203,63 @@ begin
       DataModulePrincipal.FDQueryConfiguracao.Close;  // Garante que a query esteja fechada antes de configurar
       DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'SELECT * FROM Configuracao';
       DataModulePrincipal.FDQueryConfiguracao.Open;
+      // Carregar os tipos de moeda no ComboBox
+      ComboBoxMoedaUtilizada.Items.Clear;
+      ComboBoxMoedaUtilizada.Items.Add('Real Brasileiro');
+      ComboBoxMoedaUtilizada.Items.Add('Dólar Americano');
+      ComboBoxMoedaUtilizada.Items.Add('Euro');
+      ComboBoxMoedaUtilizada.Items.Add('Dólar Canadense');
+      ComboBoxMoedaUtilizada.Style := csDropDownList;
+      // Carregar os idiomas do relatório no ComboBox
+      ComboBoxIdioma.Items.Clear;
+      ComboBoxIdioma.Items.Add('Português');
+      ComboBoxIdioma.Items.Add('Inglês');
+      ComboBoxIdioma.Style := csDropDownList;
       while not Eof do
       begin
-        if DataModulePrincipal.FDQueryConfiguracao.FieldByName('NomeConfiguracao').AsString = 'ExibirDataInsercaoNoOrcamento' then
+        // Configurações que já estavam no código original
+        if FieldByName('NomeConfiguracao').AsString = 'ExibirDataInsercaoNoOrcamento' then
         begin
-          CheckBoxDataInsercaoDoItem.Checked := DataModulePrincipal.FDQueryConfiguracao.FieldByName('FLATIVO').AsString = 'S';
+          CheckBoxDataInsercaoDoItem.Checked := FieldByName('FLATIVO').AsString = 'S';
           AtualizaDtOrcamento := CheckBoxDataInsercaoDoItem.Checked;
         end
-        else if DataModulePrincipal.FDQueryConfiguracao.FieldByName('NomeConfiguracao').AsString = 'ExibirDataInsercaoNoRelatorio' then
-          CheckBoxDataDeInsercaoDoItemRelatorio.Checked := DataModulePrincipal.FDQueryConfiguracao.FieldByName('FLATIVO').AsString = 'S'
-        else if DataModulePrincipal.FDQueryConfiguracao.FieldByName('NomeConfiguracao').AsString = 'ExibirEmpresaNoRelatorio' then
-          CheckBoxEmpresaVisivelNoCabecalho.Checked := DataModulePrincipal.FDQueryConfiguracao.FieldByName('FLATIVO').AsString = 'S';
-        if DataModulePrincipal.FDQueryConfiguracao.FindField('NomeConfiguracao').AsString = 'CaminhoDoBackupDoBanco' then
-          EditCaminhoBackup.Text := DataModulePrincipal.FDQueryConfiguracao.FieldByName('CaminhoBackup').AsString;
-        if DataModulePrincipal.FDQueryConfiguracao.FieldByName('NomeConfiguracao').AsString = 'QtdDiasParaLimparBanco' then
+        else if FieldByName('NomeConfiguracao').AsString = 'ExibirDataInsercaoNoRelatorio' then
+          CheckBoxDataDeInsercaoDoItemRelatorio.Checked := FieldByName('FLATIVO').AsString = 'S'
+        else if FieldByName('NomeConfiguracao').AsString = 'ExibirEmpresaNoRelatorio' then
+          CheckBoxEmpresaVisivelNoCabecalho.Checked := FieldByName('FLATIVO').AsString = 'S';
+        if FieldByName('NomeConfiguracao').AsString = 'CaminhoDoBackupDoBanco' then
+          EditCaminhoBackup.Text := FieldByName('CaminhoBackup').AsString;
+        if FieldByName('NomeConfiguracao').AsString = 'QtdDiasParaLimparBanco' then
+          SpinEditQtdDiasLimpar.Value := FieldByName('QtdDias').AsInteger;
+        // Verificar a configuração da moeda
+        if FieldByName('NomeConfiguracao').AsString = 'MoedaApresentadaNoRelatorio' then
         begin
-          SpinEditQtdDiasLimpar.Value := DataModulePrincipal.FDQueryConfiguracao.FieldByName('QtdDias').AsInteger;
+          // Verificar se o valor de 'UsarMoeda' existe no ComboBox
+          if ComboBoxMoedaUtilizada.Items.IndexOf(FieldByName('UsarMoeda').AsString) <> -1 then
+          begin
+            ComboBoxMoedaUtilizada.ItemIndex := ComboBoxMoedaUtilizada.Items.IndexOf(FieldByName('UsarMoeda').AsString);
+          end
+          else
+          begin
+            // Se não encontrar o valor no ComboBox, informa o valor do banco
+            ShowMessage('Moeda ' + FieldByName('UsarMoeda').AsString + ' não encontrada no ComboBox. Usando o valor do banco.');
+            ComboBoxMoedaUtilizada.ItemIndex := -1; // Se não achar, deixa o ComboBox em estado inicial
+          end;
         end;
-
+        if FieldByName('NomeConfiguracao').AsString = 'UsaIdiomaNoRelatorio' then
+        begin
+          // Verificar se o valor de 'UsarMoeda' existe no ComboBox
+          if ComboBoxIdioma.Items.IndexOf(FieldByName('Idioma').AsString) <> -1 then
+          begin
+            ComboBoxIdioma.ItemIndex := ComboBoxIdioma.Items.IndexOf(FieldByName('Idioma').AsString);
+          end
+          else
+          begin
+            // Se não encontrar o valor no ComboBox, informa o valor do banco
+            ShowMessage('Idioma ' + FieldByName('Idioma').AsString + ' não encontrada no ComboBox. Usando o valor do banco.');
+            ComboBoxIdioma.ItemIndex := -1; // Se não achar, deixa o ComboBox em estado inicial
+          end;
+        end;
         Next;
       end;
     finally

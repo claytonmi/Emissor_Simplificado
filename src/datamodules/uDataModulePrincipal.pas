@@ -36,6 +36,7 @@ type
 
   private
     function TabelaExiste(const TabelaNome: string): Boolean;
+    function RegistraConfiguracaoExistente(NomeConfiguracao: string): Boolean;
     procedure ConfigurarConexao(const DatabasePath: string);
     procedure CriarBancoDeDados(const DatabasePath: string; ComDadosTeste: Boolean);
     function VerificarOuCriarColuna(const Tabela, Coluna, Tipo: string): Boolean;
@@ -49,7 +50,7 @@ type
 var
   DataModulePrincipal: TDataModulePrincipal;
 const
-  VERSAO_ATUAL = '1.1';
+  VERSAO_ATUAL = '1.2';
 
 implementation
 
@@ -125,6 +126,47 @@ begin
       VerificarOuCriarColuna('Pedido', 'TotalPedido', 'REAL');
       VerificarOuCriarColuna('ItemPedido', 'Desc', 'REAL');
       VerificarOuCriarColuna('Cliente', 'Endereco', 'TEXT');
+      VerificarOuCriarColuna('Configuracao', 'UsarMoeda', 'TEXT');
+      VerificarOuCriarColuna('Configuracao', 'Idioma', 'TEXT');
+      if TabelaExiste('Configuracao') then
+      begin
+        // Inserir os registros na tabela Configuracao, somente se a tabela existir
+        if not RegistraConfiguracaoExistente('ExibirDataInsercaoNoOrcamento') then
+          FDConnection.ExecSQL(
+            'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
+            'VALUES (''ExibirDataInsercaoNoOrcamento'', ''S'');'
+          );
+        if not RegistraConfiguracaoExistente('ExibirDataInsercaoNoRelatorio') then
+          FDConnection.ExecSQL(
+            'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
+            'VALUES (''ExibirDataInsercaoNoRelatorio'', ''S'');'
+          );
+        if not RegistraConfiguracaoExistente('ExibirEmpresaNoRelatorio') then
+          FDConnection.ExecSQL(
+            'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
+            'VALUES (''ExibirEmpresaNoRelatorio'', ''S'');'
+          );
+        if not RegistraConfiguracaoExistente('CaminhoDoBackupDoBanco') then
+          FDConnection.ExecSQL(
+            'INSERT INTO Configuracao (NomeConfiguracao, CaminhoBackup, FLATIVO) ' +
+            'VALUES (''CaminhoDoBackupDoBanco'', ''C:\Users\Default\Downloads'', ''S'');'
+          );
+        if not RegistraConfiguracaoExistente('QtdDiasParaLimparBanco') then
+          FDConnection.ExecSQL(
+            'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
+            'VALUES (''QtdDiasParaLimparBanco'', ''S'');'
+          );
+        if not RegistraConfiguracaoExistente('MoedaApresentadaNoRelatorio') then
+          FDConnection.ExecSQL(
+            'INSERT INTO Configuracao (NomeConfiguracao, UsarMoeda, FLATIVO) ' +
+            'VALUES (''MoedaApresentadaNoRelatorio'', ''Real Brasileiro'', ''S'');'
+          );
+        if not RegistraConfiguracaoExistente('UsaIdiomaNoRelatorio') then
+          FDConnection.ExecSQL(
+            'INSERT INTO Configuracao (NomeConfiguracao, Idioma, FLATIVO) ' +
+            'VALUES (''UsaIdiomaNoRelatorio'', ''Português'', ''S'');'
+          );
+      end;
     end;
 
     if FDConnection.Connected then
@@ -307,32 +349,12 @@ if not TabelaExiste('ItemPedido') then
     'NomeConfiguracao TEXT NOT NULL, ' +
     'CaminhoBackup TEXT,' +
     'QtdDias INTEGER DEFAULT 0,' +
+    'UsarMoeda TEXT,' +
+    'Idioma TEXT,' +
     'FLATIVO CHAR(1) NOT NULL CHECK(FLATIVO IN (''S'', ''N''))' +
     ');'
     );
-
-    FDConnection.ExecSQL(
-      'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
-      'VALUES (''ExibirDataInsercaoNoOrcamento'', ''S'');'
-    );
-    FDConnection.ExecSQL(
-      'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
-      'VALUES (''ExibirDataInsercaoNoRelatorio'', ''S'');'
-    );
-    FDConnection.ExecSQL(
-      'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
-      'VALUES (''ExibirEmpresaNoRelatorio'', ''S'');'
-    );
-    FDConnection.ExecSQL(
-      'INSERT INTO Configuracao (NomeConfiguracao, CaminhoBackup, FLATIVO) ' +
-      'VALUES (''CaminhoDoBackupDoBanco'', ''C:\Users\Default\Downloads'', ''S'');'
-    );
-    FDConnection.ExecSQL(
-      'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
-      'VALUES (''QtdDiasParaLimparBanco'', ''S'');'
-    );
   end;
-
 
   if not TabelaExiste('Sistema') then
   begin
@@ -345,6 +367,15 @@ if not TabelaExiste('ItemPedido') then
 
     FDConnection.ExecSQL('INSERT INTO Sistema (VersaoSistema) VALUES (''0.0'');');
   end;
+end;
+
+function TDataModulePrincipal.RegistraConfiguracaoExistente(NomeConfiguracao: string): Boolean;
+begin
+  Result := False;
+  FDQueryConfiguracao.SQL.Text := 'SELECT COUNT(*) FROM Configuracao WHERE NomeConfiguracao = :NomeConfiguracao';
+  FDQueryConfiguracao.ParamByName('NomeConfiguracao').AsString := NomeConfiguracao;
+  FDQueryConfiguracao.Open;
+  Result := FDQueryConfiguracao.Fields[0].AsInteger > 0;
 end;
 
 function TDataModulePrincipal.VerificarAtualizacaoSistema(VersaoAtual: string): Boolean;

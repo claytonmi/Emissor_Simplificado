@@ -37,24 +37,25 @@ type
     LabelTelefoneCliente: TRLDBText;
     LabelIDVenda: TRLDBText;
     LabelData: TRLDBText;
-    RLLabel1: TRLLabel;
-    RLLabel2: TRLLabel;
-    RLLabel3: TRLLabel;
-    RLLabel4: TRLLabel;
+    RLLabelNome: TRLLabel;
+    RLLabelTel: TRLLabel;
+    RLLabelNuOrc: TRLLabel;
+    RLLabeldt: TRLLabel;
     RLDBResult1: TRLDBResult;
-    RLLabel5: TRLLabel;
+    RLLabelMoedaTotal: TRLLabel;
     RLLabel6: TRLLabel;
     RLSystemInfo1: TRLSystemInfo;
     RLDBMemo1: TRLDBMemo;
-    RLLabel7: TRLLabel;
+    RLLabelObs: TRLLabel;
     RLBand1: TRLBand;
     RLLabelProduto: TRLLabel;
     RLLabelQuantidade: TRLLabel;
     RLLabelValor: TRLLabel;
     RLLabelDataDeInsercao: TRLLabel;
     RLLabelTotal: TRLLabel;
-    RLLabel8: TRLLabel;
+    RLLabelEnder: TRLLabel;
     RLDBEnderecoCliente: TRLDBText;
+    RLLabelMoeda: TRLLabel;
     procedure GerarRelatorio(DataInicial: TDateTime; DataFim: TDateTime; NomeCliente: string;
       IDEmpresa: Integer);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -87,13 +88,47 @@ var
   LinhaAtual, CenterX, WidthPage: Integer;
   NovoLabel: TRLLabel;
   EmpresaNome, EmpresaFantasia, EmpresaCNPJ, EmpresaEndereco,
-  EmpresaTelefone: string;
+  EmpresaTelefone, MoedaConfigurada, SimboloMoeda, IdiomaRelatorio: string;
   LogoEmpresa: TRLImage;
   LogoStream: TMemoryStream;
   ExibirData: String;
 begin
   DataFinal := DataFim;
   TotalGeral := 0;
+
+    // Obtém o idioma do relatório
+  with DataModulePrincipal.FDQueryConfiguracao do
+  begin
+    DataModulePrincipal.FDQueryConfiguracao.Close;
+    DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'SELECT Idioma FROM Configuracao WHERE NomeConfiguracao = :Nome';
+    DataModulePrincipal.FDQueryConfiguracao.ParamByName('Nome').AsString := 'UsaIdiomaNoRelatorio';
+    DataModulePrincipal.FDQueryConfiguracao.Open;
+    IdiomaRelatorio := DataModulePrincipal.FDQueryConfiguracao.FieldByName('Idioma').AsString;
+  end;
+
+   with DataModulePrincipal.FDQueryConfiguracao do
+  begin
+    DataModulePrincipal.FDQueryConfiguracao.Close;
+    DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'SELECT UsarMoeda FROM Configuracao WHERE NomeConfiguracao = :Nome';
+    DataModulePrincipal.FDQueryConfiguracao.ParamByName('Nome').AsString := 'MoedaApresentadaNoRelatorio';
+    DataModulePrincipal.FDQueryConfiguracao.Open;
+    MoedaConfigurada := DataModulePrincipal.FDQueryConfiguracao.FieldByName('UsarMoeda').AsString;
+  end;
+  // Definindo o símbolo da moeda com base na configuração
+  if MoedaConfigurada = 'Real Brasileiro' then
+    SimboloMoeda := 'R$'
+  else if MoedaConfigurada = 'Dólar Americano' then
+    SimboloMoeda := '$'
+  else if MoedaConfigurada = 'Euro' then
+    SimboloMoeda := '€'
+  else if MoedaConfigurada = 'Dólar Canadense' then
+    SimboloMoeda := 'C$'
+  else
+    SimboloMoeda := 'R$';  // Valor padrão
+  // Atualiza o RLLabelMoeda com o símbolo da moeda
+  RLLabelMoeda.Caption := SimboloMoeda;
+  RLLabelMoedaTotal.Caption := 'Total ' + SimboloMoeda + ':';
+
   // Obtém o valor da configuração ExibirDataInsercaoNoRelatorio
   with DataModulePrincipal.FDQueryConfiguracao do
   begin
@@ -221,19 +256,51 @@ begin
     RLLabelTelefone.Font.Size := 10;
 
   end;
-
-  // Pega o Total Geral da consulta
   TotalGeral := DataModulePrincipal.FDQueryRelatorioDePedidos.FieldByName('TotalGeral').AsCurrency;
-  // Atualiza o label no relatório com o Total Geral
-  RLLabelTotalGeral.Caption := 'Total Geral: R$ ' + FormatFloat('0.00', TotalGeral);
-  RLLabelTotalGeral.Font.Size := 9;
-  RLLabelTotalGeral.Font.Style := [fsBold];
-
-
-  // **Cabeçalho do Relatório**
-  RLLabelTitulo.Caption := 'Relatórios de Orçamentos';
-  RLLabelPeriodo.Caption := 'Período: ' + DateToStr(DataInicial) + ' a ' +
-    DateToStr(DataFinal);
+  if IdiomaRelatorio = 'Inglês' then
+    begin
+      LabelNomeCliente.Left:=230;
+      LabelTelefoneCliente.Left:=206;
+      LabelIDVenda.Left:=483;
+      RLLabelTitulo.Caption := 'Budget Reports';
+      RLLabelPeriodo.Caption := 'Period: ' + DateToStr(DataInicial) + ' to ' + DateToStr(DataFinal);
+      RLLabelNome.Caption := 'Customer:';
+      RLLabelNuOrc.Caption := 'Order No.:';
+      RLLabelTel.Caption := 'Phone:';
+      RLLabelEnder.Caption := 'Address:';
+      RLLabelObs.Caption := 'Notes:';
+      RLLabeldt.Caption := 'Date:';
+      RLLabelProduto.Caption := 'Product';
+      RLLabelQuantidade.Caption := 'Quantity';
+      RLLabelValor.Caption := 'Value';
+      RLLabelDataDeInsercao.Caption := 'Insert Date';
+      RLLabelTotal.Caption := 'Total';
+      RLLabelMoedaTotal.Caption := 'Total ' + SimboloMoeda + ':';
+      RLLabelTotalGeral.Caption := 'Total Amount: $ ' + FormatFloat('0.00', TotalGeral);
+    end
+    else
+    begin
+      LabelNomeCliente.Left:=213;
+      LabelTelefoneCliente.Left:=221;
+      LabelIDVenda.Left:=510;
+      RLLabelTitulo.Caption := 'Relatórios de Orçamentos';
+      RLLabelPeriodo.Caption := 'Período: ' + DateToStr(DataInicial) + ' a ' + DateToStr(DataFinal);
+      RLLabelNome.Caption := 'Cliente:';
+      RLLabelNuOrc.Caption := 'Nº Orçamento:';
+      RLLabelTel.Caption := 'Telefone:';
+      RLLabelEnder.Caption := 'Endereço:';
+      RLLabelObs.Caption := 'Observações:';
+      RLLabeldt.Caption := 'Data:';
+      RLLabelProduto.Caption := 'Produto';
+      RLLabelQuantidade.Caption := 'Quantidade';
+      RLLabelValor.Caption := 'Valor';
+      RLLabelDataDeInsercao.Caption := 'Data de Inserção';
+      RLLabelTotal.Caption := 'Total';
+      RLLabelMoedaTotal.Caption := 'Total ' + SimboloMoeda + ':';
+      RLLabelTotalGeral.Caption := 'Total Geral: R$ ' + FormatFloat('0.00', TotalGeral);
+    end;
+    RLLabelTotalGeral.Font.Size := 9;
+    RLLabelTotalGeral.Font.Style := [fsBold];
 
     RLReport1.PreviewModal;
 end;

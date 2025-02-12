@@ -62,7 +62,7 @@ begin
   if (hMutex = 0) or (GetLastError = ERROR_ALREADY_EXISTS) then
   begin
     MessageBox(0, 'O programa já está em execução.', 'Aviso', MB_OK or MB_ICONWARNING);
-    Halt; // Encerra o programa
+    ExitProcess(0);
   end;
   labEdit('Inicializando...');
   ProgressBar1.Position := 0;
