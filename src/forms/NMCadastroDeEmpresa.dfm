@@ -3098,9 +3098,9 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
     end
     object ImgEmpresa: TImage
       Left = 347
-      Top = 118
-      Width = 100
-      Height = 100
+      Top = 102
+      Width = 115
+      Height = 115
     end
     object Label9: TLabel
       Left = 222
@@ -3117,7 +3117,7 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Height = 15
       Alignment = taCenter
       AutoSize = False
-      Caption = '100x100'
+      Caption = '115x115'
     end
     object CheckBoxDefault: TCheckBox
       Left = 347

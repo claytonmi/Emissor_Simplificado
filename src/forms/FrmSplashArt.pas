@@ -28,6 +28,8 @@ type
   end;
 
 var
+  hMutex: THandle;
+  MutexName: string; // Nome do Mutex
   FrmSplash: TFrmSplash;
 
 implementation
@@ -49,16 +51,31 @@ begin
 end;
 
 procedure TFrmSplash.FormShow(Sender: TObject);
+var
+  ExeName: string;
 begin
+  // Obtém o nome do executável sem a extensão
+  ExeName := ChangeFileExt(ExtractFileName(ParamStr(0)), '');
+  MutexName := 'Mutex_' + ExeName; // Nome único baseado no executável
+  // Criar Mutex para impedir múltiplas instâncias
+  hMutex := CreateMutex(nil, True, PChar(MutexName));
+  if (hMutex = 0) or (GetLastError = ERROR_ALREADY_EXISTS) then
+  begin
+    MessageBox(0, 'O programa já está em execução.', 'Aviso', MB_OK or MB_ICONWARNING);
+    Halt; // Encerra o programa
+  end;
   labEdit('Inicializando...');
   ProgressBar1.Position := 0;
   Timer1.Enabled := True;
 end;
+
+
 procedure TFrmSplash.Timer1Timer(Sender: TObject);
 begin
   Timer1.Enabled := False;
   IniciarSistema;
 end;
+
 procedure TFrmSplash.IniciarSistema;
 begin
   labEdit('Verificando Banco de Dados...');

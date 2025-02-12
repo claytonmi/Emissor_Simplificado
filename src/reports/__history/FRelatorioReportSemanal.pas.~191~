@@ -53,6 +53,8 @@ type
     RLLabelValor: TRLLabel;
     RLLabelDataDeInsercao: TRLLabel;
     RLLabelTotal: TRLLabel;
+    RLLabel8: TRLLabel;
+    RLDBEnderecoCliente: TRLDBText;
     procedure GerarRelatorio(DataInicial: TDateTime; DataFim: TDateTime; NomeCliente: string;
       IDEmpresa: Integer);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -99,12 +101,27 @@ begin
     DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'SELECT FLATIVO FROM Configuracao WHERE NomeConfiguracao = :Nome';
     DataModulePrincipal.FDQueryConfiguracao.ParamByName('Nome').AsString := 'ExibirDataInsercaoNoRelatorio';
     DataModulePrincipal.FDQueryConfiguracao.Open;
-
     ExibirData := DataModulePrincipal.FDQueryConfiguracao.FieldByName('FLATIVO').AsString;
   end;
+    RLDBTextData.Visible := ExibirData  = 'S';
+    RLLabelDataDeInsercao.Visible := ExibirData  = 'S';
+  if ExibirData = 'S' then
+  begin
+    RLLabelQuantidade.left := 266;
+    RLLabelValor.left := 390;
+    RLDBTextQuantidade.left := 266;
+    RLDBTextValor.left := 390;
+  end
+  else
+  begin
+    RLLabelQuantidade.left := 322;
+    RLLabelValor.left := 472;
+    RLDBTextQuantidade.left := 322;
+    RLDBTextValor.left := 472;
+  end;
 
-  RLDBTextData.Visible := ExibirData = 'S';
-  RLLabelDataDeInsercao.Visible := ExibirData = 'S';
+
+
   // Se a empresa for especificada, buscar dados da empresa
   if IDEmpresa > 0 then
   begin
@@ -141,32 +158,35 @@ begin
   // Consulta pedidos no intervalo de datas e para o cliente específico
   DataModulePrincipal.FDQueryRelatorioDePedidos.Close;
   DataModulePrincipal.FDQueryRelatorioDePedidos.SQL.Text :=
-  'SELECT ' +
-  '    p.IDVenda, ' +
-  '    p.NomeCliente, ' +
-  '    p.TelefoneCliente, ' +
-  '    p.Data AS DataPedido, ' +
-  '    p.Observacao, ' +
-  '    p.TotalPedido, ' +
-  '    i.NomeProduto, ' +
-  '    i.Quantidade, ' +
-  '    i.Valor, ' +
-  '    i.DataInsercao, ' +
-  '    i.Total, ' +
-  '    (SELECT SUM(i2.Total) ' +
-  '     FROM ItemPedido i2 ' +
-  '     INNER JOIN Pedido p2 ON i2.IDVenda = p2.IDVenda ' +
-  '     WHERE p2.Data BETWEEN :DataInicial AND :DataFinal ' +
-  '     AND p2.NomeCliente = :NomeCliente) AS TotalGeral ' +
-  'FROM ' +
-  '    Pedido p ' +
-  'INNER JOIN ' +
-  '    ItemPedido i ON p.IDVenda = i.IDVenda ' +
-  'WHERE ' +
-  '    p.Data BETWEEN :DataInicial AND :DataFinal ' +
-  '    AND p.NomeCliente = :NomeCliente ' +
-  'ORDER BY ' +
-  '    p.IDVenda, i.DataInsercao';
+    'SELECT ' +
+      '    p.IDVenda, ' +
+      '    p.NomeCliente, ' +
+      '    c.Endereco, ' +
+      '    p.TelefoneCliente, ' +
+      '    p.Data AS DataPedido, ' +
+      '    p.Observacao, ' +
+      '    p.TotalPedido, ' +
+      '    i.NomeProduto, ' +
+      '    i.Quantidade, ' +
+      '    i.Valor, ' +
+      '    i.DataInsercao, ' +
+      '    i.Total, ' +
+      '    (SELECT SUM(i2.Total) ' +
+      '     FROM ItemPedido i2 ' +
+      '     INNER JOIN Pedido p2 ON i2.IDVenda = p2.IDVenda ' +
+      '     WHERE p2.Data BETWEEN :DataInicial AND :DataFinal ' +
+      '     AND p2.NomeCliente = :NomeCliente) AS TotalGeral ' +
+      'FROM ' +
+      '    Pedido p ' +
+      'INNER JOIN ' +
+      '    ItemPedido i ON p.IDVenda = i.IDVenda ' +
+      'LEFT JOIN ' +
+      '    Cliente c ON p.IDCliente = c.IDCliente ' +
+      'WHERE ' +
+      '    p.Data BETWEEN :DataInicial AND :DataFinal ' +
+      '    AND p.NomeCliente = :NomeCliente ' +
+      'ORDER BY ' +
+      '    p.IDVenda, i.DataInsercao';
 
   DataModulePrincipal.FDQueryRelatorioDePedidos.ParamByName('DataInicial').AsDate := DataInicial;
   DataModulePrincipal.FDQueryRelatorioDePedidos.ParamByName('DataFinal').AsDate := DataFinal;
@@ -211,7 +231,7 @@ begin
 
 
   // **Cabeçalho do Relatório**
-  RLLabelTitulo.Caption := 'Relatório de Vendas';
+  RLLabelTitulo.Caption := 'Relatórios de Orçamentos';
   RLLabelPeriodo.Caption := 'Período: ' + DateToStr(DataInicial) + ' a ' +
     DateToStr(DataFinal);
 

@@ -3029,6 +3029,7 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Height = 23
       Enabled = False
       TabOrder = 2
+      OnExit = EdBairroExit
     end
     object EdCidade: TEdit
       Left = 352
@@ -3037,6 +3038,7 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Height = 23
       Enabled = False
       TabOrder = 1
+      OnExit = EdCidadeExit
     end
     object EdEndereco: TEdit
       Left = 48
@@ -3045,6 +3047,7 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Height = 23
       Enabled = False
       TabOrder = 0
+      OnExit = EdEnderecoExit
     end
     object EdEstado: TEdit
       Left = 352
@@ -3053,6 +3056,7 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Height = 23
       Enabled = False
       TabOrder = 3
+      OnExit = EdEstadoExit
     end
   end
   object PanelInformacoes: TPanel
@@ -3081,9 +3085,9 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
     object Label3: TLabel
       Left = 48
       Top = 111
-      Width = 35
+      Width = 27
       Height = 15
-      Caption = 'CNPJ *'
+      Caption = 'CNPJ'
     end
     object Label4: TLabel
       Left = 48
@@ -3113,7 +3117,7 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Height = 15
       Alignment = taCenter
       AutoSize = False
-      Caption = '100x100'
+      Caption = '115x115'
     end
     object CheckBoxDefault: TCheckBox
       Left = 347
@@ -3132,6 +3136,7 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Height = 23
       Enabled = False
       TabOrder = 3
+      OnExit = EdCNPJExit
       OnKeyPress = EdCNPJKeyPress
     end
     object EdNomeEmpresa: TEdit
@@ -3142,6 +3147,7 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Enabled = False
       MaxLength = 255
       TabOrder = 1
+      OnExit = EdNomeEmpresaExit
     end
     object EdNomeFantasia: TEdit
       Left = 48
@@ -3151,6 +3157,7 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Enabled = False
       MaxLength = 255
       TabOrder = 2
+      OnExit = EdNomeFantasiaExit
     end
     object EdTelefone: TEdit
       Left = 48
@@ -3226,6 +3233,7 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       36FF00000000}
     TabOrder = 3
     OnClick = BtInfoClick
+    ExplicitTop = -1
   end
   object OpenPictureDialog: TOpenPictureDialog
     Left = 448

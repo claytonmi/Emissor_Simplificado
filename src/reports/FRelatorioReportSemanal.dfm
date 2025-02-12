@@ -29,7 +29,7 @@ object NMRelatorioReport: TNMRelatorioReport
       Left = 38
       Top = 38
       Width = 718
-      Height = 131
+      Height = 155
       BandType = btHeader
       Borders.Sides = sdCustom
       Borders.DrawLeft = False
@@ -105,15 +105,15 @@ object NMRelatorioReport: TNMRelatorioReport
       object RLDBImage1: TRLDBImage
         Left = 3
         Top = 3
-        Width = 100
-        Height = 100
+        Width = 115
+        Height = 115
         DataField = 'ImgLogo'
         DataSource = DataModulePrincipal.DataSourceEmpresa
       end
     end
     object RLBandTitulo: TRLBand
       Left = 38
-      Top = 169
+      Top = 193
       Width = 718
       Height = 72
       BandType = btTitle
@@ -155,7 +155,7 @@ object NMRelatorioReport: TNMRelatorioReport
     end
     object RLBandRodape: TRLBand
       Left = 38
-      Top = 663
+      Top = 687
       Width = 718
       Height = 62
       BandType = btFooter
@@ -202,7 +202,7 @@ object NMRelatorioReport: TNMRelatorioReport
     end
     object RLGroupPedidos: TRLGroup
       Left = 38
-      Top = 241
+      Top = 265
       Width = 718
       Height = 422
       DataFields = 'IDVenda'
