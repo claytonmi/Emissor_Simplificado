@@ -14,13 +14,22 @@ type
     Label2: TLabel;
     BtSalvar: TBitBtn;
     BtEditar: TBitBtn;
+    BtInfo: TBitBtn;
+    BalloonHint: TBalloonHint;
+    LBSucesso: TLabel;
     procedure BtSalvarClick(Sender: TObject);
     procedure BtEditarClick(Sender: TObject);
+    procedure BtInfoClick(Sender: TObject);
+    procedure EdNomeProdutoKeyPress(Sender: TObject; var Key: Char);
+    procedure EdPrecoKeyPress(Sender: TObject; var Key: Char);
+    procedure EdPrecoExit(Sender: TObject);
   private
+    FStep: integer;
     FProdutoID: Integer; // Armazena o ID do produto selecionado para edição
     procedure LimparCampos;
     procedure CarregarProduto(ID: Integer);
     procedure PreencherCamposParaEdicao(ProdutoID: Integer);
+    procedure ShowHintForStep(Step: Integer);
   public
     { Public declarations }
   end;
@@ -32,8 +41,46 @@ implementation
 
 {$R *.dfm}
 
+procedure TNMCadastroProduto.BtInfoClick(Sender: TObject);
+begin
+  FStep := 1; // Inicia o tutorial com o primeiro passo
+  ShowHintForStep(FStep);
+end;
+
+procedure TNMCadastroProduto.ShowHintForStep(Step: Integer);
+begin
+  case Step of
+      1:
+      begin
+        BalloonHint.HideHint;
+        BalloonHint.Title := 'Passo 1: Nome do Produto';
+        BalloonHint.Description := 'Agora informe o nome do produto no campo "Nome do Produto".';
+        BalloonHint.ShowHint(EdNomeProduto);
+      end;
+    2:
+      begin
+        BalloonHint.HideHint;
+        BalloonHint.Title := 'Passo 2: Preço do Produto';
+        BalloonHint.Description := 'Agora informe o preço do produto no campo "Preço".';
+        BalloonHint.ShowHint(EdPreco);
+      end;
+    3:
+      begin
+        BalloonHint.HideHint;
+        BalloonHint.Title := 'Passo 3: Salvar Cadastro';
+        BalloonHint.Description := 'Agora clique em "Salvar" para finalizar o cadastro do produto.';
+        BalloonHint.ShowHint(BtSalvar);
+      end;
+  end;
+end;
+
 procedure TNMCadastroProduto.BtSalvarClick(Sender: TObject);
 begin
+  if FStep = 3 then
+  begin
+    BalloonHint.HideHint;
+    FStep := 0;  // Avança para o próximo passo
+  end;
   if Trim(EdNomeProduto.Text) = '' then
     raise Exception.Create('O nome do produto é obrigatório.');
 
@@ -62,9 +109,15 @@ begin
 
     LimparCampos;
     FProdutoID := 0;
+    LBSucesso.font.color :=  clGreen;
+    LBSucesso.Caption := 'Produto salvo com sucesso';
   except
     on E: Exception do
+    begin
       ShowMessage('Erro ao salvar o produto: ' + E.Message);
+      LBSucesso.Caption := 'Erro ao salvar produto';
+      LBSucesso.font.color :=  clRed;
+    end;
   end;
 end;
 
@@ -113,6 +166,47 @@ begin
   end;
 
   DataModulePrincipal.FDQueryProduto.Close;
+end;
+
+procedure TNMCadastroProduto.EdNomeProdutoKeyPress(Sender: TObject;
+  var Key: Char);
+begin
+  if FStep = 1 then
+  begin
+    FStep := 2;  // Avança para o próximo passo
+    ShowHintForStep(FStep);
+  end;
+end;
+
+procedure TNMCadastroProduto.EdPrecoExit(Sender: TObject);
+begin
+  // Substituir ponto por vírgula quando o usuário sair do campo
+  EdPreco.Text := StringReplace(EdPreco.Text, '.', ',', [rfReplaceAll]);
+  // Verificar se o valor inserido tem um formato numérico válido
+  try
+    StrToFloat(EdPreco.Text); // Tenta converter para número
+  except
+    on E: EConvertError do
+    begin
+      ShowMessage('Valor inválido! Insira um preço válido no formato 0,00');
+      EdPreco.SetFocus;
+    end;
+  end;
+end;
+
+procedure TNMCadastroProduto.EdPrecoKeyPress(Sender: TObject; var Key: Char);
+begin
+  if FStep = 2 then
+  begin
+    FStep := 3;  // Avança para o próximo passo
+    ShowHintForStep(FStep);
+  end;
+    // Permitir apenas números, vírgula e backspace
+  if not (Key in ['0'..'9', ',', #8]) then
+    Key := #0; // Cancela a tecla pressionada, se não for válida
+  // Se o campo já tiver uma vírgula, impedir mais vírgulas
+  if (Key = ',') and (Pos(',', EdPreco.Text) > 0) then
+    Key := #0; // Impede mais de uma vírgula
 end;
 
 procedure TNMCadastroProduto.LimparCampos;

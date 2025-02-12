@@ -158,6 +158,10 @@
             <Form>FrmSplash</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="..\forms\NMConfiguracao.pas">
+            <Form>NMConfig</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

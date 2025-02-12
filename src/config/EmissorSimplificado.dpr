@@ -16,7 +16,8 @@ uses
   Vcl.Styles,
   NMCadastroDeEmpresa in '..\forms\NMCadastroDeEmpresa.pas' {FCadastroDeEmpresa},
   NMPesquisaDeEmpresas in '..\forms\NMPesquisaDeEmpresas.pas' {NMPesquisaDeEmpresa},
-  FrmSplashArt in '..\forms\FrmSplashArt.pas' {FrmSplash};
+  FrmSplashArt in '..\forms\FrmSplashArt.pas' {FrmSplash},
+  NMConfiguracao in '..\forms\NMConfiguracao.pas' {NMConfig};
 
 {$R *.res}
 

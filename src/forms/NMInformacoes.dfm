@@ -4,8 +4,8 @@
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Informa'#231#245'es'
-  ClientHeight = 143
-  ClientWidth = 415
+  ClientHeight = 523
+  ClientWidth = 771
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -273,8 +273,8 @@
   object MemoInformações: TMemo
     Left = 0
     Top = 0
-    Width = 415
-    Height = 143
+    Width = 771
+    Height = 523
     Align = alClient
     Alignment = taCenter
     CharCase = ecUpperCase
@@ -284,19 +284,66 @@
     Font.Name = 'Segoe UI'
     Font.Style = [fsBold]
     Lines.Strings = (
-      'FLUXO DE UTILIZA'#199#195'O DO CADASTRO DE CLIENTE'
+      'EMISSOR SIMPLIFICADO DE PEDIDO '#8211' LICEN'#199'A DE USO'
       ''
-      'PRIMEIRO FLUXO'
-      '- INFORME OS DADOS DO CLIENTE E CLIQUE NO BOT'#195'O '#39'SALVAR'#39
+      'COPYRIGHT (C) 2025 CLAYTON MACHADO'
       ''
-      'SEGUNDO FLUXO'
-      '- CLIQUE NO BOT'#195'O '#39'EDITAR'#39' E SELECIONE UM CLIENTE NO COMBO'
-      '- FECHE O FORMUL'#193'RIO'
-      '- EDITE O CLIENTE E CLIQUE NO BOT'#195'O '#39'SALVAR'#39)
+      
+        'ESTE SOFTWARE, DENOMINADO "EMISSOR SIMPLIFICADO DE PEDIDO", '#201' DI' +
+        'SPONIBILIZADO SOB OS SEGUINTES TERMOS:'
+      ''
+      '1. PERMISS'#195'O DE USO'
+      
+        'O SOFTWARE PODE SER UTILIZADO EXCLUSIVAMENTE PARA USO PESSOAL E ' +
+        'INTERNO. O USU'#193'RIO TEM PERMISS'#195'O PARA:'
+      '- INSTALAR E UTILIZAR O SOFTWARE EM SEUS DISPOSITIVOS.'
+      
+        '- MODIFICAR O SOFTWARE PARA FINS PESSOAIS, SEM DISTRIBUI'#199#195'O P'#218'BL' +
+        'ICA.'
+      ''
+      '2. RESTRI'#199#213'ES'
+      #201' ESTRITAMENTE PROIBIDO, SEM A PERMISS'#195'O EXPL'#205'CITA DO AUTOR:'
+      
+        '- VENDER, ALUGAR, SUBLICENCIAR OU OBTER QUALQUER VANTAGEM COMERC' +
+        'IAL COM ESTE SOFTWARE.'
+      '- REDISTRIBUIR C'#211'PIAS, MODIFICADAS OU N'#195'O, DE QUALQUER FORMA.'
+      
+        '- PUBLICAR ESTE SOFTWARE, TOTAL OU PARCIALMENTE, EM QUALQUER PLA' +
+        'TAFORMA OU REPOSIT'#211'RIO P'#218'BLICO.'
+      ''
+      
+        'APENAS O AUTOR, CLAYTON MACHADO, PODE DISTRIBUIR E COMERCIALIZAR' +
+        ' ESTE SOFTWARE OU CONCEDER AUTORIZA'#199#195'O '
+      'PARA TAL.'
+      ''
+      '3. OBTEN'#199#195'O DE LICEN'#199'A COMERCIAL OU DE DISTRIBUI'#199#195'O'
+      
+        'PARA OBTER PERMISS'#195'O PARA DISTRIBUI'#199#195'O OU COMERCIALIZA'#199#195'O, '#201' NEC' +
+        'ESS'#193'RIO UM CONTRATO FORMAL COM O AUTOR. '
+      'INTERESSADOS DEVEM ENTRAR EM CONTATO PARA NEGOCIA'#199#213'ES.'
+      ''
+      '4. REVOGA'#199#195'O DE LICEN'#199'A'
+      
+        'O USO DO SOFTWARE EST'#193' CONDICIONADO '#192' CONFORMIDADE COM ESTA LICE' +
+        'N'#199'A. QUALQUER VIOLA'#199#195'O DESTES TERMOS '
+      
+        'RESULTAR'#193' NA **REVOGA'#199#195'O AUTOM'#193'TICA DA LICEN'#199'A**, PODENDO O AUTO' +
+        'R TOMAR MEDIDAS LEGAIS CAB'#205'VEIS.'
+      ''
+      '5. ISEN'#199#195'O DE RESPONSABILIDADE'
+      
+        'ESTE SOFTWARE '#201' FORNECIDO "COMO EST'#193'", SEM GARANTIAS DE QUALQUER' +
+        ' TIPO, EXPRESSAS OU IMPL'#205'CITAS. O AUTOR N'#195'O '
+      
+        'SE RESPONSABILIZA POR QUAISQUER DANOS DIRETOS OU INDIRETOS DECOR' +
+        'RENTES DO USO DESTE SOFTWARE.'
+      ''
+      'CLAYTON MACHADO  '
+      'DATA DE CRIA'#199#195'O DO PROJETO: 29 DE JANEIRO DE 2025')
     ParentFont = False
     ReadOnly = True
     TabOrder = 0
-    ExplicitWidth = 411
-    ExplicitHeight = 142
+    ExplicitWidth = 718
+    ExplicitHeight = 533
   end
 end

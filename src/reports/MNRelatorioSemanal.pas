@@ -11,13 +11,13 @@ type
   TRelatorioSemanal = class(TForm)
     BtImprimir: TButton;
     DateTimePickerInicial: TDateTimePicker;
-    Label1: TLabel;
-    Label2: TLabel;
+    LabelDataInicio: TLabel;
+    LabelCliente: TLabel;
     ComboBoxCliente: TComboBox;
-    Label3: TLabel;
+    LabelEmpresa: TLabel;
     ComboBoxNomeEmpresa: TComboBox;
     DateTimePickerFinal: TDateTimePicker;
-    Label4: TLabel;
+    LabelDataFim: TLabel;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtImprimirClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -110,15 +110,55 @@ begin
 end;
 
 procedure TRelatorioSemanal.FormCreate(Sender: TObject);
+var
+  ExibirEmpresa: string;
 begin
   DateTimePickerInicial.Date := Now;
   DateTimePickerFinal.Date := Now + 1;
   CarregarClientes;
-  CarregarEmpresas;
+  // Verifica se ExibirEmpresaNoRelatorio está ativo
+  with DataModulePrincipal.FDQueryConfiguracao do
+  begin
+    DataModulePrincipal.FDQueryConfiguracao.Close;
+    DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'SELECT FLATIVO FROM Configuracao WHERE NomeConfiguracao = :NomeConfig';
+    DataModulePrincipal.FDQueryConfiguracao.ParamByName('NomeConfig').AsString := 'ExibirEmpresaNoRelatorio';
+    DataModulePrincipal.FDQueryConfiguracao.Open;
+    ExibirEmpresa := DataModulePrincipal.FDQueryConfiguracao.FieldByName('FLATIVO').AsString;
+  end;
+  if ExibirEmpresa = 'S' then
+  begin
+    CarregarEmpresas;
+    ComboBoxNomeEmpresa.Visible := True;
+    LabelEmpresa.Visible := True;
+    LabelCliente.top := 65;
+    ComboBoxCliente.top := 88;
+    LabelDataInicio.top := 120;
+    LabelDataFim.top := 120;
+    DateTimePickerInicial.top := 143;
+    DateTimePickerFinal.top := 143;
+    BtImprimir.top := 180;
+    Height := 256;
+
+  end
+  else
+  begin
+    ComboBoxNomeEmpresa.Visible := False;
+    LabelEmpresa.Visible := False;
+    // Realinha os componentes
+    LabelCliente.top := 8;
+    ComboBoxCliente.top := 31;
+    LabelDataInicio.top := 65;
+    LabelDataFim.top := 65;
+    DateTimePickerInicial.top := 88;
+    DateTimePickerFinal.top := 88;
+    BtImprimir.top := 125;
+    Height := 203;
+  end;
 end;
 
 function TRelatorioSemanal.CarregarClientes: string;
 begin
+
   DataModulePrincipal.FDQueryPedido.Close;
   DataModulePrincipal.FDQueryPedido.SQL.Text := 'SELECT DISTINCT NomeCliente FROM Pedido';
   DataModulePrincipal.FDQueryPedido.Open;

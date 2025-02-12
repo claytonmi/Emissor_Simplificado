@@ -5,7 +5,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uDataModulePrincipal, Vcl.StdCtrls, NMPesquisaDeEmpresas,
-  Vcl.ExtCtrls, Vcl.ExtDlgs, FireDAC.Stan.Intf, Data.DB, FireDAC.Comp.Client, System.StrUtils;
+  Vcl.ExtCtrls, Vcl.ExtDlgs, FireDAC.Stan.Intf, Data.DB, FireDAC.Comp.Client, System.StrUtils,
+  Vcl.Buttons;
 
 type
   TFCadastroDeEmpresa = class(TForm)
@@ -40,6 +41,8 @@ type
     Label10: TLabel;
     BtExcluir: TButton;
     EdCodigoEmpresa: TEdit;
+    BtInfo: TBitBtn;
+    BalloonHintCadastroEmpresa: TBalloonHint;
     procedure BtImagemClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -50,8 +53,18 @@ type
     procedure BtCancelarClick(Sender: TObject);
     procedure EdCNPJKeyPress(Sender: TObject; var Key: Char);
     procedure EdTelefoneKeyPress(Sender: TObject; var Key: Char);
+    procedure BtInfoClick(Sender: TObject);
+    procedure MostrarBalloonHint(Controle: TControl; Titulo, Mensagem: string);
+    procedure EdNomeEmpresaExit(Sender: TObject);
+    procedure EdNomeFantasiaExit(Sender: TObject);
+    procedure EdCNPJExit(Sender: TObject);
+    procedure EdEnderecoExit(Sender: TObject);
+    procedure EdCidadeExit(Sender: TObject);
+    procedure EdBairroExit(Sender: TObject);
+    procedure EdEstadoExit(Sender: TObject);
   private
   FImagemStream: TMemoryStream;
+  TutorialAtivo: Boolean;
     { Private declarations }
   public
     { Public declarations }
@@ -75,6 +88,7 @@ begin
     EdCidade.Clear;
     EdEstado.Clear;
     ImgEmpresa.Picture := nil;
+    EdCodigoEmpresa.Clear;
 
     //Contrele de campos habilitados
     EdNomeEmpresa.Enabled := false;
@@ -100,59 +114,75 @@ procedure TFCadastroDeEmpresa.BtEditarClick(Sender: TObject);
 begin
   NMPesquisaDeEmpresa := TNMPesquisaDeEmpresa.Create(Self);
   try
-    NMPesquisaDeEmpresa.ShowModal; // Abre a pesquisa
-    // Se um ID válido foi selecionado, busca os dados no banco
+    NMPesquisaDeEmpresa.ShowModal; // Abre a pesquisa sem bloquear o restante do código
+
+    // Exemplo de verificação após o fechamento da pesquisa
     if IDEmpresaSelecionada > 0 then
     begin
       // Usar somente um fechamento de query para evitar reabertura repetitiva
       with DataModulePrincipal.FDQueryEmpresa do
       begin
-        Close;
-        SQL.Text := 'SELECT * FROM Empresa WHERE IDEmpresa = :IDEmpresa';
-        ParamByName('IDEmpresa').AsInteger := IDEmpresaSelecionada;
-        Open;
-        if not IsEmpty then
-        begin
-          EdCodigoEmpresa.Text := IntToStr(FieldByName('IDEmpresa').AsInteger);
-          EdNomeEmpresa.Text := FieldByName('NomeEmpresa').AsString;
-          EdCNPJ.Text := FieldByName('CNPJ').AsString;
-          EdNomeFantasia.Text := FieldByName('NomeFantasia').AsString;
-          EdTelefone.Text := FieldByName('Telefone').AsString;
-          EdEndereco.Text := FieldByName('Endereco').AsString;
-          EdCidade.Text := FieldByName('Cidade').AsString;
-          EdBairro.Text := FieldByName('Bairro').AsString;
-          EdEstado.Text := FieldByName('Estado').AsString;
-          EdNomeEmpresa.Enabled := true;
-          EdCNPJ.Enabled := true;
-          EdNomeFantasia.Enabled := true;
-          CheckBoxDefault.Enabled := true;
-          EdTelefone.Enabled := true;
-          EdEndereco.Enabled := true;
-          EdCidade.Enabled := true;
-          EdBairro.Enabled := true;
-          EdEstado.Enabled := true;
-          BtImagem.Enabled := true;
-          BtNovo.Enabled := false;
-          BtGravar.Enabled := true;
-          BtEditar.Enabled := false;
-          BtCancelar.Enabled := true;
-          BtExcluir.Enabled := true;
-          // Definir CheckBox com base no campo FlDefault
-          CheckBoxDefault.Checked := FieldByName('FlDefault').AsString = 'S';
-          // Carregar imagem se existir
-          if not FieldByName('ImgLogo').IsNull then
+        try
+          // Verifica se a consulta está aberta antes de fechar
+          if Active then
+          DataModulePrincipal.FDQueryEmpresa.Close;
+
+          DataModulePrincipal.FDQueryEmpresa.SQL.Text := 'SELECT * FROM Empresa WHERE IDEmpresa = :IDEmpresa';
+          DataModulePrincipal.FDQueryEmpresa.ParamByName('IDEmpresa').AsInteger := IDEmpresaSelecionada;
+          DataModulePrincipal.FDQueryEmpresa.Open;
+
+          if not IsEmpty then
           begin
-            var StreamLogo := TMemoryStream.Create;
-            try
-              (FieldByName('ImgLogo') as TBlobField).SaveToStream(StreamLogo);
-              StreamLogo.Position := 0;
-              ImgEmpresa.Picture.LoadFromStream(StreamLogo);
-            finally
-              StreamLogo.Free;
-            end;
+            EdCodigoEmpresa.Text := IntToStr(FieldByName('IDEmpresa').AsInteger);
+            EdNomeEmpresa.Text := FieldByName('NomeEmpresa').AsString;
+            EdCNPJ.Text := FieldByName('CNPJ').AsString;
+            EdNomeFantasia.Text := FieldByName('NomeFantasia').AsString;
+            EdTelefone.Text := FieldByName('Telefone').AsString;
+            EdEndereco.Text := FieldByName('Endereco').AsString;
+            EdCidade.Text := FieldByName('Cidade').AsString;
+            EdBairro.Text := FieldByName('Bairro').AsString;
+            EdEstado.Text := FieldByName('Estado').AsString;
+
+            // Habilitar os campos para edição
+            EdNomeEmpresa.Enabled := true;
+            EdCNPJ.Enabled := true;
+            EdNomeFantasia.Enabled := true;
+            CheckBoxDefault.Enabled := true;
+            EdTelefone.Enabled := true;
+            EdEndereco.Enabled := true;
+            EdCidade.Enabled := true;
+            EdBairro.Enabled := true;
+            EdEstado.Enabled := true;
+            BtImagem.Enabled := true;
+            BtNovo.Enabled := false;
+            BtGravar.Enabled := true;
+            BtEditar.Enabled := false;
+            BtCancelar.Enabled := true;
+            BtExcluir.Enabled := true;
+
+            // Definir CheckBox com base no campo FlDefault
+            CheckBoxDefault.Checked := FieldByName('FlDefault').AsString = 'S';
+
+            // Carregar imagem se existir
+            if not FieldByName('ImgLogo').IsNull then
+            begin
+              var StreamLogo := TMemoryStream.Create;
+              try
+                (FieldByName('ImgLogo') as TBlobField).SaveToStream(StreamLogo);
+                StreamLogo.Position := 0;
+                ImgEmpresa.Picture.LoadFromStream(StreamLogo);
+              finally
+                StreamLogo.Free;
+              end;
+            end
+            else
+              ImgEmpresa.Picture := nil;
           end
           else
-            ImgEmpresa.Picture := nil;
+            ShowMessage('Empresa não encontrada.');
+        finally
+          // Garante que a consulta será fechada
+          DataModulePrincipal.FDQueryEmpresa.Close;
         end;
       end;
     end;
@@ -160,6 +190,9 @@ begin
     NMPesquisaDeEmpresa.Free;
   end;
 end;
+
+
+
 
 
 procedure TFCadastroDeEmpresa.BtExcluirClick(Sender: TObject);
@@ -179,6 +212,7 @@ begin
   if MessageDlg('Tem certeza que deseja excluir esta empresa?', mtConfirmation, [mbYes, mbNo], 0) = mrNo then
     Exit;
 
+  DataModulePrincipal.FDConnection.StartTransaction;
   try
     // Preparar a query para excluir o registro da tabela Empresa
     DataModulePrincipal.FDQueryEmpresa.Close;
@@ -190,6 +224,9 @@ begin
 
     // Executa o comando SQL para excluir o registro
     DataModulePrincipal.FDQueryEmpresa.ExecSQL;
+    if DataModulePrincipal.FDQueryEmpresa.RowsAffected = 0 then
+      ShowMessage('Nenhuma empresa encontrada para exclusão.');
+
     DataModulePrincipal.FDConnection.Commit;
 
     // Exibe uma mensagem de sucesso
@@ -227,8 +264,11 @@ begin
     BtExcluir.Enabled := false;
     BtImagem.Enabled := false;
   except
-    on E: Exception do
-      ShowMessage('Erro ao excluir empresa: ' + E.Message);
+   on E: Exception do
+    begin
+     DataModulePrincipal.FDConnection.Rollback; // Desfaz se houver erro
+     ShowMessage('Erro ao excluir empresa: ' + E.Message);
+    end;
   end;
 end;
 
@@ -237,13 +277,21 @@ procedure TFCadastroDeEmpresa.BtGravarClick(Sender: TObject);
 var
   StreamLogo: TMemoryStream;
 begin
+  if TutorialAtivo then
+  begin
+    BalloonHintCadastroEmpresa.HideHint;
+    TutorialAtivo := False;
+  end;
   // Validação dos campos obrigatórios
   if (Trim(EdNomeEmpresa.Text) = '') or
-     (Trim(EdTelefone.Text) = '') or
-     (Trim(EdNomeFantasia.Text) = '') or
-     (Trim(EdCNPJ.Text) = '') then
+     (Trim(EdNomeFantasia.Text) = '') then
   begin
     ShowMessage('Preencha todos os campos obrigatórios!');
+    Exit;
+  end;
+  if ImgEmpresa.Picture.Graphic.Empty then
+  begin
+    ShowMessage('Por favor, insira uma imagem para o logo da empresa!');
     Exit;
   end;
   try
@@ -357,7 +405,26 @@ begin
   finally
     OpenDialog.Free;
   end;
+  if TutorialAtivo then
+    MostrarBalloonHint(EdEndereco, 'Passo 6: Endereço', 'Informe o endereço da empresa.');
+
 end;
+
+procedure TFCadastroDeEmpresa.BtInfoClick(Sender: TObject);
+begin
+ // Inicia o tutorial mostrando o balão no botão BtNovoPedido
+  TutorialAtivo := True;
+  MostrarBalloonHint(BtNovo, 'Passo 1: Criar Novo Cadastro', 'Clique aqui para iniciar o cadastro.');
+end;
+
+procedure TFCadastroDeEmpresa.MostrarBalloonHint(Controle: TControl; Titulo, Mensagem: string);
+begin
+  BalloonHintCadastroEmpresa.HideHint;
+  BalloonHintCadastroEmpresa.Title := Titulo;
+  BalloonHintCadastroEmpresa.Description := Mensagem;
+  BalloonHintCadastroEmpresa.ShowHint(Controle);
+end;
+
 
 procedure TFCadastroDeEmpresa.BtNovoClick(Sender: TObject);
 begin
@@ -391,6 +458,30 @@ begin
     BtEditar.Enabled := False;
     BtCancelar.Enabled := true;
   end;
+  if TutorialAtivo then
+  MostrarBalloonHint(EdNomeEmpresa, 'Passo 2: Nome da Empresa', 'Informe o nome da empresa.');
+
+end;
+
+procedure TFCadastroDeEmpresa.EdBairroExit(Sender: TObject);
+begin
+  if TutorialAtivo then
+    MostrarBalloonHint(EdEstado, 'Passo 9: Estado', 'Informe o estado da empresa.');
+
+end;
+
+procedure TFCadastroDeEmpresa.EdCidadeExit(Sender: TObject);
+begin
+if TutorialAtivo then
+    MostrarBalloonHint(EdBairro, 'Passo 8: Bairro', 'Informe o bairro da empresa.');
+
+end;
+
+procedure TFCadastroDeEmpresa.EdCNPJExit(Sender: TObject);
+begin
+if TutorialAtivo then
+    MostrarBalloonHint(BtImagem, 'Passo 5: Adicionar Imagem', 'Clique aqui para adicionar uma imagem da empresa.');
+
 end;
 
 procedure TFCadastroDeEmpresa.EdCNPJKeyPress(Sender: TObject; var Key: Char);
@@ -438,6 +529,32 @@ begin
 end;
 
 
+procedure TFCadastroDeEmpresa.EdEnderecoExit(Sender: TObject);
+begin
+if TutorialAtivo then
+    MostrarBalloonHint(EdCidade, 'Passo 7: Cidade', 'Informe a cidade da empresa.');
+
+end;
+
+procedure TFCadastroDeEmpresa.EdEstadoExit(Sender: TObject);
+begin
+ if TutorialAtivo then
+    MostrarBalloonHint(BtGravar, 'Passo 10: Finalizar Cadastro', 'Clique aqui para salvar os dados.');
+
+end;
+
+procedure TFCadastroDeEmpresa.EdNomeEmpresaExit(Sender: TObject);
+begin
+if TutorialAtivo then
+    MostrarBalloonHint(EdNomeFantasia, 'Passo 3: Nome Fantasia', 'Informe o nome fantasia da empresa.');
+end;
+
+procedure TFCadastroDeEmpresa.EdNomeFantasiaExit(Sender: TObject);
+begin
+if TutorialAtivo then
+    MostrarBalloonHint(EdCNPJ, 'Passo 4: CNPJ', 'Digite o CNPJ da empresa.');
+end;
+
 procedure TFCadastroDeEmpresa.EdTelefoneKeyPress(Sender: TObject; var Key: Char);
 var
   TextoAtual: string;
@@ -465,7 +582,7 @@ begin
       ApenasNumeros := ApenasNumeros + TextoAtual[i];
 
   // Limita a 11 números (telefone no formato (XX) XXXXX-XXXX)
-  if (Length(ApenasNumeros) >= 14) then
+  if (Length(ApenasNumeros) >= 11) then
   begin
     Key := #0;  // Impede a digitação de mais números
     Exit;
@@ -474,9 +591,9 @@ begin
   // Formata o telefone automaticamente enquanto digita
   case Length(ApenasNumeros) of
     1: EdTelefone.Text := '(' + EdTelefone.Text;
-    3: EdTelefone.Text := EdTelefone.Text + ') ';
-    6: EdTelefone.Text := EdTelefone.Text + ' ';
-    10: EdTelefone.Text := EdTelefone.Text + '-';
+    2: EdTelefone.Text := EdTelefone.Text + ') ';
+    3: EdTelefone.Text := EdTelefone.Text + ' ';
+    7: EdTelefone.Text := EdTelefone.Text + '-';
   end;
 
   // Move o cursor para o final do texto

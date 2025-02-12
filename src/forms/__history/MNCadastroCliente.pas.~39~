@@ -1,0 +1,256 @@
+unit MNCadastroCliente;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Data.DB, uDataModulePrincipal,
+  FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param,
+  FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
+  FireDAC.Stan.Async, FireDAC.DApt, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
+  System.RegularExpressions,NMPesquisaCliente, Vcl.Buttons; // Adicionando System.RegularExpressions para validação de email
+
+type
+  TFCadastroCliente = class(TForm)
+    EdNome: TEdit;
+    EdTelefone: TEdit;
+    EdEmail: TEdit;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
+    BtSalvar: TButton;
+    BtEditar: TButton;
+    BtInfo: TBitBtn;
+    LBSucesso: TLabel;
+    BalloonHintUsandoCliente: TBalloonHint;
+    EdEndereco: TEdit;
+    Label4: TLabel;
+    procedure BtSalvarClick(Sender: TObject);
+    procedure EdTelefoneKeyPress(Sender: TObject; var Key: Char);
+    procedure BtEditarClick(Sender: TObject);
+    procedure BtInfoClick(Sender: TObject);
+    procedure EdNomeKeyPress(Sender: TObject; var Key: Char);
+    procedure EdEmailKeyPress(Sender: TObject; var Key: Char);
+    procedure EdEnderecoKeyPress(Sender: TObject; var Key: Char); // Novo evento de edição
+  private
+    { Private declarations }
+    TutorialAtivo: Boolean;
+    FClienteId: Integer; // Variável para armazenar o ID do cliente
+    procedure PreencherCamposParaEdicao(ClientId: Integer); // Preencher campos para edição
+  public
+    { Public declarations }
+  end;
+
+var
+  FCadastroCliente: TFCadastroCliente;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFCadastroCliente.BtEditarClick(Sender: TObject);
+var
+  ClienteId: Integer;
+begin
+  NMDePesquisaCliente := TNMDePesquisaCliente.Create(Self);
+  try
+    NMDePesquisaCliente.ShowModal;
+    // Verifica se o usuário selecionou um cliente
+    if NMDePesquisaCliente.DBComboBoxPesquisaCliente.ItemIndex <> -1 then
+    begin
+      // Obtém o ID do cliente selecionado
+      ClienteId := Integer(NMDePesquisaCliente.DBComboBoxPesquisaCliente.Items.Objects[NMDePesquisaCliente.DBComboBoxPesquisaCliente.ItemIndex]);
+      // Chama o método para preencher os campos com os dados do cliente
+      PreencherCamposParaEdicao(ClienteId);
+    end;
+  finally
+    NMDePesquisaCliente.Free;
+  end;
+end;
+
+
+procedure TFCadastroCliente.PreencherCamposParaEdicao(ClientId: Integer);
+begin
+  FClienteId := ClientId;  // Armazena o ID do cliente em uma variável global
+  // Consulta os dados do cliente no banco de dados
+  DataModulePrincipal.FDQueryCliente.SQL.Text := 'SELECT * FROM Cliente WHERE IDCliente = :IDCliente';
+  DataModulePrincipal.FDQueryCliente.Params.ParamByName('IDCliente').AsInteger := FClienteId;
+  DataModulePrincipal.FDQueryCliente.Open;
+  // Preenche os campos com os dados do cliente
+  EdNome.Text := DataModulePrincipal.FDQueryCliente.FieldByName('nome').AsString;
+  EdTelefone.Text := DataModulePrincipal.FDQueryCliente.FieldByName('telefone').AsString;
+  EdEmail.Text := DataModulePrincipal.FDQueryCliente.FieldByName('email').AsString;
+end;
+
+procedure TFCadastroCliente.BtInfoClick(Sender: TObject);
+begin
+  // Inicia o tutorial mostrando o balão no botão BtNovoPedido
+  BalloonHintUsandoCliente.Title := 'Passo 1: Nome do cliente';
+  BalloonHintUsandoCliente.Description := 'Informe no campo o nome do cliente.';
+  BalloonHintUsandoCliente.ShowHint(EdNome);
+  TutorialAtivo := true;
+end;
+
+procedure TFCadastroCliente.BtSalvarClick(Sender: TObject);
+var
+  SQL: string;
+begin
+  // Verifica se os campos obrigatórios estão preenchidos
+  if EdNome.Text = '' then
+  begin
+    ShowMessage('O campo Nome é obrigatório.');
+    Exit;
+  end;
+  if EdTelefone.Text = '' then
+  begin
+    ShowMessage('O campo Telefone é obrigatório.');
+    Exit;
+  end;
+  if EdEmail.Text = '' then
+  begin
+    ShowMessage('O campo Email é obrigatório.');
+    Exit;
+  end;
+  // Inicia uma transação para garantir a consistência dos dados
+  try
+    DataModulePrincipal.FDConnection.StartTransaction;
+    try
+      if DataModulePrincipal.FDQueryCliente.Active then
+        DataModulePrincipal.FDQueryCliente.Close;
+
+      DataModulePrincipal.FDQueryCliente.Connection := DataModulePrincipal.FDConnection;
+
+      if FClienteId > 0 then
+      begin
+        // Atualiza os dados de um cliente existente
+        SQL := 'UPDATE Cliente SET nome = :Nome, endereco = :Endereco ,telefone = :Telefone, email = :Email WHERE IDCliente = :IDCliente';
+      end
+      else
+      begin
+        // Cadastra um novo cliente
+        SQL := 'INSERT INTO Cliente (nome, endereco, telefone, email) VALUES (:Nome, :Endereco, :Telefone, :Email)';
+      end;
+      DataModulePrincipal.FDQueryCliente.SQL.Text := SQL;
+      DataModulePrincipal.FDQueryCliente.Params.ParamByName('Nome').AsString := EdNome.Text;
+      DataModulePrincipal.FDQueryCliente.Params.ParamByName('Endereco').AsString := EdEndereco.Text;
+      DataModulePrincipal.FDQueryCliente.Params.ParamByName('Telefone').AsString := EdTelefone.Text;
+      DataModulePrincipal.FDQueryCliente.Params.ParamByName('Email').AsString := EdEmail.Text;
+      // Se for edição, também precisa passar o ID
+      if FClienteId > 0 then
+        DataModulePrincipal.FDQueryCliente.Params.ParamByName('IDCliente').AsInteger := FClienteId;
+      // Executa a operação (inserção ou atualização)
+      DataModulePrincipal.FDQueryCliente.ExecSQL;
+      // Comita a transação
+      DataModulePrincipal.FDConnection.Commit;
+
+      // Limpa os campos e prepara o formulário para um novo cadastro
+      EdNome.Clear;
+      EdTelefone.Clear;
+      EdEndereco.Clear;
+      EdEmail.Clear;
+      FClienteId := 0;  // Limpa a variável de controle do ID
+      LBSucesso.font.color :=  clGreen;
+      LBSucesso.Caption := 'Cliente salvo com sucesso';
+
+    except
+      on E: Exception do
+      begin
+        DataModulePrincipal.FDConnection.Rollback; // Reverte a operação em caso de erro
+        ShowMessage('Erro ao salvar cliente: ' + E.Message);
+        LBSucesso.Caption := 'Erro ao salvar cliente';
+        LBSucesso.font.color :=  clRed;
+      end;
+    end;
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Erro na transação: ' + E.Message);
+      LBSucesso.Caption := 'Erro ao salvar cliente';
+      LBSucesso.font.color :=  clRed;
+    end;
+  end;
+  if TutorialAtivo then
+  begin
+    if Assigned(BalloonHintUsandoCliente) then
+    begin
+      BalloonHintUsandoCliente.HideHint;
+      BalloonHintUsandoCliente.Free;
+      BalloonHintUsandoCliente := TBalloonHint.Create(Self); // Cria novamente para resetar
+    end;
+  TutorialAtivo := false;
+  end;
+end;
+
+
+
+procedure TFCadastroCliente.EdEmailKeyPress(Sender: TObject; var Key: Char);
+begin
+  if TutorialAtivo then
+  begin
+  // Inicia o tutorial mostrando o balão no botão BtNovoPedido
+  BalloonHintUsandoCliente.HideAfter := 10000; // 5 segundos
+  BalloonHintUsandoCliente.Title := 'Passo 4: Salvar cliente';
+  BalloonHintUsandoCliente.Description := 'Clique aqui para salvar o novo cliente.';
+  BalloonHintUsandoCliente.ShowHint(BtSalvar);
+  end;
+end;
+
+procedure TFCadastroCliente.EdEnderecoKeyPress(Sender: TObject; var Key: Char);
+begin
+  if TutorialAtivo then
+  begin
+  // Inicia o tutorial mostrando o balão no botão BtNovoPedido
+  BalloonHintUsandoCliente.HideAfter := 10000; // 5 segundos
+  BalloonHintUsandoCliente.Title := 'Passo 3: Telefone do cliente';
+  BalloonHintUsandoCliente.Description := 'Informe no campo o telefone do cliente.';
+  BalloonHintUsandoCliente.ShowHint(EdTelefone);
+  end;
+end;
+
+procedure TFCadastroCliente.EdNomeKeyPress(Sender: TObject; var Key: Char);
+begin
+  if TutorialAtivo then
+  begin
+  // Inicia o tutorial mostrando o balão no botão BtNovoPedido
+  BalloonHintUsandoCliente.HideAfter := 10000; // 5 segundos
+  BalloonHintUsandoCliente.Title := 'Passo 2: Endereço do cliente';
+  BalloonHintUsandoCliente.Description := 'Informe no campo o endereço do cliente.';
+  BalloonHintUsandoCliente.ShowHint(EdEndereco);
+  end;
+end;
+
+procedure TFCadastroCliente.EdTelefoneKeyPress(Sender: TObject; var Key: Char);
+begin
+ // Se pressionar uma tecla que não seja um número, não faz nada
+  if not (Key in ['0'..'9']) then
+    Exit;
+  // Impede que o usuário digite mais do que 15 caracteres
+  if Length(EdTelefone.Text) >= 15 then
+  begin
+    Key := #0; // Cancela a digitação
+    Exit;
+  end;
+  // Controla a máscara conforme o número de caracteres
+  if Length(EdTelefone.Text) = 0 then
+    EdTelefone.Text := '(' + EdTelefone.Text; // Adiciona o parêntese de abertura
+  if Length(EdTelefone.Text) = 3 then
+    EdTelefone.Text := EdTelefone.Text + ') '; // Fecha o parêntese e coloca o espaço
+  if Length(EdTelefone.Text) = 9 then
+    EdTelefone.Text := EdTelefone.Text + '-'; // Adiciona o hífen
+  // Após ajustar a máscara, movemos o cursor para o final do texto
+  EdTelefone.SelStart := Length(EdTelefone.Text);
+  // Permite a inserção do número
+  EdTelefone.Text := EdTelefone.Text + Key;
+  Key := #0; // Impede que a tecla pressionada seja inserida diretamente
+  if TutorialAtivo then
+  begin
+  // Inicia o tutorial mostrando o balão no botão BtNovoPedido
+  BalloonHintUsandoCliente.HideAfter := 10000; // 5 segundos
+  BalloonHintUsandoCliente.Title := 'Passo 4: Email do cliente';
+  BalloonHintUsandoCliente.Description := 'Informe no campo o Email do cliente.';
+  BalloonHintUsandoCliente.ShowHint(EdEmail);
+  end;
+end;
+
+end.
+

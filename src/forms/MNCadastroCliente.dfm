@@ -4,8 +4,8 @@ object FCadastroCliente: TFCadastroCliente
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Cadastro Cliente'
-  ClientHeight = 165
-  ClientWidth = 363
+  ClientHeight = 198
+  ClientWidth = 360
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -279,22 +279,22 @@ object FCadastroCliente: TFCadastroCliente
   end
   object Label2: TLabel
     Left = 67
-    Top = 48
+    Top = 80
     Width = 47
     Height = 15
     Caption = 'Telefone:'
   end
   object Label3: TLabel
     Left = 77
-    Top = 77
+    Top = 109
     Width = 37
     Height = 15
     Caption = 'E-mail:'
   end
   object LBSucesso: TLabel
     Left = 0
-    Top = 150
-    Width = 363
+    Top = 183
+    Width = 360
     Height = 15
     Align = alBottom
     Alignment = taCenter
@@ -306,7 +306,15 @@ object FCadastroCliente: TFCadastroCliente
     Font.Style = []
     ParentColor = False
     ParentFont = False
+    ExplicitTop = 150
     ExplicitWidth = 3
+  end
+  object Label4: TLabel
+    Left = 62
+    Top = 51
+    Width = 52
+    Height = 15
+    Caption = 'Endere'#231'o:'
   end
   object EdNome: TEdit
     Left = 120
@@ -314,10 +322,11 @@ object FCadastroCliente: TFCadastroCliente
     Width = 217
     Height = 23
     TabOrder = 0
+    OnKeyPress = EdNomeKeyPress
   end
   object EdTelefone: TEdit
     Left = 120
-    Top = 45
+    Top = 77
     Width = 129
     Height = 23
     TabOrder = 1
@@ -325,14 +334,15 @@ object FCadastroCliente: TFCadastroCliente
   end
   object EdEmail: TEdit
     Left = 120
-    Top = 74
+    Top = 106
     Width = 121
     Height = 23
     TabOrder = 2
+    OnKeyPress = EdEmailKeyPress
   end
   object BtSalvar: TButton
     Left = 96
-    Top = 114
+    Top = 147
     Width = 75
     Height = 25
     Caption = 'Salvar'
@@ -341,7 +351,7 @@ object FCadastroCliente: TFCadastroCliente
   end
   object BtEditar: TButton
     Left = 192
-    Top = 114
+    Top = 147
     Width = 75
     Height = 25
     Caption = 'Editar'
@@ -349,12 +359,10 @@ object FCadastroCliente: TFCadastroCliente
     OnClick = BtEditarClick
   end
   object BtInfo: TBitBtn
-    Left = 344
-    Top = 148
+    Left = 343
+    Top = 0
     Width = 17
     Height = 17
-    Align = alCustom
-    Anchors = [akLeft, akBottom]
     Glyph.Data = {
       42040000424D4204000000000000420000002800000010000000100000000100
       20000300000000040000130B0000130B000000000000000000000000FF0000FF
@@ -393,6 +401,17 @@ object FCadastroCliente: TFCadastroCliente
       36FF00000000}
     TabOrder = 5
     OnClick = BtInfoClick
-    ExplicitTop = 147
+  end
+  object EdEndereco: TEdit
+    Left = 120
+    Top = 48
+    Width = 217
+    Height = 23
+    TabOrder = 6
+    OnKeyPress = EdEnderecoKeyPress
+  end
+  object BalloonHintUsandoCliente: TBalloonHint
+    Left = 8
+    Top = 72
   end
 end

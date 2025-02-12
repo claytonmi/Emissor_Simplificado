@@ -1027,7 +1027,7 @@ object FrmSplash: TFrmSplash
   end
   object Label3: TLabel
     Left = 243
-    Top = 50
+    Top = 53
     Width = 26
     Height = 30
     Caption = 'De'

@@ -29,6 +29,8 @@ type
     FDQueryEmpresa: TFDQuery;
     DataSourceRelatorioDePedidos: TDataSource;
     FDQueryRelatorioDePedidos: TFDQuery;
+    DataSourceConfiguracao: TDataSource;
+    FDQueryConfiguracao: TFDQuery;
     procedure DataModuleCreate(Sender: TObject);
     procedure CriarTabelas;
 
@@ -38,14 +40,16 @@ type
     procedure CriarBancoDeDados(const DatabasePath: string; ComDadosTeste: Boolean);
     function VerificarOuCriarColuna(const Tabela, Coluna, Tipo: string): Boolean;
     function VerificarAtualizacaoSistema(VersaoAtual: string): Boolean;
+
   public
     function  VersaoAtual: string;
+    function VerificarExibirDataInsercao: Boolean;
   end;
 
 var
   DataModulePrincipal: TDataModulePrincipal;
 const
-  VERSAO_ATUAL = '1.0';
+  VERSAO_ATUAL = '1.1';
 
 implementation
 
@@ -120,6 +124,7 @@ begin
       VerificarOuCriarColuna('Pedido', 'Observacao', 'TEXT');
       VerificarOuCriarColuna('Pedido', 'TotalPedido', 'REAL');
       VerificarOuCriarColuna('ItemPedido', 'Desc', 'REAL');
+      VerificarOuCriarColuna('Cliente', 'Endereco', 'TEXT');
     end;
 
     if FDConnection.Connected then
@@ -134,6 +139,7 @@ begin
       FDQuerySistema.Active := True;
       FDQueryEmpresa.Active := True;
       FDQueryRelatorioDePedidos.Active := True;
+      FDQueryConfiguracao.Active := True;
     end
     else
       FrmSplashArt.FrmSplash.labEdit('A conexão com o banco de dados não foi estabelecida....');
@@ -144,6 +150,7 @@ begin
     begin
       ShowMessage('Erro ao conectar ou criar o banco de dados: ' + E.Message +
         sLineBreak + 'Caminho do banco de dados: ' + DatabasePath);
+      FDConnection.Connected := False;
       Halt;
     end;
   end;
@@ -206,6 +213,19 @@ begin
   end;
 end;
 
+function TDataModulePrincipal.VerificarExibirDataInsercao: Boolean;
+begin
+  Result := False; // Valor padrão caso não encontre o registro
+  with FDQueryConfiguracao do
+  begin
+    Close;
+    SQL.Text := 'SELECT FLAtivo FROM Configuracao WHERE NomeConfiguracao = :Nome';
+    ParamByName('Nome').AsString := 'ExibirDataInsercaoNoOrcamento';
+    Open;
+    if not IsEmpty then
+      Result := FieldByName('FLAtivo').AsString = 'S'; // Retorna True se for 'S'
+  end;
+end;
 
 procedure TDataModulePrincipal.CriarTabelas;
 begin
@@ -250,7 +270,8 @@ if not TabelaExiste('ItemPedido') then
       'IDCliente INTEGER PRIMARY KEY AUTOINCREMENT, ' +
       'Nome TEXT, ' +
       'Telefone TEXT, ' +
-      'Email TEXT);'
+      'Email TEXT, ' +
+      'Endereco TEXT);'
     );
 
   // Verifica e cria a tabela Produto
@@ -277,6 +298,41 @@ if not TabelaExiste('ItemPedido') then
       'ImgLogo BLOB, ' +
       'FlDefault char(1)DEFAULT ''S'');'
     );
+
+  if not TabelaExiste('Configuracao') then
+  begin
+     FDConnection.ExecSQL(
+    'CREATE TABLE IF NOT EXISTS Configuracao (' +
+    'IDConfiguracao INTEGER PRIMARY KEY AUTOINCREMENT, ' +
+    'NomeConfiguracao TEXT NOT NULL, ' +
+    'CaminhoBackup TEXT,' +
+    'QtdDias INTEGER DEFAULT 0,' +
+    'FLATIVO CHAR(1) NOT NULL CHECK(FLATIVO IN (''S'', ''N''))' +
+    ');'
+    );
+
+    FDConnection.ExecSQL(
+      'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
+      'VALUES (''ExibirDataInsercaoNoOrcamento'', ''S'');'
+    );
+    FDConnection.ExecSQL(
+      'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
+      'VALUES (''ExibirDataInsercaoNoRelatorio'', ''S'');'
+    );
+    FDConnection.ExecSQL(
+      'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
+      'VALUES (''ExibirEmpresaNoRelatorio'', ''S'');'
+    );
+    FDConnection.ExecSQL(
+      'INSERT INTO Configuracao (NomeConfiguracao, CaminhoBackup, FLATIVO) ' +
+      'VALUES (''CaminhoDoBackupDoBanco'', ''C:\Users\Default\Downloads'', ''S'');'
+    );
+    FDConnection.ExecSQL(
+      'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
+      'VALUES (''QtdDiasParaLimparBanco'', ''S'');'
+    );
+  end;
+
 
   if not TabelaExiste('Sistema') then
   begin

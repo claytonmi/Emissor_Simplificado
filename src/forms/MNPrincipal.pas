@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus,
-  MNRelatorioSemanal, NMPesquisaPedido, MNCadastroCliente, NMCadastroDeProduto, NMCadastroDeEmpresa,
+  MNRelatorioSemanal, NMPesquisaPedido, MNCadastroCliente, NMInformacoes, NMCadastroDeProduto, NMCadastroDeEmpresa,
   uDataModulePrincipal,
   System.IOUtils, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Grids,
   System.Generics.Collections,
@@ -16,7 +16,7 @@ uses
   FireDAC.Comp.Client, FireDAC.Stan.ExprFuncs, FireDAC.Phys.SQLiteWrapper.Stat,
   FireDAC.Phys.SQLiteDef, FireDAC.Phys.SQLite, FireDAC.Stan.Param, FireDAC.DatS,
   FireDAC.DApt.Intf, FireDAC.DApt, FireDAC.Comp.DataSet, Vcl.DBCtrls,
-  Vcl.Buttons, Math, Vcl.ComCtrls;
+  Vcl.Buttons, Math, Vcl.ComCtrls,  NMConfiguracao;
 
 type
   TEmissorPrincipal = class(TForm)
@@ -73,6 +73,14 @@ type
     NMCadastrodeEmpresas: TMenuItem;
     EdDataPedido: TDateTimePicker;
     LabelContador: TLabel;
+    Configurao1: TMenuItem;
+    Configurao2: TMenuItem;
+    Backupdobanco1: TMenuItem;
+    BalloonHintComoUsar: TBalloonHint;
+    N2: TMenuItem;
+    ComousaroSistema1: TMenuItem;
+    N3: TMenuItem;
+    Informaes1: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure MNCadastrodeClienteClick(Sender: TObject);
     procedure MNCadastroProdutoClick(Sender: TObject);
@@ -102,6 +110,12 @@ type
     procedure NMCadastrodeEmpresasClick(Sender: TObject);
     procedure FormShortCut(var Msg: TWMKey; var Handled: Boolean);
     procedure MemoOBSExit(Sender: TObject);
+    procedure Configurao1Click(Sender: TObject);
+    procedure Backupdobanco1Click(Sender: TObject);
+    procedure ComousaroSistema1Click(Sender: TObject);
+    procedure StringGridListSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure Informaes1Click(Sender: TObject);
 
   private
     { Private declarations }
@@ -111,6 +125,7 @@ type
     FValorItemAlterado: Boolean;
     FDescItemAlterado: Boolean;
     FQtdItemAlterado: Boolean;
+    TutorialAtivo: Boolean;
     procedure CarregarClientes;
     procedure AtualizarGridItens;
     procedure CarregarProdutos;
@@ -124,6 +139,8 @@ type
     function QuebrarTextoMemo(const Texto: string; TamanhoLinha: Integer): string;
 
   public
+    procedure AtualizarConfiguracoes;
+
     { Public declarations }
   end;
 
@@ -149,6 +166,99 @@ begin
       i := Length(Texto);
     Result := Result + Copy(Texto, PosInicio, i - PosInicio + 1) + sLineBreak;
     PosInicio := i + 1;
+  end;
+end;
+
+
+procedure TEmissorPrincipal.Backupdobanco1Click(Sender: TObject);
+var
+  CaminhoBanco, CaminhoBackup, DestinoBackup: string;
+  QtdDias: Integer;
+  DataLimite, DataAtual: TDateTime;
+begin
+  // Obtém o caminho do banco de dados em uso
+  CaminhoBanco := DataModulePrincipal.FDConnection.Params.Values['Database'];
+  // Busca o caminho de backup na tabela Configuracao
+  with DataModulePrincipal.FDQueryConfiguracao do
+  begin
+    DataModulePrincipal.FDQueryConfiguracao.Close;
+    DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'SELECT CaminhoBackup FROM Configuracao WHERE NomeConfiguracao = :Nome';
+    DataModulePrincipal.FDQueryConfiguracao.ParamByName('Nome').AsString := 'CaminhoDoBackupDoBanco';
+    DataModulePrincipal.FDQueryConfiguracao.Open;
+    if IsEmpty then
+    begin
+      ShowMessage('O caminho de backup não está configurado.');
+      Exit;
+    end;
+    CaminhoBackup := DataModulePrincipal.FDQueryConfiguracao.FieldByName('CaminhoBackup').AsString;
+  end;
+  // Define o caminho final do backup
+  DestinoBackup := IncludeTrailingPathDelimiter(CaminhoBackup) + 'Vendas_Backup_' + FormatDateTime('yyyymmdd_hhnnss', Now) + '.db';
+  // Confirmação do usuário
+ if MessageDlg('ATENÇÃO: O local do backup deve permitir a criação e cópia de arquivos.' + sLineBreak +
+                'Deseja continuar com o backup para o caminho:' + sLineBreak + DestinoBackup + '?',
+                mtWarning, [mbYes, mbNo], 0) = mrNo then
+    Exit;
+  try
+    // Desconecta o banco antes de copiar
+    DataModulePrincipal.FDConnection.Connected := False;
+    // Copia o arquivo do banco para o local de backup
+    if FileExists(CaminhoBanco) then
+      CopyFile(PChar(CaminhoBanco), PChar(DestinoBackup), False)
+    else
+    begin
+      ShowMessage('Arquivo do banco de dados não encontrado!');
+      Exit;
+    end;
+    // Reconecta ao banco
+    DataModulePrincipal.FDConnection.Connected := True;
+    ShowMessage('Backup realizado com sucesso em: ' + DestinoBackup);
+
+     // Agora verifica o valor de QtdDiasParaLimparBanco
+    with DataModulePrincipal.FDQueryConfiguracao do
+    begin
+      Close;
+      SQL.Text := 'SELECT QtdDias FROM Configuracao WHERE NomeConfiguracao = ''QtdDiasParaLimparBanco''';
+      Open;
+
+      if not IsEmpty then
+      begin
+        QtdDias := FieldByName('QtdDias').AsInteger;
+
+        if QtdDias > 0 then
+        begin
+          // Calcula a data limite (data atual menos QtdDias)
+          DataAtual := Date;
+          DataLimite := DataAtual - QtdDias;
+
+          // Exibe a mensagem informando ao usuário que QtdDias > 0
+          MessageDlg('A configuração de limpeza de orçamentos está ativada.' + sLineBreak +
+                     'Os orçamentos e itens do orçamento com data anterior a ' + DateToStr(DataLimite) +
+                     ' serão excluídos. Apenas os orçamentos realizados a partir dessa data serão mantidos.',
+                     mtWarning, [mbOK], 0);
+
+          // Apaga os itens de pedido mais antigos
+          DataModulePrincipal.FDQueryConfiguracao.Close;
+          DataModulePrincipal.FDQueryConfiguracao.SQL.Text :=
+            'DELETE FROM ItemPedido WHERE IDVenda NOT IN (SELECT IDVenda FROM Pedido WHERE Data >= :DataLimite)';
+          DataModulePrincipal.FDQueryConfiguracao.ParamByName('DataLimite').AsDateTime := DataLimite;
+          DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
+
+          // Apaga os pedidos mais antigos que a data limite
+          DataModulePrincipal.FDQueryConfiguracao.SQL.Text :=
+            'DELETE FROM Pedido WHERE Data < :DataLimite';
+          DataModulePrincipal.FDQueryConfiguracao.ParamByName('DataLimite').AsDateTime := DataLimite;
+          DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
+          DataModulePrincipal.FDQueryConfiguracao.Close;
+
+          // Informa o usuário sobre a exclusão
+          ShowMessage('Pedidos e itens de pedidos antigos foram apagados com sucesso.');
+        end;
+      end;
+    end;
+  except
+    on E: Exception do
+      ShowMessage('Erro ao fazer backup: ' + E.Message);
   end;
 end;
 
@@ -275,6 +385,16 @@ begin
   EdDescItem.Enabled := true;
   BtGravarItem.Enabled := true;
   BtInserirItem.Enabled := false;
+  BtExcluirItem.Enabled := false;
+
+    if TutorialAtivo then
+  begin
+    // Esconde o balão anterior e mostra no botão BtSalvar
+    BalloonHintComoUsar.HideHint;
+    BalloonHintComoUsar.Title := 'Passo 8: Gravar alteração';
+    BalloonHintComoUsar.Description := 'Agora clique aqui para salvar a edição do item.';
+    BalloonHintComoUsar.ShowHint(BtGravarItem);
+  end;
 end;
 
 procedure TEmissorPrincipal.BtExcluirItemClick(Sender: TObject);
@@ -397,10 +517,22 @@ begin
     EdValorItem.Enabled := false;
     BtGravarItem.Enabled := false;
     BtInserirItem.Enabled := true;
+    BtExcluirItem.Enabled := true;
 
   except
     on E: Exception do
       ShowMessage('Erro ao salvar o item: ' + E.Message);
+  end;
+
+  if TutorialAtivo then
+  begin
+    if Assigned(BalloonHintComoUsar) then
+    begin
+      BalloonHintComoUsar.HideHint;
+      BalloonHintComoUsar.Free;
+      BalloonHintComoUsar := TBalloonHint.Create(Self); // Cria novamente para resetar
+    end;
+    TutorialAtivo := False;
   end;
 end;
 
@@ -415,16 +547,13 @@ begin
     ShowMessage('Selecione um item para editar.');
     Exit;
   end;
-
   IDItem := StrToInt(StringGridList.Cells[0, StringGridList.Row]);
   IDProduto := ObterIDProduto(IDItem);
   ValorOriginal := ObterPrecoProduto(IDProduto);
-
   ProdutoNome := CBEdNomeProduto.Text;
   EdDesc := StrToFloatDef(EdDescItem.Text, 0);
   Qtd := StrToIntDef(EdQtdItem.Text, 1);
   ValorDigitado := StrToFloatDef(EdValorItem.Text, 0);
-
   // Define o ValorUnitario conforme a alteração do usuário
   if FValorItemAlterado then
   begin
@@ -452,9 +581,7 @@ begin
   begin
     ValorUnitario := ValorDigitado;
   end;
-
   ValorTotal := Qtd * ValorUnitario;
-
   // Atualiza no banco de dados
   with DataModulePrincipal.FDQueryItemPedido do
   begin
@@ -470,10 +597,8 @@ begin
     ParamByName('IDItem').AsInteger := IDItem;
     ExecSQL;
   end;
-
   DataModulePrincipal.FDConnection.Commit;
   AtualizarGridItens;
-
   // Limpa os campos e reseta as flags
   CBEdNomeProduto.ItemIndex := -1;
   CBEdNomeProduto.Clear;
@@ -546,6 +671,19 @@ begin
   end;
 end;
 
+procedure TEmissorPrincipal.StringGridListSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+begin
+  if TutorialAtivo then
+  begin
+    // Esconde o balão anterior e mostra no botão BtSalvar
+    BalloonHintComoUsar.HideHint;
+    BalloonHintComoUsar.Title := 'Passo 7: Editar Item';
+    BalloonHintComoUsar.Description := 'Agora clique aqui para editar o item selecionado.';
+    BalloonHintComoUsar.ShowHint(BtEditarItem);
+  end;
+end;
+
 procedure TEmissorPrincipal.BtInserirItemClick(Sender: TObject);
 var
   IDProduto, IDVenda, Qtd: Integer;
@@ -564,7 +702,6 @@ begin
 
     // Obtém o IDProduto diretamente do ComboBox
     IDProduto := Integer(CBEdNomeProduto.Items.Objects[CBEdNomeProduto.ItemIndex]);
-
     // Remove o IDProduto e o traço para obter apenas o NomeProduto
     Delete(ProdutoNome, 1, Pos(' - ', ProdutoNome) + 2);
     Qtd := StrToInt(EdQtdItem.Text);
@@ -616,6 +753,15 @@ begin
     on E: Exception do
       ShowMessage('Erro ao inserir item: ' + E.Message);
   end;
+
+  if TutorialAtivo then
+  begin
+    // Esconde o balão anterior e mostra no botão BtSalvar
+    BalloonHintComoUsar.HideHint;
+    BalloonHintComoUsar.Title := 'Passo 6: Selecione um item';
+    BalloonHintComoUsar.Description := 'Agora selecione um produto na lista de itens.';
+    BalloonHintComoUsar.ShowHint(StringGridList);
+  end;
 end;
 
 
@@ -624,19 +770,10 @@ var
   i: Integer;
   TotalDescontos, TotalGeral: Double;
 begin
-  // Configurar o cabeçalho da grid
-  StringGridList.ColCount := 7;
-  StringGridList.RowCount := 2; // Cabeçalho + 1 linha inicial
 
-  // Define os títulos das colunas
-  StringGridList.Cells[0, 0] := 'Código';
-  StringGridList.Cells[1, 0] := 'Nome do Produto';
-  StringGridList.Cells[2, 0] := 'Valor';
-  StringGridList.Cells[3, 0] := 'Quantidade';
-  StringGridList.Cells[4, 0] := 'Desconto';
-  StringGridList.Cells[5, 0] := 'Total';
-  StringGridList.Cells[6, 0] := 'Data';
-
+if DataModulePrincipal.VerificarExibirDataInsercao then
+begin
+  AtualizarConfiguracoes;
   i := 1;
   TotalDescontos := 0; // Resetar antes da soma
   TotalGeral := 0;     // Resetar antes da soma
@@ -676,6 +813,49 @@ begin
 
     Close;
   end;
+end
+else
+begin
+  AtualizarConfiguracoes;
+  i := 1;
+  TotalDescontos := 0; // Resetar antes da soma
+  TotalGeral := 0;     // Resetar antes da soma
+
+  // A consulta agora é realizada a cada chamada da função
+  with DataModulePrincipal.FDQueryItemPedido do
+  begin
+    SQL.Text :=
+      'SELECT IDItem, NomeProduto, Valor, Quantidade, Desc, Total ' +
+      'FROM ItemPedido WHERE IDVenda = :IDVenda';
+    ParamByName('IDVenda').AsInteger := StrToInt(EdCodigoVenda.Text);
+
+    Open;
+
+    // Preenche a grid com os dados da consulta
+    while not EOF do
+    begin
+      if i >= StringGridList.RowCount then
+        StringGridList.RowCount := i + 1;
+
+      // Preenche os dados
+      StringGridList.Cells[0, i] := IntToStr(FieldByName('IDItem').AsInteger);
+      StringGridList.Cells[1, i] := FieldByName('NomeProduto').AsString;
+      StringGridList.Cells[2, i] := FormatFloat('0.00', FieldByName('Valor').AsFloat);
+      StringGridList.Cells[3, i] := FieldByName('Quantidade').AsString;
+      StringGridList.Cells[4, i] := FormatFloat('0.00', FieldByName('Desc').AsFloat);
+      StringGridList.Cells[5, i] := FormatFloat('0.00', FieldByName('Total').AsFloat);
+
+      // Acumula os valores de desconto e total
+      TotalDescontos := TotalDescontos + FieldByName('Desc').AsFloat;
+      TotalGeral := TotalGeral + FieldByName('Total').AsFloat;
+
+      Inc(i);
+      Next;
+    end;
+
+    Close;
+  end;
+end;
 
   // Atualiza os labels com os valores totais corretamente formatados
   LabDescItens.Caption := FormatFloat('0.00', TotalDescontos);
@@ -709,6 +889,14 @@ end;
 
 procedure TEmissorPrincipal.BtNovoPedidoClick(Sender: TObject);
 begin
+  if TutorialAtivo then
+  begin
+    BalloonHintComoUsar.HideHint;
+    BalloonHintComoUsar.Title := 'Passo 2: Nome do Cliente';
+    BalloonHintComoUsar.Description := 'Selecione um cliente antes de continuar.';
+    BalloonHintComoUsar.ShowHint(EdNomeCliente);
+  end;
+
 
   // Limpa a grid ao iniciar um novo pedido
   StringGridList.RowCount := 2; // Mantém o cabeçalho e a linha de dados
@@ -800,6 +988,14 @@ begin
     on E: Exception do
       ShowMessage('Erro ao salvar pedido: ' + E.Message);
   end;
+  if TutorialAtivo then
+  begin
+    // Esconde o balão anterior e mostra no botão BtSalvar
+    BalloonHintComoUsar.HideHint;
+    BalloonHintComoUsar.Title := 'Passo 4: Nome do Produto';
+    BalloonHintComoUsar.Description := 'Agora selecione um produto para o orçamento.';
+    BalloonHintComoUsar.ShowHint(CBEdNomeProduto);
+  end;
 end;
 
 procedure TEmissorPrincipal.EdDescItemExit(Sender: TObject);
@@ -838,6 +1034,16 @@ var
   ClienteID: Integer;
   ClienteInfo: TStringList;
 begin
+  if TutorialAtivo then
+  begin
+    // Esconde o balão anterior e mostra no botão BtSalvar
+    BalloonHintComoUsar.HideHint;
+    BalloonHintComoUsar.Title := 'Passo 3: Salvar Orçamento';
+    BalloonHintComoUsar.Description := 'Clique aqui para salvar o Orçamento.';
+    BalloonHintComoUsar.ShowHint(BtSalvar);
+  end;
+
+
   // Verifica se algum item foi selecionado
   if EdNomeCliente.ItemIndex >= 0 then
   begin
@@ -913,15 +1119,12 @@ begin
   // Permite números, vírgula, ponto e Backspace
   if not (Key in ['0'..'9', ',', '.', #8]) then
     Key := #0;
-
   // Impede mais de um ponto ou vírgula
   if (Key in [',', '.']) and (Pos(Key, EdValorItem.Text) > 0) then
     Key := #0;
-
   // Impede inserção do sinal de menos '-'
   if Key = '-' then
     Key := #0;
-
   // Se algo foi digitado, marca que o usuário alterou o campo
   FValorItemAlterado := True;
 end;
@@ -938,13 +1141,21 @@ begin
     DataModulePrincipal.FDQueryItemPedido.Active or
     DataModulePrincipal.FDQueryPedido.Active or
     DataModulePrincipal.FDQueryCliente.Active or
-    DataModulePrincipal.FDQueryProduto.Active) do
+    DataModulePrincipal.FDQueryProduto.Active or
+    DataModulePrincipal.FDQuerySistema.Active or
+    DataModulePrincipal.FDQueryEmpresa.Active or
+    DataModulePrincipal.FDQueryRelatorioDePedidos.Active or
+    DataModulePrincipal.FDQueryConfiguracao.Active) do
   begin
     // Tenta desativar queries e liberar recursos
     DataModulePrincipal.FDQueryItemPedido.Active := false;
     DataModulePrincipal.FDQueryPedido.Active := false;
     DataModulePrincipal.FDQueryCliente.Active := false;
     DataModulePrincipal.FDQueryProduto.Active := false;
+    DataModulePrincipal.FDQuerySistema.Active := false;
+    DataModulePrincipal.FDQueryEmpresa.Active := false;
+    DataModulePrincipal.FDQueryRelatorioDePedidos.Active := false;
+    DataModulePrincipal.FDQueryConfiguracao.Active := false;
 
     // Libera tempo para o sistema processar as operações
     Application.ProcessMessages;
@@ -966,31 +1177,7 @@ begin
 
   RodaPeVersion.Caption := 'Versão:' + DataModulePrincipal.VersaoAtual;
   RodaPeHora.Caption := 'Hora: ' + TimeToStr(Now);
-
-  // Configuração do TStringGrid
-  StringGridList.ColCount := 7;
-  // 5 colunas (IDItem, NomeProduto, Valor, Quantidade, Total)
-  StringGridList.RowCount := 2; // 1 linha para os títulos e 1 para os dados
-  StringGridList.Cells[0, 0] := 'Código'; // Título da segunda coluna (Código)
-  StringGridList.Cells[1, 0] := 'Nome do Produto';
-  // Título da segunda coluna (NomeProduto)
-  StringGridList.Cells[2, 0] := 'Valor'; // Título da terceira coluna (Valor)
-  StringGridList.Cells[3, 0] := 'Quantidade';
-  StringGridList.Cells[4, 0] := 'Desconto';
-  // Título da quarta coluna (Quantidade)
-  StringGridList.Cells[5, 0] := 'Total'; // Título da quinta coluna (Total)
-  StringGridList.Cells[6, 0] := 'Data';
-  // Título da sexta coluna (Data) data especifica pois o pedido pode ficar aberto de um dia para outro
-
-  StringGridList.ColWidths[0] := 64;
-  // A largura da segunda coluna será 200 pixels
-  StringGridList.ColWidths[1] := 190;
-  StringGridList.ColWidths[2] := 80;
-  StringGridList.ColWidths[3] := 80;
-  StringGridList.ColWidths[4] := 60;
-  StringGridList.ColWidths[5] := 80;
-  StringGridList.ColWidths[6] := 90;
-
+  AtualizarConfiguracoes;
   CarregarUltimoPedido;
 end;
 
@@ -1071,6 +1258,9 @@ begin
         end
         else
         begin
+          BtNovoPedido.Enabled := false;
+          BtEditarPedido.Enabled := false;
+          BtCancelarPedido.Enabled := true;
           BtEditarItem.Enabled := False;
           BtExcluirItem.Enabled := False;
         end;
@@ -1214,6 +1404,34 @@ begin
   except
     on E: Exception do
       ShowMessage('Erro ao selecionar produto: ' + E.Message);
+  end;
+  if TutorialAtivo then
+  begin
+    // Esconde o balão anterior e mostra no botão BtSalvar
+    BalloonHintComoUsar.HideHint;
+    BalloonHintComoUsar.Title := 'Passo 5: Novo Item';
+    BalloonHintComoUsar.Description := 'Clique aqui para adicionar o item na lista de itens do orçamento.';
+    BalloonHintComoUsar.ShowHint(BtInserirItem);
+  end;
+end;
+
+procedure TEmissorPrincipal.ComousaroSistema1Click(Sender: TObject);
+begin
+  TutorialAtivo := True;
+  // Inicia o tutorial mostrando o balão no botão BtNovoPedido
+  BalloonHintComoUsar.Title := 'Passo 1: Novo Orçamento';
+  BalloonHintComoUsar.Description := 'Clique aqui para iniciar um novo orçamento.';
+  BalloonHintComoUsar.ShowHint(BtNovoPedido);
+
+end;
+
+procedure TEmissorPrincipal.Configurao1Click(Sender: TObject);
+begin
+  try
+    NMConfig := TNMConfig.Create(Self);
+    NMConfig.ShowModal;
+  finally
+    FreeAndNil(NMConfig);
   end;
 end;
 
@@ -1369,6 +1587,18 @@ begin
   end;
 end;
 
+procedure TEmissorPrincipal.Informaes1Click(Sender: TObject);
+var
+  FInformações: TFInformações;
+begin
+  FInformações := TFInformações.Create(Self);
+  try
+    FInformações.ShowModal; // Abre de forma modal
+  finally
+    FInformações.Free; // Libera o formulário da memória
+  end;
+end;
+
 procedure TEmissorPrincipal.IniciarTransacao;
 begin
   DataModulePrincipal.FDConnection.StartTransaction;
@@ -1444,52 +1674,83 @@ begin
     Close;
   end;
 
-  // Configurar o cabeçalho da grid (garantindo que ele nunca fique em branco)
-  StringGridList.ColCount := 7; // Define o número de colunas
-  StringGridList.RowCount := 2; // Sempre inicia com 2 linhas (cabeçalho + 1 linha de dados)
-
-  // Define os títulos do cabeçalho
-  StringGridList.Cells[0, 0] := 'Código';
-  StringGridList.Cells[1, 0] := 'Nome do Produto';
-  StringGridList.Cells[2, 0] := 'Valor';
-  StringGridList.Cells[3, 0] := 'Quantidade';
-  StringGridList.Cells[4, 0] := 'Desconto';
-  StringGridList.Cells[5, 0] := 'Total';
-  StringGridList.Cells[6, 0] := 'Data';
-
-  // Consulta os itens do pedido
-  with DataModulePrincipal.FDQueryItemPedido do
+  if DataModulePrincipal.VerificarExibirDataInsercao then
   begin
-    Close;
-    SQL.Text := 'SELECT * FROM ItemPedido WHERE IDVenda = :IDVenda';
-    ParamByName('IDVenda').AsInteger := IDVenda;
-    Open;
+     AtualizarConfiguracoes;
 
-    // Limpa a grid e reseta contadores
-    StringGridList.RowCount := 1; // Mantém apenas a linha de cabeçalho
-    i := 1;
-
-    while not Eof do
+    // Consulta os itens do pedido
+    with DataModulePrincipal.FDQueryItemPedido do
     begin
-      StringGridList.RowCount := StringGridList.RowCount + 1;
-      StringGridList.Cells[0, i] := FieldByName('IDItem').AsString;
-      StringGridList.Cells[1, i] := FieldByName('NomeProduto').AsString;
-      StringGridList.Cells[2, i] := FormatFloat('0.00', FieldByName('Valor').AsFloat);
-      StringGridList.Cells[3, i] := FieldByName('Quantidade').AsString;
-      StringGridList.Cells[4, i] := FormatFloat('0.00', FieldByName('Desc').AsFloat);
-      StringGridList.Cells[5, i] := FormatFloat('0.00', FieldByName('Total').AsFloat);
-      StringGridList.Cells[6, i] := FormatDateTime('dd/mm/yyyy', FieldByName('DataInsercao').AsDateTime);
+      Close;
+      SQL.Text := 'SELECT * FROM ItemPedido WHERE IDVenda = :IDVenda';
+      ParamByName('IDVenda').AsInteger := IDVenda;
+      Open;
 
-      // Soma os valores de desconto e total
-      TotalDesconto := TotalDesconto + FieldByName('Desc').AsFloat;
-      TotalValor := TotalValor + FieldByName('Total').AsFloat;
+      // Limpa a grid e reseta contadores
+      StringGridList.RowCount := 1; // Mantém apenas a linha de cabeçalho
+      i := 1;
 
-      Inc(i);
-      Next;
+      while not Eof do
+      begin
+        StringGridList.RowCount := StringGridList.RowCount + 1;
+        StringGridList.Cells[0, i] := FieldByName('IDItem').AsString;
+        StringGridList.Cells[1, i] := FieldByName('NomeProduto').AsString;
+        StringGridList.Cells[2, i] := FormatFloat('0.00', FieldByName('Valor').AsFloat);
+        StringGridList.Cells[3, i] := FieldByName('Quantidade').AsString;
+        StringGridList.Cells[4, i] := FormatFloat('0.00', FieldByName('Desc').AsFloat);
+        StringGridList.Cells[5, i] := FormatFloat('0.00', FieldByName('Total').AsFloat);
+        StringGridList.Cells[6, i] := FormatDateTime('dd/mm/yyyy', FieldByName('DataInsercao').AsDateTime);
+
+        // Soma os valores de desconto e total
+        TotalDesconto := TotalDesconto + FieldByName('Desc').AsFloat;
+        TotalValor := TotalValor + FieldByName('Total').AsFloat;
+
+        Inc(i);
+        Next;
+      end;
+
+      Close;
     end;
+  end
+  else
+  begin
+      AtualizarConfiguracoes;
 
-    Close;
+
+      // Consulta os itens do pedido
+      with DataModulePrincipal.FDQueryItemPedido do
+      begin
+        Close;
+        SQL.Text := 'SELECT * FROM ItemPedido WHERE IDVenda = :IDVenda';
+        ParamByName('IDVenda').AsInteger := IDVenda;
+        Open;
+
+        // Limpa a grid e reseta contadores
+        StringGridList.RowCount := 1; // Mantém apenas a linha de cabeçalho
+        i := 1;
+
+        while not Eof do
+        begin
+          StringGridList.RowCount := StringGridList.RowCount + 1;
+          StringGridList.Cells[0, i] := FieldByName('IDItem').AsString;
+          StringGridList.Cells[1, i] := FieldByName('NomeProduto').AsString;
+          StringGridList.Cells[2, i] := FormatFloat('0.00', FieldByName('Valor').AsFloat);
+          StringGridList.Cells[3, i] := FieldByName('Quantidade').AsString;
+          StringGridList.Cells[4, i] := FormatFloat('0.00', FieldByName('Desc').AsFloat);
+          StringGridList.Cells[5, i] := FormatFloat('0.00', FieldByName('Total').AsFloat);
+
+          // Soma os valores de desconto e total
+          TotalDesconto := TotalDesconto + FieldByName('Desc').AsFloat;
+          TotalValor := TotalValor + FieldByName('Total').AsFloat;
+
+          Inc(i);
+          Next;
+        end;
+
+        Close;
+      end;
   end;
+
 
   // Atualiza os labels com os valores calculados
   LabDescItens.Caption := FormatFloat('0.00', TotalDesconto);
@@ -1509,6 +1770,47 @@ begin
   BtNovoPedido.Enabled := False;
   BtSalvar.Enabled := False;
 end;
+
+procedure TEmissorPrincipal.AtualizarConfiguracoes;
+begin
+  if DataModulePrincipal.VerificarExibirDataInsercao then
+  begin
+    StringGridList.ColCount := 7;
+    StringGridList.Cells[0, 0] := 'Código';
+    StringGridList.Cells[1, 0] := 'Nome do Produto';
+    StringGridList.Cells[2, 0] := 'Valor';
+    StringGridList.Cells[3, 0] := 'Quantidade';
+    StringGridList.Cells[4, 0] := 'Desconto';
+    StringGridList.Cells[5, 0] := 'Total';
+    StringGridList.Cells[6, 0] := 'Data';
+
+    StringGridList.ColWidths[0] := 64;
+    StringGridList.ColWidths[1] := 190;
+    StringGridList.ColWidths[2] := 80;
+    StringGridList.ColWidths[3] := 80;
+    StringGridList.ColWidths[4] := 60;
+    StringGridList.ColWidths[5] := 80;
+    StringGridList.ColWidths[6] := 90;
+  end
+  else
+  begin
+    StringGridList.ColCount := 6;
+    StringGridList.Cells[0, 0] := 'Código';
+    StringGridList.Cells[1, 0] := 'Nome do Produto';
+    StringGridList.Cells[2, 0] := 'Valor';
+    StringGridList.Cells[3, 0] := 'Quantidade';
+    StringGridList.Cells[4, 0] := 'Desconto';
+    StringGridList.Cells[5, 0] := 'Total';
+
+    StringGridList.ColWidths[0] := 70;
+    StringGridList.ColWidths[1] := 250;
+    StringGridList.ColWidths[2] := 100;
+    StringGridList.ColWidths[3] := 100;
+    StringGridList.ColWidths[4] := 90;
+    StringGridList.ColWidths[5] := 100;
+  end;
+end;
+
 
 
 

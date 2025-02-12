@@ -4,8 +4,8 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
   BorderIcons = [biSystemMenu, biMaximize]
   BorderStyle = bsSingle
   Caption = 'Cadastro de empresa'
-  ClientHeight = 451
-  ClientWidth = 547
+  ClientHeight = 450
+  ClientWidth = 543
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -2928,13 +2928,13 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
   TextHeight = 15
   object Panelbutoes: TPanel
     Left = 0
-    Top = 391
-    Width = 547
+    Top = 390
+    Width = 543
     Height = 60
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 390
-    ExplicitWidth = 543
+    ExplicitTop = 389
+    ExplicitWidth = 539
     object BtNovo: TButton
       Left = 48
       Top = 16
@@ -2987,13 +2987,13 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
   end
   object PanelEndereco: TPanel
     Left = 0
-    Top = 224
-    Width = 547
+    Top = 223
+    Width = 543
     Height = 167
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 223
-    ExplicitWidth = 543
+    ExplicitTop = 222
+    ExplicitWidth = 539
     object Label5: TLabel
       Left = 48
       Top = 16
@@ -3029,6 +3029,7 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Height = 23
       Enabled = False
       TabOrder = 2
+      OnExit = EdBairroExit
     end
     object EdCidade: TEdit
       Left = 352
@@ -3037,6 +3038,7 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Height = 23
       Enabled = False
       TabOrder = 1
+      OnExit = EdCidadeExit
     end
     object EdEndereco: TEdit
       Left = 48
@@ -3045,6 +3047,7 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Height = 23
       Enabled = False
       TabOrder = 0
+      OnExit = EdEnderecoExit
     end
     object EdEstado: TEdit
       Left = 352
@@ -3053,17 +3056,18 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Height = 23
       Enabled = False
       TabOrder = 3
+      OnExit = EdEstadoExit
     end
   end
   object PanelInformacoes: TPanel
     Left = 0
     Top = 0
-    Width = 547
-    Height = 224
+    Width = 543
+    Height = 223
     Align = alClient
     TabOrder = 2
-    ExplicitWidth = 543
-    ExplicitHeight = 223
+    ExplicitWidth = 539
+    ExplicitHeight = 222
     object Label1: TLabel
       Left = 48
       Top = 16
@@ -3081,9 +3085,9 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
     object Label3: TLabel
       Left = 48
       Top = 111
-      Width = 35
+      Width = 27
       Height = 15
-      Caption = 'CNPJ *'
+      Caption = 'CNPJ'
     end
     object Label4: TLabel
       Left = 48
@@ -3132,6 +3136,7 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Height = 23
       Enabled = False
       TabOrder = 3
+      OnExit = EdCNPJExit
       OnKeyPress = EdCNPJKeyPress
     end
     object EdNomeEmpresa: TEdit
@@ -3142,6 +3147,7 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Enabled = False
       MaxLength = 255
       TabOrder = 1
+      OnExit = EdNomeEmpresaExit
     end
     object EdNomeFantasia: TEdit
       Left = 48
@@ -3151,6 +3157,7 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Enabled = False
       MaxLength = 255
       TabOrder = 2
+      OnExit = EdNomeFantasiaExit
     end
     object EdTelefone: TEdit
       Left = 48
@@ -3181,8 +3188,59 @@ object FCadastroDeEmpresa: TFCadastroDeEmpresa
       Visible = False
     end
   end
+  object BtInfo: TBitBtn
+    Left = 526
+    Top = 0
+    Width = 17
+    Height = 17
+    Align = alCustom
+    Anchors = [akLeft, akBottom]
+    Glyph.Data = {
+      42040000424D4204000000000000420000002800000010000000100000000100
+      20000300000000040000130B0000130B000000000000000000000000FF0000FF
+      0000FF0000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000EF8325FFEF8325FFEF8325FFEF8325FFEF8325FFEF83
+      25FFEF8325FFEF8325FFEF8325FFEF8325FFEF8325FFEF8325FF000000000000
+      00000000000000000000EF8325FFEF8325FFEF8325FFEF8325FFEF8325FFEF83
+      25FFEF8325FFEF8325FFEF8325FFEF8325FFEF8325FFEF8325FF000000000000
+      00000000000000000000EF8325FFEF8325FFF6C836FFF6C836FFF6C836FFF6C8
+      36FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C8
+      36FF0000000000000000EF8325FFEF8325FFF6C836FFF6C836FFF6C836FFF6C8
+      36FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C8
+      36FF0000000000000000EF8325FFEF8325FFF6C836FFF6C836FFF6C836FFF6C8
+      36FFF6C836FFEF8325FFEF8325FFF6C836FFF6C836FFF6C836FFF6C836FFF6C8
+      36FF0000000000000000EF8325FFEF8325FFF6C836FFF6C836FFF6C836FFF6C8
+      36FFF6C836FFEF8325FFEF8325FFF6C836FFF6C836FFF6C836FFF6C836FFF6C8
+      36FF0000000000000000EF8325FFEF8325FFF6C836FFF6C836FFF6C836FFF6C8
+      36FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C8
+      36FF0000000000000000EF8325FFEF8325FFF6C836FFF6C836FFF6C836FFF6C8
+      36FFF6C836FFEF8325FFEF8325FFF29E2CFFF6C736FFF6C836FFF6C836FFF6C8
+      36FF0000000000000000EF8325FFEF8325FFF6C836FFF6C836FFF6C836FFF6C8
+      36FFF6C836FFF5B431FFF08C27FFEF8325FFF3A42DFFF6C836FFF6C836FFF6C8
+      36FF0000000000000000EF8325FFEF8325FFF6C836FFF6C836FFF6C836FFF6C8
+      36FFF6C836FFF6C836FFF4BE34FFEF8325FFEF8826FFF6C836FFF6C836FFF6C8
+      36FF0000000000000000EF8325FFEF8325FFF6C836FFF6C836FFF6C836FFF08A
+      27FFEF8325FFF4B932FFF4B832FFEF8325FFF08A27FFF6C836FFF6C836FFF6C8
+      36FF0000000000000000EF8325FFEF8325FFF6C836FFF6C836FFF6C836FFF2A3
+      2DFFEF8325FFEF8325FFEF8325FFEF8325FFF3A32DFFF6C836FFF6C836FFF6C8
+      36FF0000000000000000EF8325FFEF8325FFF6C836FFF6C836FFF6C836FFF6C6
+      36FFF2A32DFFF08A26FFF08A27FFF2A32DFFF6C636FFF6C836FFF6C836FFF6C8
+      36FF00000000000000000000000000000000F6C836FFF6C836FFF6C836FFF6C8
+      36FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C8
+      36FF00000000000000000000000000000000F6C836FFF6C836FFF6C836FFF6C8
+      36FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C8
+      36FF00000000}
+    TabOrder = 3
+    OnClick = BtInfoClick
+    ExplicitTop = -1
+  end
   object OpenPictureDialog: TOpenPictureDialog
     Left = 448
     Top = 65534
+  end
+  object BalloonHintCadastroEmpresa: TBalloonHint
+    Left = 480
+    Top = 72
   end
 end

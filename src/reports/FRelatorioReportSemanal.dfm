@@ -129,7 +129,7 @@ object NMRelatorioReport: TNMRelatorioReport
         Height = 30
         Align = faBottom
         Alignment = taCenter
-        Caption = 'Relat'#243'rio Semanal'
+        Caption = 'Relat'#243'rio Peri'#243'dico'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = 30
@@ -208,7 +208,7 @@ object NMRelatorioReport: TNMRelatorioReport
       DataFields = 'IDVenda'
       object RLBandDetail: TRLBand
         Left = 0
-        Top = 136
+        Top = 137
         Width = 718
         Height = 24
         Font.Charset = DEFAULT_CHARSET
@@ -218,7 +218,7 @@ object NMRelatorioReport: TNMRelatorioReport
         Font.Style = []
         ParentFont = False
         object RLDBTextQuantidade: TRLDBText
-          Left = 248
+          Left = 266
           Top = 6
           Width = 67
           Height = 15
@@ -233,7 +233,7 @@ object NMRelatorioReport: TNMRelatorioReport
           Text = ''
         end
         object RLDBTextValor: TRLDBText
-          Left = 372
+          Left = 390
           Top = 6
           Width = 31
           Height = 15
@@ -295,22 +295,22 @@ object NMRelatorioReport: TNMRelatorioReport
       end
       object RLBandSubTotalPedido: TRLBand
         Left = 0
-        Top = 160
+        Top = 161
         Width = 718
         Height = 40
         BandType = btSummary
         Borders.Sides = sdCustom
         Borders.DrawLeft = False
-        Borders.DrawTop = False
+        Borders.DrawTop = True
         Borders.DrawRight = False
         Borders.DrawBottom = True
-        Color = clInactiveCaption
+        Color = clMenu
         ParentColor = False
         Transparent = False
         object RLDBResult1: TRLDBResult
-          Left = 596
+          Left = 605
           Top = 14
-          Width = 119
+          Width = 120
           Height = 15
           DataField = 'TotalPedido'
           DataSource = DataModulePrincipal.DataSourceRelatorioDePedidos
@@ -318,22 +318,22 @@ object NMRelatorioReport: TNMRelatorioReport
           Font.Color = clBlack
           Font.Height = 15
           Font.Name = 'Arial'
-          Font.Style = []
+          Font.Style = [fsBold]
           ParentFont = False
           Text = ''
           Transparent = False
         end
         object RLLabel5: TRLLabel
-          Left = 515
+          Left = 513
           Top = 14
-          Width = 75
+          Width = 76
           Height = 15
           Caption = 'Total Pedido:'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = 15
           Font.Name = 'Arial'
-          Font.Style = []
+          Font.Style = [fsBold]
           ParentFont = False
           Transparent = False
         end
@@ -342,16 +342,19 @@ object NMRelatorioReport: TNMRelatorioReport
         Left = 0
         Top = 0
         Width = 718
-        Height = 112
+        Height = 113
         BandType = btColumnHeader
         Borders.Sides = sdCustom
         Borders.DrawLeft = False
         Borders.DrawTop = False
         Borders.DrawRight = False
         Borders.DrawBottom = True
+        Color = clWhite
+        ParentColor = False
+        Transparent = False
         object LabelNomeCliente: TRLDBText
           Left = 213
-          Top = 35
+          Top = 19
           Width = 76
           Height = 15
           DataField = 'NomeCliente'
@@ -363,10 +366,11 @@ object NMRelatorioReport: TNMRelatorioReport
           Font.Style = []
           ParentFont = False
           Text = ''
+          Transparent = False
         end
         object LabelTelefoneCliente: TRLDBText
           Left = 221
-          Top = 56
+          Top = 40
           Width = 90
           Height = 15
           DataField = 'TelefoneCliente'
@@ -378,10 +382,11 @@ object NMRelatorioReport: TNMRelatorioReport
           Font.Style = []
           ParentFont = False
           Text = ''
+          Transparent = False
         end
         object LabelIDVenda: TRLDBText
-          Left = 497
-          Top = 35
+          Left = 489
+          Top = 19
           Width = 50
           Height = 15
           DataField = 'IDVenda'
@@ -393,10 +398,11 @@ object NMRelatorioReport: TNMRelatorioReport
           Font.Style = []
           ParentFont = False
           Text = ''
+          Transparent = False
         end
         object LabelData: TRLDBText
-          Left = 472
-          Top = 56
+          Left = 465
+          Top = 40
           Width = 68
           Height = 15
           DataField = 'DataPedido'
@@ -408,10 +414,11 @@ object NMRelatorioReport: TNMRelatorioReport
           Font.Style = []
           ParentFont = False
           Text = ''
+          Transparent = False
         end
         object RLLabel1: TRLLabel
           Left = 162
-          Top = 35
+          Top = 19
           Width = 45
           Height = 15
           Caption = 'Cliente:'
@@ -421,10 +428,11 @@ object NMRelatorioReport: TNMRelatorioReport
           Font.Name = 'Arial'
           Font.Style = []
           ParentFont = False
+          Transparent = False
         end
         object RLLabel2: TRLLabel
           Left = 161
-          Top = 56
+          Top = 40
           Width = 54
           Height = 15
           Caption = 'Telefone:'
@@ -434,10 +442,11 @@ object NMRelatorioReport: TNMRelatorioReport
           Font.Name = 'Arial'
           Font.Style = []
           ParentFont = False
+          Transparent = False
         end
         object RLLabel3: TRLLabel
-          Left = 430
-          Top = 35
+          Left = 423
+          Top = 19
           Width = 61
           Height = 15
           Caption = 'Pedido N'#186':'
@@ -447,11 +456,12 @@ object NMRelatorioReport: TNMRelatorioReport
           Font.Name = 'Arial'
           Font.Style = []
           ParentFont = False
+          Transparent = False
         end
         object RLLabel4: TRLLabel
-          Left = 430
-          Top = 56
-          Width = 25
+          Left = 423
+          Top = 40
+          Width = 36
           Height = 15
           Caption = 'Data:'
           Font.Charset = DEFAULT_CHARSET
@@ -460,10 +470,11 @@ object NMRelatorioReport: TNMRelatorioReport
           Font.Name = 'Arial'
           Font.Style = []
           ParentFont = False
+          Transparent = False
         end
         object RLDBMemo1: TRLDBMemo
           Left = 240
-          Top = 77
+          Top = 82
           Width = 309
           Height = 15
           Behavior = [beSiteExpander]
@@ -475,10 +486,11 @@ object NMRelatorioReport: TNMRelatorioReport
           Font.Name = 'Arial'
           Font.Style = []
           ParentFont = False
+          Transparent = False
         end
         object RLLabel7: TRLLabel
           Left = 162
-          Top = 77
+          Top = 82
           Width = 72
           Height = 15
           Caption = 'Observa'#231#227'o:'
@@ -488,11 +500,42 @@ object NMRelatorioReport: TNMRelatorioReport
           Font.Name = 'Arial'
           Font.Style = []
           ParentFont = False
+          Transparent = False
+        end
+        object RLLabel8: TRLLabel
+          Left = 162
+          Top = 61
+          Width = 59
+          Height = 15
+          Caption = 'Endere'#231'o:'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = 15
+          Font.Name = 'Arial'
+          Font.Style = []
+          ParentFont = False
+          Transparent = False
+        end
+        object RLDBEnderecoCliente: TRLDBText
+          Left = 227
+          Top = 61
+          Width = 56
+          Height = 15
+          DataField = 'Endereco'
+          DataSource = DataModulePrincipal.DataSourceRelatorioDePedidos
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = 15
+          Font.Name = 'Arial'
+          Font.Style = []
+          ParentFont = False
+          Text = ''
+          Transparent = False
         end
       end
       object RLBand1: TRLBand
         Left = 0
-        Top = 112
+        Top = 113
         Width = 718
         Height = 24
         BandType = btColumnHeader
@@ -501,6 +544,9 @@ object NMRelatorioReport: TNMRelatorioReport
         Borders.DrawTop = False
         Borders.DrawRight = False
         Borders.DrawBottom = True
+        Color = clMenu
+        ParentColor = False
+        Transparent = False
         object RLLabelProduto: TRLLabel
           Left = 40
           Top = 6
@@ -514,9 +560,10 @@ object NMRelatorioReport: TNMRelatorioReport
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           ParentFont = False
+          Transparent = False
         end
         object RLLabelQuantidade: TRLLabel
-          Left = 248
+          Left = 266
           Top = 6
           Width = 85
           Height = 16
@@ -528,9 +575,10 @@ object NMRelatorioReport: TNMRelatorioReport
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           ParentFont = False
+          Transparent = False
         end
         object RLLabelValor: TRLLabel
-          Left = 372
+          Left = 390
           Top = 6
           Width = 40
           Height = 16
@@ -542,6 +590,7 @@ object NMRelatorioReport: TNMRelatorioReport
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           ParentFont = False
+          Transparent = False
         end
         object RLLabelDataDeInsercao: TRLLabel
           Left = 472
@@ -556,6 +605,7 @@ object NMRelatorioReport: TNMRelatorioReport
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           ParentFont = False
+          Transparent = False
         end
         object RLLabelTotal: TRLLabel
           Left = 605
@@ -570,6 +620,7 @@ object NMRelatorioReport: TNMRelatorioReport
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           ParentFont = False
+          Transparent = False
         end
       end
     end

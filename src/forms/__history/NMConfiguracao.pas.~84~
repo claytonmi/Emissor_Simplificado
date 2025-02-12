@@ -1,0 +1,184 @@
+unit NMConfiguracao;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, uDataModulePrincipal, System.StrUtils, Vcl.FileCtrl,
+  Vcl.Buttons, Vcl.Samples.Spin;
+
+type
+  TNMConfig = class(TForm)
+    GroupBoxCamposOrcamento: TGroupBox;
+    Panel1: TPanel;
+    Panel2: TPanel;
+    BtSalvarConfig: TButton;
+    BtZerarConfig: TButton;
+    GroupBox1: TGroupBox;
+    CheckBoxDataDeInsercaoDoItemRelatorio: TCheckBox;
+    GroupBox2: TGroupBox;
+    CheckBoxDataInsercaoDoItem: TCheckBox;
+    CheckBoxEmpresaVisivelNoCabecalho: TCheckBox;
+    Label1: TLabel;
+    EditCaminhoBackup: TEdit;
+    ButtonSelecionarCaminhoBackup: TBitBtn;
+    SpinEditQtdDiasLimpar: TSpinEdit;
+    LbDiasBackup: TLabel;
+    BalloonHint: TBalloonHint;
+    BtInfo: TBitBtn;
+    procedure FormCreate(Sender: TObject);
+    procedure BtZerarConfigClick(Sender: TObject);
+    procedure BtSalvarConfigClick(Sender: TObject);
+    procedure ButtonSelecionarCaminhoBackupClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure BtInfoClick(Sender: TObject);
+  private
+    AtualizaDtOrcamento: Boolean;
+    procedure CarregarConfiguracoes;
+    procedure ResetarConfiguracoesVerdadeiro;
+    procedure SalvarConfiguracoes;
+  public
+    { Public declarations }
+  end;
+
+var
+  NMConfig: TNMConfig;
+
+implementation
+
+uses
+  MNPrincipal;
+
+{$R *.dfm}
+
+procedure TNMConfig.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+if CheckBoxDataInsercaoDoItem.Checked <> AtualizaDtOrcamento then
+begin
+    EmissorPrincipal.AtualizarConfiguracoes;
+end;
+
+
+  Action := caFree;
+end;
+
+procedure TNMConfig.FormCreate(Sender: TObject);
+begin
+   CarregarConfiguracoes;
+end;
+
+procedure TNMConfig.BtInfoClick(Sender: TObject);
+begin
+  // Exibe o balão de dica sobre o campo EditCaminhoBackup
+  BalloonHint.Title := 'Caminho de Backup';
+  BalloonHint.Hint := 'Este campo serve para armazenar o backup do banco e deve ser um caminho com permissão de criação, como Desktop.';
+
+
+  // Mostra o balão de dica sobre o campo EditCaminhoBackup
+  BalloonHint.ShowHint(EditCaminhoBackup);
+end;
+
+procedure TNMConfig.BtSalvarConfigClick(Sender: TObject);
+begin
+  SalvarConfiguracoes;
+end;
+
+procedure TNMConfig.BtZerarConfigClick(Sender: TObject);
+begin
+  ResetarConfiguracoesVerdadeiro;
+end;
+
+procedure TNMConfig.ButtonSelecionarCaminhoBackupClick(Sender: TObject);
+var
+  PastaSelecionada: string;
+begin
+  if SelectDirectory('Selecione a pasta para backup', '', PastaSelecionada) then
+    EditCaminhoBackup.Text := PastaSelecionada;
+end;
+
+procedure TNMConfig.SalvarConfiguracoes;
+begin
+  try
+    // Inicia transação (caso necessário)
+    if not DataModulePrincipal.FDConnection.InTransaction then
+      DataModulePrincipal.FDConnection.StartTransaction;
+    // Atualiza ExibirDataInsercaoNoOrcamento
+    DataModulePrincipal.FDQueryConfiguracao.Close;
+    DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'UPDATE Configuracao SET FLATIVO = :FLATIVO WHERE NomeConfiguracao = :Nome';
+    DataModulePrincipal.FDQueryConfiguracao.ParamByName('Nome').AsString := 'ExibirDataInsercaoNoOrcamento';
+    DataModulePrincipal.FDQueryConfiguracao.ParamByName('FLATIVO').AsString := IfThen(CheckBoxDataInsercaoDoItem.Checked, 'S', 'N');
+    DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
+    // Atualiza ExibirDataInsercaoNoRelatorio
+    DataModulePrincipal.FDQueryConfiguracao.Close;
+    DataModulePrincipal.FDQueryConfiguracao.ParamByName('Nome').AsString := 'ExibirDataInsercaoNoRelatorio';
+    DataModulePrincipal.FDQueryConfiguracao.ParamByName('FLATIVO').AsString := IfThen(CheckBoxDataDeInsercaoDoItemRelatorio.Checked, 'S', 'N');
+    DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
+    // Atualiza ExibirEmpresaNoRelatorio
+    DataModulePrincipal.FDQueryConfiguracao.Close;
+    DataModulePrincipal.FDQueryConfiguracao.ParamByName('Nome').AsString := 'ExibirEmpresaNoRelatorio';
+    DataModulePrincipal.FDQueryConfiguracao.ParamByName('FLATIVO').AsString := IfThen(CheckBoxEmpresaVisivelNoCabecalho.Checked, 'S', 'N');
+    DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
+    // Atualiza CaminhoBackup
+    DataModulePrincipal.FDQueryConfiguracao.Close;
+    DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'UPDATE Configuracao SET CaminhoBackup = :Caminho WHERE NomeConfiguracao = ''CaminhoDoBackupDoBanco''';
+    DataModulePrincipal.FDQueryConfiguracao.ParamByName('Caminho').AsString := EditCaminhoBackup.Text;
+    DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
+    // Atualiza QtdDiasParaLimparBanco
+    DataModulePrincipal.FDQueryConfiguracao.Close;
+    DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'UPDATE Configuracao SET QtdDias = :QtdDiasLimpa WHERE NomeConfiguracao = ''QtdDiasParaLimparBanco''';
+    DataModulePrincipal.FDQueryConfiguracao.ParamByName('QtdDiasLimpa').AsInteger := SpinEditQtdDiasLimpar.Value;
+    DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
+    // Confirma a transação
+    DataModulePrincipal.FDConnection.Commit;
+    ShowMessage('Configurações salvas com sucesso!');
+  except
+    on E: Exception do
+    begin
+      DataModulePrincipal.FDConnection.Rollback; // Desfaz mudanças em caso de erro
+      ShowMessage('Erro ao salvar configurações: ' + E.Message);
+    end;
+  end;
+end;
+
+
+procedure TNMConfig.ResetarConfiguracoesVerdadeiro;
+begin
+  // Define todos os checkboxes como ativos
+  CheckBoxDataInsercaoDoItem.Checked := True;
+  CheckBoxDataDeInsercaoDoItemRelatorio.Checked := True;
+  CheckBoxEmpresaVisivelNoCabecalho.Checked := True;
+  EditCaminhoBackup.Text := 'C:\Users\Default\Downloads';
+  SpinEditQtdDiasLimpar.Value := 0;
+end;
+
+
+procedure TNMConfig.CarregarConfiguracoes;
+begin
+  with DataModulePrincipal.FDQueryConfiguracao do
+  begin
+    try
+      DataModulePrincipal.FDQueryConfiguracao.Close;  // Garante que a query esteja fechada antes de configurar
+      DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'SELECT NomeConfiguracao, CaminhoBackup, FLATIVO FROM Configuracao';
+      DataModulePrincipal.FDQueryConfiguracao.Open;
+      while not Eof do
+      begin
+        if DataModulePrincipal.FDQueryConfiguracao.FieldByName('NomeConfiguracao').AsString = 'ExibirDataInsercaoNoOrcamento' then
+        begin
+          CheckBoxDataInsercaoDoItem.Checked := DataModulePrincipal.FDQueryConfiguracao.FieldByName('FLATIVO').AsString = 'S';
+          AtualizaDtOrcamento := CheckBoxDataInsercaoDoItem.Checked;
+        end
+        else if DataModulePrincipal.FDQueryConfiguracao.FieldByName('NomeConfiguracao').AsString = 'ExibirDataInsercaoNoRelatorio' then
+          CheckBoxDataDeInsercaoDoItemRelatorio.Checked := DataModulePrincipal.FDQueryConfiguracao.FieldByName('FLATIVO').AsString = 'S'
+        else if DataModulePrincipal.FDQueryConfiguracao.FieldByName('NomeConfiguracao').AsString = 'ExibirEmpresaNoRelatorio' then
+          CheckBoxEmpresaVisivelNoCabecalho.Checked := DataModulePrincipal.FDQueryConfiguracao.FieldByName('FLATIVO').AsString = 'S';
+        if DataModulePrincipal.FDQueryConfiguracao.FindField('NomeConfiguracao').AsString = 'CaminhoDoBackupDoBanco' then
+          EditCaminhoBackup.Text := DataModulePrincipal.FDQueryConfiguracao.FieldByName('CaminhoBackup').AsString;
+        Next;
+      end;
+    finally
+      DataModulePrincipal.FDQueryConfiguracao.Close;  // Fecha a consulta para liberar a conexão
+    end;
+  end;
+end;
+
+end.

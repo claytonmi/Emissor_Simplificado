@@ -1,9 +1,8 @@
 object RelatorioSemanal: TRelatorioSemanal
   Left = 0
   Top = 0
-  BorderStyle = bsSingle
   Caption = 'Relat'#243'rio Peri'#243'dico'
-  ClientHeight = 213
+  ClientHeight = 214
   ClientWidth = 296
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -271,7 +270,7 @@ object RelatorioSemanal: TRelatorioSemanal
   OnClose = FormClose
   OnCreate = FormCreate
   TextHeight = 8
-  object Label1: TLabel
+  object LabelDataInicio: TLabel
     Left = 40
     Top = 120
     Width = 86
@@ -284,7 +283,7 @@ object RelatorioSemanal: TRelatorioSemanal
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object Label2: TLabel
+  object LabelCliente: TLabel
     Left = 40
     Top = 65
     Width = 43
@@ -297,7 +296,7 @@ object RelatorioSemanal: TRelatorioSemanal
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object Label3: TLabel
+  object LabelEmpresa: TLabel
     Left = 40
     Top = 8
     Width = 52
@@ -310,7 +309,7 @@ object RelatorioSemanal: TRelatorioSemanal
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object Label4: TLabel
+  object LabelDataFim: TLabel
     Left = 151
     Top = 120
     Width = 75
