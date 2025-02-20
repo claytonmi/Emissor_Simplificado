@@ -1,0 +1,177 @@
+unit FrmSplashArt;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, MNPrincipal,
+  Vcl.Imaging.pngimage, NMAtivador, Registry, FrmConexaoComMultiBanco;
+
+type
+  TFrmSplash = class(TForm)
+    lblStatus: TLabel;
+    ProgressBar1: TProgressBar;
+    Timer1: TTimer;
+    ImageLogo: TImage;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
+    Label4: TLabel;
+    procedure FormShow(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
+  private
+    procedure IniciarSistema;
+  public
+    procedure labEdit(labeltext: string);
+    procedure processCout(process: Integer);
+    { Public declarations }
+  end;
+
+var
+  hMutex: THandle;
+  MutexName: string; // Nome do Mutex
+  FrmSplash: TFrmSplash;
+
+implementation
+
+uses
+  uDataModulePrincipal;  // Mover para cá!
+
+{$R *.dfm}
+
+procedure TFrmSplash.labEdit(labeltext: string);
+begin
+    lblStatus.Caption := labeltext;
+    lblStatus.Repaint;
+end;
+
+procedure TFrmSplash.processCout(process: Integer);
+begin
+    ProgressBar1.Position := process;
+end;
+
+procedure TFrmSplash.FormShow(Sender: TObject);
+var
+  ExeName: string;
+begin
+  // Obtém o nome do executável sem a extensão
+  ExeName := ChangeFileExt(ExtractFileName(ParamStr(0)), '');
+  MutexName := 'Mutex_' + ExeName; // Nome único baseado no executável
+  // Criar Mutex para impedir múltiplas instâncias
+  hMutex := CreateMutex(nil, True, PChar(MutexName));
+  if (hMutex = 0) or (GetLastError = ERROR_ALREADY_EXISTS) then
+  begin
+    MessageBox(0, 'O programa já está em execução.', 'Aviso', MB_OK or MB_ICONWARNING);
+    ExitProcess(0);
+  end;
+
+  labEdit('Inicializando...');
+  ProgressBar1.Position := 0;
+  Timer1.Enabled := True;
+end;
+
+
+procedure TFrmSplash.Timer1Timer(Sender: TObject);
+begin
+  Timer1.Enabled := False;
+  IniciarSistema;
+end;
+
+procedure TFrmSplash.IniciarSistema;
+var
+  Reg: TRegistry;
+  ChaveSalva: string;
+  IniFilePath: string;
+begin
+  labEdit('Verificando ativação...');
+  processCout(10);
+  Application.ProcessMessages;
+
+  // Verificar ativação no Registro do Windows
+  Reg := TRegistry.Create;
+  try
+    Reg.RootKey := HKEY_CURRENT_USER;
+    if Reg.OpenKeyReadOnly('\Software\MeuSistema') then
+      ChaveSalva := Reg.ReadString('ChaveAtivacao')
+    else
+      ChaveSalva := '';
+
+    if ChaveSalva = '' then
+    begin
+      ShowMessage('O sistema não está ativado. Por favor, insira a chave de ativação.');
+      NMAtivadorChave := TNMAtivadorChave.Create(nil);
+      try
+        NMAtivadorChave.ShowModal;
+      finally
+        NMAtivadorChave.Free;
+      end;
+
+      if not Reg.OpenKeyReadOnly('\Software\MeuSistema') or (Reg.ReadString('ChaveAtivacao') = '') then
+      begin
+        ShowMessage('Ativação não realizada. O sistema será fechado.');
+        Application.Terminate;
+        Exit;
+      end;
+    end;
+  finally
+    Reg.Free;
+  end;
+
+  // Caminho do arquivo .ini
+  IniFilePath := ExtractFilePath(ParamStr(0)) + 'config.ini';
+
+  labEdit('Verificando Configuração do Banco de Dados...');
+  processCout(20);
+  Application.ProcessMessages;
+
+  // Verifica se o arquivo de configuração existe
+  if not FileExists(IniFilePath) then
+  begin
+    ShowMessage('Nenhuma configuração de banco encontrada. Configure antes de continuar.');
+    FrmConexaoComMultiBanco := TFrmConexaoComMultiBanco.Create(nil);
+    try
+      FrmConexaoComMultiBanco.ShowModal;
+    finally
+      FrmConexaoComMultiBanco.Free;
+    end;
+
+    // Após fechar o formulário, verificar se o .ini foi criado
+    if not FileExists(IniFilePath) then
+    begin
+      ShowMessage('Configuração não realizada. O sistema será fechado.');
+      Application.Terminate;
+      Exit;
+    end;
+  end;
+
+  // Prossegue com a inicialização do banco
+  labEdit('Carregando Banco de Dados...');
+  processCout(50);
+  Application.ProcessMessages;
+
+  try
+    DataModulePrincipal := TDataModulePrincipal.Create(nil);
+    Application.ProcessMessages;
+
+    labEdit('Carregamento concluído!');
+    processCout(100);
+    Application.ProcessMessages;
+    Sleep(500);
+
+    // Esconde o splash
+    FrmSplash.Hide;
+    Application.MainFormOnTaskbar := True;
+
+    // Cria e exibe o formulário principal
+    Application.CreateForm(TEmissorPrincipal, EmissorPrincipal);
+    EmissorPrincipal.Show;
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Erro ao inicializar o sistema: ' + E.Message);
+      Application.Terminate;
+    end;
+  end;
+end;
+
+end.

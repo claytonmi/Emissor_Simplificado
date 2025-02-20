@@ -108,52 +108,92 @@ end;
 procedure TNMConfig.SalvarConfiguracoes;
 begin
   try
-    // Inicia transação (caso necessário)
-    if not DataModulePrincipal.FDConnection.InTransaction then
-      DataModulePrincipal.FDConnection.StartTransaction;
-    // Atualiza ExibirDataInsercaoNoOrcamento
-    DataModulePrincipal.FDQueryConfiguracao.Close;
-    DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'UPDATE Configuracao SET FLATIVO = :FLATIVO WHERE NomeConfiguracao = :Nome';
-    DataModulePrincipal.FDQueryConfiguracao.ParamByName('Nome').AsString := 'ExibirDataInsercaoNoOrcamento';
-    DataModulePrincipal.FDQueryConfiguracao.ParamByName('FLATIVO').AsString := IfThen(CheckBoxDataInsercaoDoItem.Checked, 'S', 'N');
-    DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
-    // Atualiza ExibirDataInsercaoNoRelatorio
-    DataModulePrincipal.FDQueryConfiguracao.Close;
-    DataModulePrincipal.FDQueryConfiguracao.ParamByName('Nome').AsString := 'ExibirDataInsercaoNoRelatorio';
-    DataModulePrincipal.FDQueryConfiguracao.ParamByName('FLATIVO').AsString := IfThen(CheckBoxDataDeInsercaoDoItemRelatorio.Checked, 'S', 'N');
-    DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
-    // Atualiza ExibirEmpresaNoRelatorio
-    DataModulePrincipal.FDQueryConfiguracao.Close;
-    DataModulePrincipal.FDQueryConfiguracao.ParamByName('Nome').AsString := 'ExibirEmpresaNoRelatorio';
-    DataModulePrincipal.FDQueryConfiguracao.ParamByName('FLATIVO').AsString := IfThen(CheckBoxEmpresaVisivelNoCabecalho.Checked, 'S', 'N');
-    DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
-    // Atualiza CaminhoBackup
-    DataModulePrincipal.FDQueryConfiguracao.Close;
-    DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'UPDATE Configuracao SET CaminhoBackup = :Caminho WHERE NomeConfiguracao = ''CaminhoDoBackupDoBanco''';
-    DataModulePrincipal.FDQueryConfiguracao.ParamByName('Caminho').AsString := EditCaminhoBackup.Text;
-    DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
-    // Atualiza QtdDiasParaLimparBanco
-    DataModulePrincipal.FDQueryConfiguracao.Close;
-    DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'UPDATE Configuracao SET QtdDias = :QtdDiasLimpa WHERE NomeConfiguracao = ''QtdDiasParaLimparBanco''';
-    DataModulePrincipal.FDQueryConfiguracao.ParamByName('QtdDiasLimpa').AsInteger := SpinEditQtdDiasLimpar.Value;
-    DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
-    // Atualiza MoedaApresentadaNoRelatorio
-    DataModulePrincipal.FDQueryConfiguracao.Close;
-    DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'UPDATE Configuracao SET UsarMoeda = :Moeda WHERE NomeConfiguracao = ''MoedaApresentadaNoRelatorio''';
-    DataModulePrincipal.FDQueryConfiguracao.ParamByName('Moeda').AsString := ComboBoxMoedaUtilizada.Text; // Salva o valor selecionado no ComboBox
-    DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
-    // Atualiza UsaIdiomaNoRelatorio
-    DataModulePrincipal.FDQueryConfiguracao.Close;
-    DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'UPDATE Configuracao SET Idioma = :idioma WHERE NomeConfiguracao = ''UsaIdiomaNoRelatorio''';
-    DataModulePrincipal.FDQueryConfiguracao.ParamByName('idioma').AsString := ComboBoxIdioma.Text; // Salva o valor selecionado no ComboBox
-    DataModulePrincipal.FDQueryConfiguracao.ExecSQL;
-    // Confirma a transação
-    DataModulePrincipal.FDConnection.Commit;
+    if dbType = 'SQLite' then
+    begin
+      if not DataModulePrincipal.FDConnection.InTransaction then
+        DataModulePrincipal.FDConnection.StartTransaction;
+      with DataModulePrincipal.FDQueryConfiguracao do
+      begin
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET FLATIVO = :FLATIVO WHERE NomeConfiguracao = :Nome';
+        ParamByName('Nome').AsString := 'ExibirDataInsercaoNoOrcamento';
+        ParamByName('FLATIVO').AsString := IfThen(CheckBoxDataInsercaoDoItem.Checked, 'S', 'N');
+        ExecSQL;
+        Close;
+        ParamByName('Nome').AsString := 'ExibirDataInsercaoNoRelatorio';
+        ParamByName('FLATIVO').AsString := IfThen(CheckBoxDataDeInsercaoDoItemRelatorio.Checked, 'S', 'N');
+        ExecSQL;
+        Close;
+        ParamByName('Nome').AsString := 'ExibirEmpresaNoRelatorio';
+        ParamByName('FLATIVO').AsString := IfThen(CheckBoxEmpresaVisivelNoCabecalho.Checked, 'S', 'N');
+        ExecSQL;
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET CaminhoBackup = :Caminho WHERE NomeConfiguracao = ''CaminhoDoBackupDoBanco''';
+        ParamByName('Caminho').AsString := EditCaminhoBackup.Text;
+        ExecSQL;
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET QtdDias = :QtdDiasLimpa WHERE NomeConfiguracao = ''QtdDiasParaLimparBanco''';
+        ParamByName('QtdDiasLimpa').AsInteger := SpinEditQtdDiasLimpar.Value;
+        ExecSQL;
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET UsarMoeda = :Moeda WHERE NomeConfiguracao = ''MoedaApresentadaNoRelatorio''';
+        ParamByName('Moeda').AsString := ComboBoxMoedaUtilizada.Text;
+        ExecSQL;
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET Idioma = :idioma WHERE NomeConfiguracao = ''UsaIdiomaNoRelatorio''';
+        ParamByName('idioma').AsString := ComboBoxIdioma.Text;
+        ExecSQL;
+      end;
+      DataModulePrincipal.FDConnection.Commit;
+    end
+    else if dbType = 'SQL Server' then
+    begin
+      if not DataModulePrincipal.ADOConnection.InTransaction then
+        DataModulePrincipal.ADOConnection.BeginTrans;
+      with DataModulePrincipal.ADOQueryConfiguracao do
+      begin
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET FLATIVO = :FLATIVO WHERE NomeConfiguracao = :Nome';
+        Parameters.ParamByName('Nome').Value := 'ExibirDataInsercaoNoOrcamento';
+        Parameters.ParamByName('FLATIVO').Value := IfThen(CheckBoxDataInsercaoDoItem.Checked, 'S', 'N');
+        ExecSQL;
+        Close;
+        Parameters.ParamByName('Nome').Value := 'ExibirDataInsercaoNoRelatorio';
+        Parameters.ParamByName('FLATIVO').Value := IfThen(CheckBoxDataDeInsercaoDoItemRelatorio.Checked, 'S', 'N');
+        ExecSQL;
+        Close;
+        Parameters.ParamByName('Nome').Value := 'ExibirEmpresaNoRelatorio';
+        Parameters.ParamByName('FLATIVO').Value := IfThen(CheckBoxEmpresaVisivelNoCabecalho.Checked, 'S', 'N');
+        ExecSQL;
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET CaminhoBackup = :Caminho WHERE NomeConfiguracao = ''CaminhoDoBackupDoBanco''';
+        Parameters.ParamByName('Caminho').Value := EditCaminhoBackup.Text;
+        ExecSQL;
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET QtdDias = :QtdDiasLimpa WHERE NomeConfiguracao = ''QtdDiasParaLimparBanco''';
+        Parameters.ParamByName('QtdDiasLimpa').Value := SpinEditQtdDiasLimpar.Value;
+        ExecSQL;
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET UsarMoeda = :Moeda WHERE NomeConfiguracao = ''MoedaApresentadaNoRelatorio''';
+        Parameters.ParamByName('Moeda').Value := ComboBoxMoedaUtilizada.Text;
+        ExecSQL;
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET Idioma = :idioma WHERE NomeConfiguracao = ''UsaIdiomaNoRelatorio''';
+        Parameters.ParamByName('idioma').Value := ComboBoxIdioma.Text;
+        ExecSQL;
+      end;
+      DataModulePrincipal.ADOConnection.CommitTrans;
+    end
+    else
+      ShowMessage('Tipo de banco de dados não reconhecido.');
     ShowMessage('Configurações salvas com sucesso!');
   except
     on E: Exception do
     begin
-      DataModulePrincipal.FDConnection.Rollback; // Desfaz mudanças em caso de erro
+      if dbType = 'SQLite' then
+        DataModulePrincipal.FDConnection.Rollback
+      else if dbType = 'SQL Server' then
+        DataModulePrincipal.ADOConnection.RollbackTrans;
       ShowMessage('Erro ao salvar configurações: ' + E.Message);
     end;
   end;
@@ -197,27 +237,65 @@ end;
 
 procedure TNMConfig.CarregarConfiguracoes;
 begin
-  with DataModulePrincipal.FDQueryConfiguracao do
+  if dbType = 'SQLite' then
   begin
-    try
-      DataModulePrincipal.FDQueryConfiguracao.Close;  // Garante que a query esteja fechada antes de configurar
-      DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'SELECT * FROM Configuracao';
-      DataModulePrincipal.FDQueryConfiguracao.Open;
-      // Carregar os tipos de moeda no ComboBox
-      ComboBoxMoedaUtilizada.Items.Clear;
-      ComboBoxMoedaUtilizada.Items.Add('Real Brasileiro');
-      ComboBoxMoedaUtilizada.Items.Add('Dólar Americano');
-      ComboBoxMoedaUtilizada.Items.Add('Euro');
-      ComboBoxMoedaUtilizada.Items.Add('Dólar Canadense');
-      ComboBoxMoedaUtilizada.Style := csDropDownList;
-      // Carregar os idiomas do relatório no ComboBox
-      ComboBoxIdioma.Items.Clear;
-      ComboBoxIdioma.Items.Add('Português');
-      ComboBoxIdioma.Items.Add('Inglês');
-      ComboBoxIdioma.Style := csDropDownList;
+    with DataModulePrincipal.FDQueryConfiguracao do
+    begin
+      try
+        Close;
+        SQL.Text := 'SELECT * FROM Configuracao';
+        Open;
+      except
+        on E: Exception do
+        begin
+          ShowMessage('Erro ao carregar configurações do SQLite: ' + E.Message);
+          Exit;
+        end;
+      end;
+    end;
+  end
+  else if dbType = 'SQL Server' then
+  begin
+    with DataModulePrincipal.ADOQueryConfiguracao do
+    begin
+      try
+        Close;
+        SQL.Text := 'SELECT * FROM Configuracao';
+        Open;
+      except
+        on E: Exception do
+        begin
+          ShowMessage('Erro ao carregar configurações do SQL Server: ' + E.Message);
+          Exit;
+        end;
+      end;
+    end;
+  end
+  else
+  begin
+    ShowMessage('Tipo de banco de dados não reconhecido.');
+    Exit;
+  end;
+  // Carregar os tipos de moeda no ComboBox
+  ComboBoxMoedaUtilizada.Items.Clear;
+  ComboBoxMoedaUtilizada.Items.Add('Real Brasileiro');
+  ComboBoxMoedaUtilizada.Items.Add('Dólar Americano');
+  ComboBoxMoedaUtilizada.Items.Add('Euro');
+  ComboBoxMoedaUtilizada.Items.Add('Dólar Canadense');
+  ComboBoxMoedaUtilizada.Style := csDropDownList;
+  // Carregar os idiomas do relatório no ComboBox
+  ComboBoxIdioma.Items.Clear;
+  ComboBoxIdioma.Items.Add('Português');
+  ComboBoxIdioma.Items.Add('Inglês');
+  ComboBoxIdioma.Style := csDropDownList;
+  // Selecionar o componente correto para leitura dos dados
+  if dbType = 'SQLite' then
+  begin
+    with DataModulePrincipal.FDQueryConfiguracao do
+    begin
+      Open; // Certifique-se de abrir a consulta antes de iterar
       while not Eof do
       begin
-        // Configurações que já estavam no código original
         if FieldByName('NomeConfiguracao').AsString = 'ExibirDataInsercaoNoOrcamento' then
         begin
           CheckBoxDataInsercaoDoItem.Checked := FieldByName('FLATIVO').AsString = 'S';
@@ -227,45 +305,92 @@ begin
           CheckBoxDataDeInsercaoDoItemRelatorio.Checked := FieldByName('FLATIVO').AsString = 'S'
         else if FieldByName('NomeConfiguracao').AsString = 'ExibirEmpresaNoRelatorio' then
           CheckBoxEmpresaVisivelNoCabecalho.Checked := FieldByName('FLATIVO').AsString = 'S';
+
         if FieldByName('NomeConfiguracao').AsString = 'CaminhoDoBackupDoBanco' then
           EditCaminhoBackup.Text := FieldByName('CaminhoBackup').AsString;
+
         if FieldByName('NomeConfiguracao').AsString = 'QtdDiasParaLimparBanco' then
           SpinEditQtdDiasLimpar.Value := FieldByName('QtdDias').AsInteger;
-        // Verificar a configuração da moeda
+
         if FieldByName('NomeConfiguracao').AsString = 'MoedaApresentadaNoRelatorio' then
         begin
-          // Verificar se o valor de 'UsarMoeda' existe no ComboBox
           if ComboBoxMoedaUtilizada.Items.IndexOf(FieldByName('UsarMoeda').AsString) <> -1 then
-          begin
-            ComboBoxMoedaUtilizada.ItemIndex := ComboBoxMoedaUtilizada.Items.IndexOf(FieldByName('UsarMoeda').AsString);
-          end
+            ComboBoxMoedaUtilizada.ItemIndex := ComboBoxMoedaUtilizada.Items.IndexOf(FieldByName('UsarMoeda').AsString)
           else
           begin
-            // Se não encontrar o valor no ComboBox, informa o valor do banco
-            ShowMessage('Moeda ' + FieldByName('UsarMoeda').AsString + ' não encontrada no ComboBox. Usando o valor do banco.');
-            ComboBoxMoedaUtilizada.ItemIndex := -1; // Se não achar, deixa o ComboBox em estado inicial
+            ShowMessage('Moeda ' + FieldByName('UsarMoeda').AsString + ' não encontrada no ComboBox.');
+            ComboBoxMoedaUtilizada.ItemIndex := -1;
           end;
         end;
+
         if FieldByName('NomeConfiguracao').AsString = 'UsaIdiomaNoRelatorio' then
         begin
-          // Verificar se o valor de 'UsarMoeda' existe no ComboBox
           if ComboBoxIdioma.Items.IndexOf(FieldByName('Idioma').AsString) <> -1 then
-          begin
-            ComboBoxIdioma.ItemIndex := ComboBoxIdioma.Items.IndexOf(FieldByName('Idioma').AsString);
-          end
+            ComboBoxIdioma.ItemIndex := ComboBoxIdioma.Items.IndexOf(FieldByName('Idioma').AsString)
           else
           begin
-            // Se não encontrar o valor no ComboBox, informa o valor do banco
-            ShowMessage('Idioma ' + FieldByName('Idioma').AsString + ' não encontrada no ComboBox. Usando o valor do banco.');
-            ComboBoxIdioma.ItemIndex := -1; // Se não achar, deixa o ComboBox em estado inicial
+            ShowMessage('Idioma ' + FieldByName('Idioma').AsString + ' não encontrado no ComboBox.');
+            ComboBoxIdioma.ItemIndex := -1;
           end;
         end;
+
         Next;
       end;
-    finally
-      DataModulePrincipal.FDQueryConfiguracao.Close;  // Fecha a consulta para liberar a conexão
+      Close; // Fechar a consulta ao final
+    end;
+  end
+  else if dbType = 'SQL Server' then
+  begin
+    with DataModulePrincipal.ADOQueryConfiguracao do
+    begin
+      Open; // Certifique-se de abrir a consulta antes de iterar
+      while not Eof do
+      begin
+        if FieldByName('NomeConfiguracao').AsString = 'ExibirDataInsercaoNoOrcamento' then
+        begin
+          CheckBoxDataInsercaoDoItem.Checked := FieldByName('FLATIVO').AsString = 'S';
+          AtualizaDtOrcamento := CheckBoxDataInsercaoDoItem.Checked;
+        end
+        else if FieldByName('NomeConfiguracao').AsString = 'ExibirDataInsercaoNoRelatorio' then
+          CheckBoxDataDeInsercaoDoItemRelatorio.Checked := FieldByName('FLATIVO').AsString = 'S'
+        else if FieldByName('NomeConfiguracao').AsString = 'ExibirEmpresaNoRelatorio' then
+          CheckBoxEmpresaVisivelNoCabecalho.Checked := FieldByName('FLATIVO').AsString = 'S';
+
+        if FieldByName('NomeConfiguracao').AsString = 'CaminhoDoBackupDoBanco' then
+          EditCaminhoBackup.Text := FieldByName('CaminhoBackup').AsString;
+
+        if FieldByName('NomeConfiguracao').AsString = 'QtdDiasParaLimparBanco' then
+          SpinEditQtdDiasLimpar.Value := FieldByName('QtdDias').AsInteger;
+
+        if FieldByName('NomeConfiguracao').AsString = 'MoedaApresentadaNoRelatorio' then
+        begin
+          if ComboBoxMoedaUtilizada.Items.IndexOf(FieldByName('UsarMoeda').AsString) <> -1 then
+            ComboBoxMoedaUtilizada.ItemIndex := ComboBoxMoedaUtilizada.Items.IndexOf(FieldByName('UsarMoeda').AsString)
+          else
+          begin
+            ShowMessage('Moeda ' + FieldByName('UsarMoeda').AsString + ' não encontrada no ComboBox.');
+            ComboBoxMoedaUtilizada.ItemIndex := -1;
+          end;
+        end;
+
+        if FieldByName('NomeConfiguracao').AsString = 'UsaIdiomaNoRelatorio' then
+        begin
+          if ComboBoxIdioma.Items.IndexOf(FieldByName('Idioma').AsString) <> -1 then
+            ComboBoxIdioma.ItemIndex := ComboBoxIdioma.Items.IndexOf(FieldByName('Idioma').AsString)
+          else
+          begin
+            ShowMessage('Idioma ' + FieldByName('Idioma').AsString + ' não encontrado no ComboBox.');
+            ComboBoxIdioma.ItemIndex := -1;
+          end;
+        end;
+
+        Next;
+      end;
+      Close; // Fechar a consulta ao final
     end;
   end;
+
+
 end;
 
 procedure TNMConfig.EditCaminhoBackupMouseEnter(Sender: TObject);

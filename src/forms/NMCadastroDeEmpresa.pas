@@ -120,69 +120,143 @@ begin
     if IDEmpresaSelecionada > 0 then
     begin
       // Usar somente um fechamento de query para evitar reabertura repetitiva
-      with DataModulePrincipal.FDQueryEmpresa do
+      if dbType = 'SQLite' then
       begin
-        try
-          // Verifica se a consulta está aberta antes de fechar
-          if Active then
-          DataModulePrincipal.FDQueryEmpresa.Close;
+        // Para SQLite
+        with DataModulePrincipal.FDQueryEmpresa do
+        begin
+          try
+            // Verifica se a consulta está aberta antes de fechar
+            if Active then
+              DataModulePrincipal.FDQueryEmpresa.Close;
 
-          DataModulePrincipal.FDQueryEmpresa.SQL.Text := 'SELECT * FROM Empresa WHERE IDEmpresa = :IDEmpresa';
-          DataModulePrincipal.FDQueryEmpresa.ParamByName('IDEmpresa').AsInteger := IDEmpresaSelecionada;
-          DataModulePrincipal.FDQueryEmpresa.Open;
+            DataModulePrincipal.FDQueryEmpresa.SQL.Text := 'SELECT * FROM Empresa WHERE IDEmpresa = :IDEmpresa';
+            DataModulePrincipal.FDQueryEmpresa.ParamByName('IDEmpresa').AsInteger := IDEmpresaSelecionada;
+            DataModulePrincipal.FDQueryEmpresa.Open;
 
-          if not IsEmpty then
-          begin
-            EdCodigoEmpresa.Text := IntToStr(FieldByName('IDEmpresa').AsInteger);
-            EdNomeEmpresa.Text := FieldByName('NomeEmpresa').AsString;
-            EdCNPJ.Text := FieldByName('CNPJ').AsString;
-            EdNomeFantasia.Text := FieldByName('NomeFantasia').AsString;
-            EdTelefone.Text := FieldByName('Telefone').AsString;
-            EdEndereco.Text := FieldByName('Endereco').AsString;
-            EdCidade.Text := FieldByName('Cidade').AsString;
-            EdBairro.Text := FieldByName('Bairro').AsString;
-            EdEstado.Text := FieldByName('Estado').AsString;
-
-            // Habilitar os campos para edição
-            EdNomeEmpresa.Enabled := true;
-            EdCNPJ.Enabled := true;
-            EdNomeFantasia.Enabled := true;
-            CheckBoxDefault.Enabled := true;
-            EdTelefone.Enabled := true;
-            EdEndereco.Enabled := true;
-            EdCidade.Enabled := true;
-            EdBairro.Enabled := true;
-            EdEstado.Enabled := true;
-            BtImagem.Enabled := true;
-            BtNovo.Enabled := false;
-            BtGravar.Enabled := true;
-            BtEditar.Enabled := false;
-            BtCancelar.Enabled := true;
-            BtExcluir.Enabled := true;
-
-            // Definir CheckBox com base no campo FlDefault
-            CheckBoxDefault.Checked := FieldByName('FlDefault').AsString = 'S';
-
-            // Carregar imagem se existir
-            if not FieldByName('ImgLogo').IsNull then
+            if not IsEmpty then
             begin
-              var StreamLogo := TMemoryStream.Create;
-              try
-                (FieldByName('ImgLogo') as TBlobField).SaveToStream(StreamLogo);
-                StreamLogo.Position := 0;
-                ImgEmpresa.Picture.LoadFromStream(StreamLogo);
-              finally
-                StreamLogo.Free;
-              end;
+              EdCodigoEmpresa.Text := IntToStr(FieldByName('IDEmpresa').AsInteger);
+              EdNomeEmpresa.Text := FieldByName('NomeEmpresa').AsString;
+              EdCNPJ.Text := FieldByName('CNPJ').AsString;
+              EdNomeFantasia.Text := FieldByName('NomeFantasia').AsString;
+              EdTelefone.Text := FieldByName('Telefone').AsString;
+              EdEndereco.Text := FieldByName('Endereco').AsString;
+              EdCidade.Text := FieldByName('Cidade').AsString;
+              EdBairro.Text := FieldByName('Bairro').AsString;
+              EdEstado.Text := FieldByName('Estado').AsString;
+
+              // Habilitar os campos para edição
+              EdNomeEmpresa.Enabled := true;
+              EdCNPJ.Enabled := true;
+              EdNomeFantasia.Enabled := true;
+              CheckBoxDefault.Enabled := true;
+              EdTelefone.Enabled := true;
+              EdEndereco.Enabled := true;
+              EdCidade.Enabled := true;
+              EdBairro.Enabled := true;
+              EdEstado.Enabled := true;
+              BtImagem.Enabled := true;
+              BtNovo.Enabled := false;
+              BtGravar.Enabled := true;
+              BtEditar.Enabled := false;
+              BtCancelar.Enabled := true;
+              BtExcluir.Enabled := true;
+
+              // Definir CheckBox com base no campo FlDefault
+              CheckBoxDefault.Checked := FieldByName('FlDefault').AsString = 'S';
+
+              // Carregar imagem se existir
+              if not FieldByName('ImgLogo').IsNull then
+              begin
+                var StreamLogo := TMemoryStream.Create;
+                try
+                  (FieldByName('ImgLogo') as TBlobField).SaveToStream(StreamLogo);
+                  StreamLogo.Position := 0;
+                  ImgEmpresa.Picture.LoadFromStream(StreamLogo);
+                finally
+                  StreamLogo.Free;
+                end;
+              end
+              else
+                ImgEmpresa.Picture := nil;
             end
             else
-              ImgEmpresa.Picture := nil;
-          end
-          else
-            ShowMessage('Empresa não encontrada.');
-        finally
-          // Garante que a consulta será fechada
-          DataModulePrincipal.FDQueryEmpresa.Close;
+              ShowMessage('Empresa não encontrada.');
+          finally
+            // Garante que a consulta será fechada
+            DataModulePrincipal.FDQueryEmpresa.Close;
+          end;
+        end;
+      end
+      else if dbType = 'SQL Server' then
+      begin
+        // Para SQL Server
+        with DataModulePrincipal.ADOQueryEmpresa do
+        begin
+          try
+            // Verifica se a consulta está aberta antes de fechar
+            if Active then
+              DataModulePrincipal.ADOQueryEmpresa.Close;
+
+            DataModulePrincipal.ADOQueryEmpresa.SQL.Text := 'SELECT * FROM Empresa WHERE IDEmpresa = :IDEmpresa';
+            DataModulePrincipal.ADOQueryEmpresa.Parameters.ParamByName('IDEmpresa').Value := IDEmpresaSelecionada;
+            DataModulePrincipal.ADOQueryEmpresa.Open;
+
+            if not IsEmpty then
+            begin
+              EdCodigoEmpresa.Text := IntToStr(FieldByName('IDEmpresa').AsInteger);
+              EdNomeEmpresa.Text := FieldByName('NomeEmpresa').AsString;
+              EdCNPJ.Text := FieldByName('CNPJ').AsString;
+              EdNomeFantasia.Text := FieldByName('NomeFantasia').AsString;
+              EdTelefone.Text := FieldByName('Telefone').AsString;
+              EdEndereco.Text := FieldByName('Endereco').AsString;
+              EdCidade.Text := FieldByName('Cidade').AsString;
+              EdBairro.Text := FieldByName('Bairro').AsString;
+              EdEstado.Text := FieldByName('Estado').AsString;
+
+              // Habilitar os campos para edição
+              EdNomeEmpresa.Enabled := true;
+              EdCNPJ.Enabled := true;
+              EdNomeFantasia.Enabled := true;
+              CheckBoxDefault.Enabled := true;
+              EdTelefone.Enabled := true;
+              EdEndereco.Enabled := true;
+              EdCidade.Enabled := true;
+              EdBairro.Enabled := true;
+              EdEstado.Enabled := true;
+              BtImagem.Enabled := true;
+              BtNovo.Enabled := false;
+              BtGravar.Enabled := true;
+              BtEditar.Enabled := false;
+              BtCancelar.Enabled := true;
+              BtExcluir.Enabled := true;
+
+              // Definir CheckBox com base no campo FlDefault
+              CheckBoxDefault.Checked := FieldByName('FlDefault').AsString = 'S';
+
+              // Carregar imagem se existir
+              if not FieldByName('ImgLogo').IsNull then
+              begin
+                var StreamLogo := TMemoryStream.Create;
+                try
+                  // Para SQL Server, o campo ImgLogo é VARBINARY(MAX), então usamos o método de leitura adequado
+                  StreamLogo.Write(FieldByName('ImgLogo').AsBytes[0], Length(FieldByName('ImgLogo').AsBytes));
+                  StreamLogo.Position := 0;
+                  ImgEmpresa.Picture.LoadFromStream(StreamLogo);
+                finally
+                  StreamLogo.Free;
+                end;
+              end
+              else
+                ImgEmpresa.Picture := nil;
+            end
+            else
+              ShowMessage('Empresa não encontrada.');
+          finally
+            // Garante que a consulta será fechada
+            DataModulePrincipal.ADOQueryEmpresa.Close;
+          end;
         end;
       end;
     end;
@@ -190,8 +264,6 @@ begin
     NMPesquisaDeEmpresa.Free;
   end;
 end;
-
-
 
 
 
@@ -212,22 +284,44 @@ begin
   if MessageDlg('Tem certeza que deseja excluir esta empresa?', mtConfirmation, [mbYes, mbNo], 0) = mrNo then
     Exit;
 
-  DataModulePrincipal.FDConnection.StartTransaction;
   try
-    // Preparar a query para excluir o registro da tabela Empresa
-    DataModulePrincipal.FDQueryEmpresa.Close;
-    DataModulePrincipal.FDQueryEmpresa.SQL.Text :=
-      'DELETE FROM Empresa WHERE IDEmpresa = :IDEmpresa';
+    if dbType = 'SQLite' then
+    begin
+      // Usando FDConnection para SQLite
+      DataModulePrincipal.FDConnection.StartTransaction;
+      // Preparar a query para excluir o registro da tabela Empresa
+      DataModulePrincipal.FDQueryEmpresa.Close;
+      DataModulePrincipal.FDQueryEmpresa.SQL.Text := 'DELETE FROM Empresa WHERE IDEmpresa = :IDEmpresa';
 
-    // Passa o ID da empresa para o parâmetro
-    DataModulePrincipal.FDQueryEmpresa.ParamByName('IDEmpresa').AsInteger := IDEmpresaExcluir;
+      // Passa o ID da empresa para o parâmetro
+      DataModulePrincipal.FDQueryEmpresa.ParamByName('IDEmpresa').AsInteger := IDEmpresaExcluir;
 
-    // Executa o comando SQL para excluir o registro
-    DataModulePrincipal.FDQueryEmpresa.ExecSQL;
-    if DataModulePrincipal.FDQueryEmpresa.RowsAffected = 0 then
-      ShowMessage('Nenhuma empresa encontrada para exclusão.');
+      // Executa o comando SQL para excluir o registro
+      DataModulePrincipal.FDQueryEmpresa.ExecSQL;
+      if DataModulePrincipal.FDQueryEmpresa.RowsAffected = 0 then
+        ShowMessage('Nenhuma empresa encontrada para exclusão.');
 
-    DataModulePrincipal.FDConnection.Commit;
+      DataModulePrincipal.FDConnection.Commit;
+    end
+    else if dbType = 'SQL Server' then
+    begin
+      // Usando ADOConnection para SQL Server
+      DataModulePrincipal.ADOConnection.BeginTrans; // Inicia a transação
+
+      // Preparar a query para excluir o registro da tabela Empresa
+      DataModulePrincipal.ADOQueryEmpresa.Close;
+      DataModulePrincipal.ADOQueryEmpresa.SQL.Text := 'DELETE FROM Empresa WHERE IDEmpresa = :IDEmpresa';
+
+      // Passa o ID da empresa para o parâmetro
+      DataModulePrincipal.ADOQueryEmpresa.Parameters.ParamByName('IDEmpresa').Value := IDEmpresaExcluir;
+
+      // Executa o comando SQL para excluir o registro
+      DataModulePrincipal.ADOQueryEmpresa.ExecSQL;
+      if DataModulePrincipal.ADOQueryEmpresa.RowsAffected = 0 then
+        ShowMessage('Nenhuma empresa encontrada para exclusão.');
+
+      DataModulePrincipal.ADOConnection.CommitTrans; // Finaliza a transação
+    end;
 
     // Exibe uma mensagem de sucesso
     ShowMessage('Empresa excluída com sucesso!');
@@ -263,14 +357,21 @@ begin
 
     BtExcluir.Enabled := false;
     BtImagem.Enabled := false;
+
   except
-   on E: Exception do
+    on E: Exception do
     begin
-     DataModulePrincipal.FDConnection.Rollback; // Desfaz se houver erro
-     ShowMessage('Erro ao excluir empresa: ' + E.Message);
+      // Caso de erro, desfaz a transação
+      if dbType = 'SQLite' then
+        DataModulePrincipal.FDConnection.Rollback // Desfaz a transação para SQLite
+      else if dbType = 'SQLServer' then
+        DataModulePrincipal.ADOConnection.RollbackTrans; // Desfaz a transação para SQL Server
+
+      ShowMessage('Erro ao excluir empresa: ' + E.Message);
     end;
   end;
 end;
+
 
 
 procedure TFCadastroDeEmpresa.BtGravarClick(Sender: TObject);
@@ -282,6 +383,7 @@ begin
     BalloonHintCadastroEmpresa.HideHint;
     TutorialAtivo := False;
   end;
+
   // Validação dos campos obrigatórios
   if (Trim(EdNomeEmpresa.Text) = '') or
      (Trim(EdNomeFantasia.Text) = '') then
@@ -289,69 +391,136 @@ begin
     ShowMessage('Preencha todos os campos obrigatórios!');
     Exit;
   end;
-  if ImgEmpresa.Picture.Graphic.Empty then
+
+  if (ImgEmpresa.Picture = nil) or (ImgEmpresa.Picture.Graphic = nil) or ImgEmpresa.Picture.Graphic.Empty then
   begin
     ShowMessage('Por favor, insira uma imagem para o logo da empresa!');
     Exit;
   end;
+
   try
     StreamLogo := TMemoryStream.Create;
     try
       ImgEmpresa.Picture.Graphic.SaveToStream(StreamLogo);
       StreamLogo.Position := 0;
-      // Utilizar BeginTransaction para iniciar a transação
-      DataModulePrincipal.FDConnection.StartTransaction;
-      // Se BtExcluir está ativo, faz UPDATE, senão faz INSERT
-      if BtExcluir.Enabled then
+
+      // Verifica o tipo de banco de dados
+      if dbType = 'SQLite' then
       begin
-        // Atualiza o registro existente
-        with DataModulePrincipal.FDQueryEmpresa do
+        // Utiliza FDConnection para SQLite
+        DataModulePrincipal.FDConnection.StartTransaction;
+        if BtExcluir.Enabled then
         begin
-          DataModulePrincipal.FDQueryEmpresa.Close;
-          DataModulePrincipal.FDQueryEmpresa.SQL.Text := 'UPDATE Empresa SET NomeEmpresa = :NomeEmpresa, Telefone = :Telefone, NomeFantasia = :NomeFantasia, ' +
-                      'CNPJ = :CNPJ, Endereco = :Endereco, Bairro = :Bairro, Cidade = :Cidade, Estado = :Estado, ' +
-                      'ImgLogo = :ImgLogo, FlDefault = :FlDefault WHERE IDEmpresa = :IDEmpresa';
-          DataModulePrincipal.FDQueryEmpresa.ParamByName('IDEmpresa').AsInteger := StrToInt(EdCodigoEmpresa.Text);
-        end;
-      end
-      else
-      begin
-        // Insere um novo registro
-        with DataModulePrincipal.FDQueryEmpresa do
-        begin
-          DataModulePrincipal.FDQueryEmpresa.Close;
-          DataModulePrincipal.FDQueryEmpresa.SQL.Text := 'INSERT INTO Empresa (NomeEmpresa, Telefone, NomeFantasia, CNPJ, Endereco, Bairro, Cidade, Estado, ImgLogo, FlDefault) ' +
-                      'VALUES (:NomeEmpresa, :Telefone, :NomeFantasia, :CNPJ, :Endereco, :Bairro, :Cidade, :Estado, :ImgLogo, :FlDefault)';
-        end;
-      end;
-      // Atribui os valores dos campos
-      with DataModulePrincipal.FDQueryEmpresa do
-      begin
-        DataModulePrincipal.FDQueryEmpresa.ParamByName('NomeEmpresa').AsString := EdNomeEmpresa.Text;
-        DataModulePrincipal.FDQueryEmpresa.ParamByName('Telefone').AsString := EdTelefone.Text;
-        DataModulePrincipal.FDQueryEmpresa.ParamByName('NomeFantasia').AsString := EdNomeFantasia.Text;
-        DataModulePrincipal.FDQueryEmpresa.ParamByName('CNPJ').AsString := EdCNPJ.Text;
-        DataModulePrincipal.FDQueryEmpresa.ParamByName('Endereco').AsString := EdEndereco.Text;
-        DataModulePrincipal.FDQueryEmpresa.ParamByName('Bairro').AsString := EdBairro.Text;
-        DataModulePrincipal.FDQueryEmpresa.ParamByName('Cidade').AsString := EdCidade.Text;
-        DataModulePrincipal.FDQueryEmpresa.ParamByName('Estado').AsString := EdEstado.Text;
-        DataModulePrincipal.FDQueryEmpresa.ParamByName('ImgLogo').LoadFromStream(StreamLogo, ftBlob);
-        // Atribui o valor do CheckBox para FlDefault
-        if CheckBoxDefault.Checked then
-          DataModulePrincipal.FDQueryEmpresa.ParamByName('FlDefault').AsString := 'S'
+          // Atualiza o registro existente no SQLite
+          with DataModulePrincipal.FDQueryEmpresa do
+          begin
+            Close;
+            SQL.Text := 'UPDATE Empresa SET NomeEmpresa = :NomeEmpresa, Telefone = :Telefone, NomeFantasia = :NomeFantasia, ' +
+                        'CNPJ = :CNPJ, Endereco = :Endereco, Bairro = :Bairro, Cidade = :Cidade, Estado = :Estado, ' +
+                        'ImgLogo = :ImgLogo, FlDefault = :FlDefault WHERE IDEmpresa = :IDEmpresa';
+            ParamByName('IDEmpresa').AsInteger := StrToInt(EdCodigoEmpresa.Text);
+          end;
+        end
         else
-          DataModulePrincipal.FDQueryEmpresa.ParamByName('FlDefault').AsString := 'N';
-        // Executa a query
-        DataModulePrincipal.FDQueryEmpresa.ExecSQL;
+        begin
+          // Insere um novo registro no SQLite
+          with DataModulePrincipal.FDQueryEmpresa do
+          begin
+            Close;
+            SQL.Text := 'INSERT INTO Empresa (NomeEmpresa, Telefone, NomeFantasia, CNPJ, Endereco, Bairro, Cidade, Estado, ImgLogo, FlDefault) ' +
+                        'VALUES (:NomeEmpresa, :Telefone, :NomeFantasia, :CNPJ, :Endereco, :Bairro, :Cidade, :Estado, :ImgLogo, :FlDefault)';
+          end;
+        end;
+
+        // Atribui os valores dos campos
+        with DataModulePrincipal.FDQueryEmpresa do
+        begin
+          ParamByName('NomeEmpresa').AsString := EdNomeEmpresa.Text;
+          ParamByName('Telefone').AsString := EdTelefone.Text;
+          ParamByName('NomeFantasia').AsString := EdNomeFantasia.Text;
+          ParamByName('CNPJ').AsString := EdCNPJ.Text;
+          ParamByName('Endereco').AsString := EdEndereco.Text;
+          ParamByName('Bairro').AsString := EdBairro.Text;
+          ParamByName('Cidade').AsString := EdCidade.Text;
+          ParamByName('Estado').AsString := EdEstado.Text;
+          ParamByName('ImgLogo').LoadFromStream(StreamLogo, ftBlob);  // BLOB para SQLite
+
+          if CheckBoxDefault.Checked then
+            ParamByName('FlDefault').AsString := 'S'
+          else
+            ParamByName('FlDefault').AsString := 'N';
+
+          ExecSQL;
+        end;
+
+        // Commit da transação
+        DataModulePrincipal.FDConnection.Commit;
+      end
+      else if dbType = 'SQL Server' then
+      begin
+        // Utiliza ADOConnection para SQL Server
+        if DataModulePrincipal.ADOConnection.InTransaction = False then
+          DataModulePrincipal.ADOConnection.BeginTrans;
+        if BtExcluir.Enabled then
+        begin
+          // Atualiza o registro existente no SQL Server
+          with DataModulePrincipal.ADOQueryEmpresa do
+          begin
+            Close;
+            SQL.Text := 'UPDATE Empresa SET NomeEmpresa = :NomeEmpresa, Telefone = :Telefone, NomeFantasia = :NomeFantasia, ' +
+                        'CNPJ = :CNPJ, Endereco = :Endereco, Bairro = :Bairro, Cidade = :Cidade, Estado = :Estado, ' +
+                        'ImgLogo = :ImgLogo, FlDefault = :FlDefault WHERE IDEmpresa = :IDEmpresa';
+            Parameters.ParamByName('IDEmpresa').Value := StrToInt(EdCodigoEmpresa.Text);
+          end;
+        end
+        else
+        begin
+          // Insere um novo registro no SQL Server
+          with DataModulePrincipal.ADOQueryEmpresa do
+          begin
+            Close;
+            SQL.Text := 'INSERT INTO Empresa (NomeEmpresa, Telefone, NomeFantasia, CNPJ, Endereco, Bairro, Cidade, Estado, ImgLogo, FlDefault) ' +
+                        'VALUES (:NomeEmpresa, :Telefone, :NomeFantasia, :CNPJ, :Endereco, :Bairro, :Cidade, :Estado, :ImgLogo, :FlDefault)';
+          end;
+        end;
+
+        // Atribui os valores dos campos
+        with DataModulePrincipal.ADOQueryEmpresa do
+        begin
+          Parameters.ParamByName('NomeEmpresa').Value := EdNomeEmpresa.Text;
+          Parameters.ParamByName('Telefone').Value := EdTelefone.Text;
+          Parameters.ParamByName('NomeFantasia').Value := EdNomeFantasia.Text;
+          Parameters.ParamByName('CNPJ').Value := EdCNPJ.Text;
+          Parameters.ParamByName('Endereco').Value := EdEndereco.Text;
+          Parameters.ParamByName('Bairro').Value := EdBairro.Text;
+          Parameters.ParamByName('Cidade').Value := EdCidade.Text;
+          Parameters.ParamByName('Estado').Value := EdEstado.Text;
+
+          // Salva a imagem como VARBINARY(MAX) no SQL Server
+          Parameters.ParamByName('ImgLogo').LoadFromStream(StreamLogo, ftBlob);
+
+          if CheckBoxDefault.Checked then
+            Parameters.ParamByName('FlDefault').Value := 'S'
+          else
+            Parameters.ParamByName('FlDefault').Value := 'N';
+
+          ExecSQL;
+        end;
+
+        // Commit da transação
+        DataModulePrincipal.ADOConnection.CommitTrans;
       end;
-      // Commit da transação
-      DataModulePrincipal.FDConnection.Commit;
+
       ShowMessage('Empresa ' + IfThen(BtExcluir.Enabled, 'atualizada', 'cadastrada') + ' com sucesso!');
     except
       on E: Exception do
       begin
         // Em caso de erro, desfaz a transação
-        DataModulePrincipal.FDConnection.Rollback;
+        if dbType = 'SQLite' then
+          DataModulePrincipal.FDConnection.Rollback
+        else if dbType = 'SQL Server' then
+          DataModulePrincipal.ADOConnection.RollbackTrans;
+
         ShowMessage('Erro ao ' + IfThen(BtExcluir.Enabled, 'atualizar', 'cadastrar') + ' empresa: ' + E.Message);
       end;
     end;
@@ -384,7 +553,6 @@ begin
     BtExcluir.Enabled := false;
   end;
 end;
-
 
 
 procedure TFCadastroDeEmpresa.BtImagemClick(Sender: TObject);
@@ -429,39 +597,58 @@ end;
 procedure TFCadastroDeEmpresa.BtNovoClick(Sender: TObject);
 begin
   // Verifica a quantidade de registros na tabela Empresa
-  DataModulePrincipal.FDQueryEmpresa.Close;
-  DataModulePrincipal.FDQueryEmpresa.SQL.Text := 'SELECT COUNT(*) FROM Empresa';
-  DataModulePrincipal.FDQueryEmpresa.Open;
-  // Se já existir 10 ou mais registros, bloqueia o cadastro
-  if DataModulePrincipal.FDQueryEmpresa.Fields[0].AsInteger >= 10 then
+  if dbType = 'SQLite' then
   begin
-    ShowMessage('Limite de 10 empresas atingido. Não é possível cadastrar mais empresas.');
+    // Se for SQLite, utiliza o FDQuery
     DataModulePrincipal.FDQueryEmpresa.Close;
-    Exit;
+    DataModulePrincipal.FDQueryEmpresa.SQL.Text := 'SELECT COUNT(*) FROM Empresa';
+    DataModulePrincipal.FDQueryEmpresa.Open;
+
+    // Se já existir 10 ou mais registros, bloqueia o cadastro
+    if DataModulePrincipal.FDQueryEmpresa.Fields[0].AsInteger >= 10 then
+    begin
+      ShowMessage('Limite de 10 empresas atingido. Não é possível cadastrar mais empresas.');
+      DataModulePrincipal.FDQueryEmpresa.Close;
+      Exit;
+    end;
   end
-  else
+  else if dbType = 'SQL Server' then
   begin
-    //Contrele de campos habilitados
-    EdNomeEmpresa.Enabled := true;
-    EdCNPJ.Enabled := true;
-    EdNomeFantasia.Enabled := true;
-    CheckBoxDefault.Enabled := true;
-    EdTelefone.Enabled := true;
-    EdEndereco.Enabled := true;
-    EdCidade.Enabled := true;
-    EdBairro.Enabled := true;
-    EdEstado.Enabled := true;
+    // Se for SQL Server, utiliza o ADOQuery
+    DataModulePrincipal.ADOQueryEmpresa.Close;
+    DataModulePrincipal.ADOQueryEmpresa.SQL.Text := 'SELECT COUNT(*) FROM Empresa';
+    DataModulePrincipal.ADOQueryEmpresa.Open;
 
-    BtImagem.Enabled := true;
-    BtNovo.Enabled := False;
-    BtGravar.Enabled := true;
-    BtEditar.Enabled := False;
-    BtCancelar.Enabled := true;
+    // Se já existir 10 ou mais registros, bloqueia o cadastro
+    if DataModulePrincipal.ADOQueryEmpresa.Fields[0].AsInteger >= 10 then
+    begin
+      ShowMessage('Limite de 10 empresas atingido. Não é possível cadastrar mais empresas.');
+      DataModulePrincipal.ADOQueryEmpresa.Close;
+      Exit;
+    end;
   end;
-  if TutorialAtivo then
-  MostrarBalloonHint(EdNomeEmpresa, 'Passo 2: Nome da Empresa', 'Informe o nome da empresa.');
 
+  // Controles de campos habilitados
+  EdNomeEmpresa.Enabled := true;
+  EdCNPJ.Enabled := true;
+  EdNomeFantasia.Enabled := true;
+  CheckBoxDefault.Enabled := true;
+  EdTelefone.Enabled := true;
+  EdEndereco.Enabled := true;
+  EdCidade.Enabled := true;
+  EdBairro.Enabled := true;
+  EdEstado.Enabled := true;
+
+  BtImagem.Enabled := true;
+  BtNovo.Enabled := False;
+  BtGravar.Enabled := true;
+  BtEditar.Enabled := False;
+  BtCancelar.Enabled := true;
+
+  if TutorialAtivo then
+    MostrarBalloonHint(EdNomeEmpresa, 'Passo 2: Nome da Empresa', 'Informe o nome da empresa.');
 end;
+
 
 procedure TFCadastroDeEmpresa.EdBairroExit(Sender: TObject);
 begin
@@ -605,8 +792,20 @@ procedure TFCadastroDeEmpresa.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   FImagemStream.Free;
-   if DataModulePrincipal.FDQueryEmpresa.Active then
-    DataModulePrincipal.FDQueryEmpresa.Close;
+
+  // Verificar o tipo de banco de dados
+  if dbType = 'SQLite' then
+  begin
+    // Se for SQLite, fecha o FDQuery
+    if DataModulePrincipal.FDQueryEmpresa.Active then
+      DataModulePrincipal.FDQueryEmpresa.Close;
+  end
+  else if dbType = 'SQL Server' then
+  begin
+    // Se for SQL Server, fecha o ADOQuery
+    if DataModulePrincipal.ADOQueryEmpresa.Active then
+      DataModulePrincipal.ADOQueryEmpresa.Close;
+  end;
 end;
 
 procedure TFCadastroDeEmpresa.FormCreate(Sender: TObject);

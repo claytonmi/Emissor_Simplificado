@@ -26,20 +26,43 @@ implementation
 
 procedure TNMDePesquisaCliente.FormCreate(Sender: TObject);
 begin
-  // Preenche o combo com os clientes
-  DataModulePrincipal.FDQueryCliente.SQL.Text := 'SELECT IDCliente, nome FROM Cliente';
-  DataModulePrincipal.FDQueryCliente.Open;
   // Limpa os itens anteriores do ComboBox
   DBComboBoxPesquisaCliente.Clear;
-  // Preenche o ComboBox com os dados dos clientes
-  while not DataModulePrincipal.FDQueryCliente.Eof do
+
+  // Verifica o tipo de banco de dados
+  if dbType = 'SQLite' then
   begin
-    DBComboBoxPesquisaCliente.Items.AddObject(
-      DataModulePrincipal.FDQueryCliente.FieldByName('nome').AsString,
-      TObject(DataModulePrincipal.FDQueryCliente.FieldByName('IDCliente').AsInteger)
-    );
-    DataModulePrincipal.FDQueryCliente.Next;
+    // Para SQLite, mantém o código original com FDQuery
+    DataModulePrincipal.FDQueryCliente.SQL.Text := 'SELECT IDCliente, nome FROM Cliente';
+    DataModulePrincipal.FDQueryCliente.Open;
+
+    // Preenche o ComboBox com os dados dos clientes
+    while not DataModulePrincipal.FDQueryCliente.Eof do
+    begin
+      DBComboBoxPesquisaCliente.Items.AddObject(
+        DataModulePrincipal.FDQueryCliente.FieldByName('nome').AsString,
+        TObject(DataModulePrincipal.FDQueryCliente.FieldByName('IDCliente').AsInteger)
+      );
+      DataModulePrincipal.FDQueryCliente.Next;
+    end;
+  end
+  else if dbType = 'SQL Server' then
+  begin
+    // Para SQL Server, usa o ADOQuery
+    DataModulePrincipal.ADOQueryCliente.SQL.Text := 'SELECT IDCliente, nome FROM Cliente';
+    DataModulePrincipal.ADOQueryCliente.Open;
+
+    // Preenche o ComboBox com os dados dos clientes
+    while not DataModulePrincipal.ADOQueryCliente.Eof do
+    begin
+      DBComboBoxPesquisaCliente.Items.AddObject(
+        DataModulePrincipal.ADOQueryCliente.FieldByName('nome').AsString,
+        TObject(DataModulePrincipal.ADOQueryCliente.FieldByName('IDCliente').AsInteger)
+      );
+      DataModulePrincipal.ADOQueryCliente.Next;
+    end;
   end;
 end;
+
 
 end.

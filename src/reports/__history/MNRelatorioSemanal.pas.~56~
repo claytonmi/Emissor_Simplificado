@@ -1,0 +1,229 @@
+unit MNRelatorioSemanal;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, FRelatorioReportSemanal, uDataModulePrincipal, Vcl.ExtCtrls, RLReport, Vcl.ComCtrls,
+  Vcl.StdCtrls, System.StrUtils;
+
+type
+  TRelatorioSemanal = class(TForm)
+    BtImprimir: TButton;
+    DateTimePickerInicial: TDateTimePicker;
+    LabelDataInicio: TLabel;
+    LabelCliente: TLabel;
+    ComboBoxCliente: TComboBox;
+    LabelEmpresa: TLabel;
+    ComboBoxNomeEmpresa: TComboBox;
+    DateTimePickerFinal: TDateTimePicker;
+    LabelDataFim: TLabel;
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure BtImprimirClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+
+  private
+    function CarregarClientes: string;
+    function CarregarEmpresas: string;
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  RelatorioSemanal: TRelatorioSemanal;
+
+implementation
+
+{$R *.dfm}
+
+procedure TRelatorioSemanal.BtImprimirClick(Sender: TObject);
+var
+  DataInicial, DataFim: TDateTime;
+  NomeCliente, IDEmpresa: string;
+  FormRelatorio: TNMRelatorioReport;
+  PosicaoHifen: Integer;
+  ID: Integer;
+begin
+  // Obtém a data inicial do DateTimePicker
+  DataInicial := DateTimePickerInicial.Date;
+  DataFim :=  DateTimePickerFinal.Date;
+
+  // Verifica se o cliente foi selecionado
+  if ComboBoxCliente.ItemIndex = -1 then
+  begin
+    ShowMessage('Selecione um cliente.');
+    Exit;
+  end;
+
+  // Obtém o nome do cliente selecionado
+  NomeCliente := ComboBoxCliente.Items[ComboBoxCliente.ItemIndex];
+
+  // Verifica se a empresa foi selecionada e extrai o ID
+  if ComboBoxNomeEmpresa.ItemIndex <> -1 then
+  begin
+    // Procura o hífen que separa o ID do nome da empresa
+    PosicaoHifen := Pos(' - ', ComboBoxNomeEmpresa.Items[ComboBoxNomeEmpresa.ItemIndex]);
+
+    if PosicaoHifen > 0 then
+    begin
+      // Extrai o ID da empresa como string
+      IDEmpresa := Copy(ComboBoxNomeEmpresa.Items[ComboBoxNomeEmpresa.ItemIndex], 1, PosicaoHifen - 1);
+
+      // Converte o ID da empresa para Integer
+      if not TryStrToInt(IDEmpresa, ID) then
+      begin
+        ShowMessage('Código da empresa inválido.');
+        Exit;
+      end;
+    end
+    else
+    begin
+      ShowMessage('Selecione uma empresa válida.');
+      Exit;
+    end;
+  end
+  else
+  begin
+    ID := 0; // Se nenhuma empresa for selecionada, ID será 0
+  end;
+
+  // Instancia o formulário de relatório
+  FormRelatorio := TNMRelatorioReport.Create(Self);
+  try
+    // Chama a procedure para gerar o relatório passando o ID da empresa (ou 0 caso não tenha sido selecionada)
+    FormRelatorio.GerarRelatorio(DataInicial, DataFim, NomeCliente, ID);
+  finally
+    // Libera o formulário da memória
+    FormRelatorio.Free;
+  end;
+end;
+
+
+
+
+procedure TRelatorioSemanal.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+begin
+  Action := caFree; // Libera o formulário da memória
+  RelatorioSemanal := nil; // Define o ponteiro como nulo
+end;
+
+procedure TRelatorioSemanal.FormCreate(Sender: TObject);
+var
+  ExibirEmpresa: string;
+begin
+  DateTimePickerInicial.Date := Now;
+  DateTimePickerFinal.Date := Now + 1;
+  CarregarClientes;
+  // Verifica se ExibirEmpresaNoRelatorio está ativo
+  with DataModulePrincipal.FDQueryConfiguracao do
+  begin
+    DataModulePrincipal.FDQueryConfiguracao.Close;
+    DataModulePrincipal.FDQueryConfiguracao.SQL.Text := 'SELECT FLATIVO FROM Configuracao WHERE NomeConfiguracao = :NomeConfig';
+    DataModulePrincipal.FDQueryConfiguracao.ParamByName('NomeConfig').AsString := 'ExibirEmpresaNoRelatorio';
+    DataModulePrincipal.FDQueryConfiguracao.Open;
+    ExibirEmpresa := DataModulePrincipal.FDQueryConfiguracao.FieldByName('FLATIVO').AsString;
+  end;
+  if ExibirEmpresa = 'S' then
+  begin
+    CarregarEmpresas;
+    ComboBoxNomeEmpresa.Visible := True;
+    LabelEmpresa.Visible := True;
+    LabelCliente.top := 65;
+    ComboBoxCliente.top := 88;
+    LabelDataInicio.top := 120;
+    LabelDataFim.top := 120;
+    DateTimePickerInicial.top := 143;
+    DateTimePickerFinal.top := 143;
+    BtImprimir.top := 180;
+    Height := 256;
+
+  end
+  else
+  begin
+    ComboBoxNomeEmpresa.Visible := False;
+    LabelEmpresa.Visible := False;
+    // Realinha os componentes
+    LabelCliente.top := 8;
+    ComboBoxCliente.top := 31;
+    LabelDataInicio.top := 65;
+    LabelDataFim.top := 65;
+    DateTimePickerInicial.top := 88;
+    DateTimePickerFinal.top := 88;
+    BtImprimir.top := 125;
+    Height := 203;
+  end;
+end;
+
+function TRelatorioSemanal.CarregarClientes: string;
+begin
+
+  DataModulePrincipal.FDQueryPedido.Close;
+  DataModulePrincipal.FDQueryPedido.SQL.Text := 'SELECT DISTINCT NomeCliente FROM Pedido';
+  DataModulePrincipal.FDQueryPedido.Open;
+  ComboBoxCliente.Items.Clear;
+
+  while not DataModulePrincipal.FDQueryPedido.Eof do
+  begin
+    ComboBoxCliente.Items.Add(DataModulePrincipal.FDQueryPedido.FieldByName('NomeCliente').AsString);
+    DataModulePrincipal.FDQueryPedido.Next;
+  end;
+
+  if ComboBoxCliente.Items.Count > 0 then
+  begin
+    ComboBoxCliente.ItemIndex := 0;
+    Result := ComboBoxCliente.Items[0]; // Retorna o primeiro cliente como padrão
+  end
+  else
+    Result := '';
+end;
+
+function TRelatorioSemanal.CarregarEmpresas: string;
+var
+  IDEmpresa, NomeEmpresa: string;
+begin
+  if dbType = 'SQLite' then
+  begin
+    DataModulePrincipal.FDQueryEmpresa.Close;
+    DataModulePrincipal.FDQueryEmpresa.SQL.Text := 'SELECT DISTINCT IDEmpresa, NomeEmpresa FROM Empresa';
+    DataModulePrincipal.FDQueryEmpresa.Open;
+    ComboBoxNomeEmpresa.Items.Clear;
+
+    while not DataModulePrincipal.FDQueryEmpresa.Eof do
+    begin
+      IDEmpresa := DataModulePrincipal.FDQueryEmpresa.FieldByName('IDEmpresa').AsString;
+      NomeEmpresa := DataModulePrincipal.FDQueryEmpresa.FieldByName('NomeEmpresa').AsString;
+      ComboBoxNomeEmpresa.Items.Add(IDEmpresa + ' - ' + NomeEmpresa);
+      DataModulePrincipal.FDQueryEmpresa.Next;
+    end;
+  end
+  else if dbType = 'SQL Server' then
+  begin
+    DataModulePrincipal.ADOQueryEmpresa.Close;
+    DataModulePrincipal.ADOQueryEmpresa.SQL.Text := 'SELECT DISTINCT IDEmpresa, NomeEmpresa FROM Empresa';
+    DataModulePrincipal.ADOQueryEmpresa.Open;
+    ComboBoxNomeEmpresa.Items.Clear;
+
+    while not DataModulePrincipal.ADOQueryEmpresa.Eof do
+    begin
+      IDEmpresa := DataModulePrincipal.ADOQueryEmpresa.FieldByName('IDEmpresa').AsString;
+      NomeEmpresa := DataModulePrincipal.ADOQueryEmpresa.FieldByName('NomeEmpresa').AsString;
+      ComboBoxNomeEmpresa.Items.Add(IDEmpresa + ' - ' + NomeEmpresa);
+      DataModulePrincipal.ADOQueryEmpresa.Next;
+    end;
+  end;
+
+  if ComboBoxNomeEmpresa.Items.Count > 0 then
+  begin
+    ComboBoxNomeEmpresa.ItemIndex := 0;
+    Result := ComboBoxNomeEmpresa.Items[0]; // Retorna a primeira empresa como padrão
+  end
+  else
+    Result := '';
+end;
+
+
+
+
+end.

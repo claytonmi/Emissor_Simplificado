@@ -280,7 +280,7 @@ object NMConfig: TNMConfig
     Align = alClient
     TabOrder = 0
     ExplicitWidth = 329
-    ExplicitHeight = 365
+    ExplicitHeight = 386
     object LabelCaminhoBackup: TLabel
       Left = 21
       Top = 272
@@ -301,7 +301,7 @@ object NMConfig: TNMConfig
       Width = 290
       Height = 250
       Caption = 'Ativar Campos'
-      TabOrder = 0
+      TabOrder = 1
       object GroupBoxRelatorio: TGroupBox
         Left = 3
         Top = 94
@@ -311,14 +311,14 @@ object NMConfig: TNMConfig
         TabOrder = 0
         object Label2: TLabel
           Left = 11
-          Top = 86
+          Top = 94
           Width = 87
           Height = 15
           Caption = 'Moeda utilizada:'
         end
         object Label1: TLabel
           Left = 58
-          Top = 115
+          Top = 123
           Width = 40
           Height = 15
           Caption = 'Idioma:'
@@ -341,7 +341,7 @@ object NMConfig: TNMConfig
         end
         object ComboBoxMoedaUtilizada: TComboBox
           Left = 104
-          Top = 83
+          Top = 91
           Width = 121
           Height = 23
           TabOrder = 2
@@ -353,7 +353,7 @@ object NMConfig: TNMConfig
         end
         object ComboBoxIdioma: TComboBox
           Left = 104
-          Top = 112
+          Top = 120
           Width = 121
           Height = 23
           TabOrder = 3
@@ -386,7 +386,7 @@ object NMConfig: TNMConfig
       Top = 293
       Width = 241
       Height = 23
-      TabOrder = 1
+      TabOrder = 2
       TextHint = 'Caminho do backup'
       OnMouseEnter = EditCaminhoBackupMouseEnter
     end
@@ -527,7 +527,7 @@ object NMConfig: TNMConfig
         00F2E4A200FDE4A100FDE3A000F2E2A000D8E29F00A9E19E0063E19D0017E19E
         0000E29E0001DF9B0003DE9A0001DE9A0000DE9A0000DE9A0000000000000000
         000000000000}
-      TabOrder = 2
+      TabOrder = 3
       OnClick = ButtonSelecionarCaminhoBackupClick
     end
     object SpinEditQtdDiasLimpar: TSpinEdit
@@ -537,13 +537,13 @@ object NMConfig: TNMConfig
       Height = 24
       MaxValue = 60
       MinValue = 0
-      TabOrder = 3
+      TabOrder = 4
       Value = 0
       OnMouseMove = SpinEditQtdDiasLimparMouseMove
     end
     object BtInfo: TBitBtn
       Left = 316
-      Top = 21
+      Top = 0
       Width = 17
       Height = 17
       Align = alCustom
@@ -584,7 +584,7 @@ object NMConfig: TNMConfig
         36FF00000000000000000000000000000000F6C836FFF6C836FFF6C836FFF6C8
         36FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C836FFF6C8
         36FF00000000}
-      TabOrder = 4
+      TabOrder = 0
       OnClick = BtInfoClick
       ExplicitTop = -1
     end
@@ -596,7 +596,7 @@ object NMConfig: TNMConfig
     Height = 65
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 365
+    ExplicitTop = 386
     ExplicitWidth = 329
     object BtSalvarConfig: TButton
       Left = 53

@@ -33,21 +33,39 @@ procedure TNMPesquisaDeEmpresa.CarregarEmpresas;
 begin
   ComboBoxPesquisaDeEmpresa.Clear;
   try
-    // Defina um tempo máximo de execução da consulta para evitar timeouts (se necessário)
-    DataModulePrincipal.FDQueryEmpresa.Close;
-    DataModulePrincipal.FDQueryEmpresa.SQL.Text := 'SELECT IDEmpresa, NomeEmpresa FROM Empresa ORDER BY NomeEmpresa';
-
-    // Executa a consulta com um timeout
-    DataModulePrincipal.FDQueryEmpresa.Open;
-
-    // Processa os dados retornados da consulta
-    while not DataModulePrincipal.FDQueryEmpresa.Eof do
+    if dbType = 'SQLite' then
     begin
-      ComboBoxPesquisaDeEmpresa.Items.AddObject(
-        DataModulePrincipal.FDQueryEmpresa.FieldByName('NomeEmpresa').AsString,
-        TObject(DataModulePrincipal.FDQueryEmpresa.FieldByName('IDEmpresa').AsInteger)
-      );
-      DataModulePrincipal.FDQueryEmpresa.Next;
+      // Código para SQLite
+      DataModulePrincipal.FDQueryEmpresa.Close;
+      DataModulePrincipal.FDQueryEmpresa.SQL.Text := 'SELECT IDEmpresa, NomeEmpresa FROM Empresa ORDER BY NomeEmpresa';
+      // Executa a consulta com um timeout
+      DataModulePrincipal.FDQueryEmpresa.Open;
+      // Processa os dados retornados da consulta
+      while not DataModulePrincipal.FDQueryEmpresa.Eof do
+      begin
+        ComboBoxPesquisaDeEmpresa.Items.AddObject(
+          DataModulePrincipal.FDQueryEmpresa.FieldByName('NomeEmpresa').AsString,
+          TObject(DataModulePrincipal.FDQueryEmpresa.FieldByName('IDEmpresa').AsInteger)
+        );
+        DataModulePrincipal.FDQueryEmpresa.Next;
+      end;
+    end
+    else if dbType = 'SQL Server' then
+    begin
+      // Código para SQL Server
+      DataModulePrincipal.ADOQueryEmpresa.Close;
+      DataModulePrincipal.ADOQueryEmpresa.SQL.Text := 'SELECT IDEmpresa, NomeEmpresa FROM Empresa ORDER BY NomeEmpresa';
+      // Executa a consulta com um timeout
+      DataModulePrincipal.ADOQueryEmpresa.Open;
+      // Processa os dados retornados da consulta
+      while not DataModulePrincipal.ADOQueryEmpresa.Eof do
+      begin
+        ComboBoxPesquisaDeEmpresa.Items.AddObject(
+          DataModulePrincipal.ADOQueryEmpresa.FieldByName('NomeEmpresa').AsString,
+          TObject(DataModulePrincipal.ADOQueryEmpresa.FieldByName('IDEmpresa').AsInteger)
+        );
+        DataModulePrincipal.ADOQueryEmpresa.Next;
+      end;
     end;
 
     // Seleciona o primeiro item automaticamente, se houver
@@ -61,8 +79,12 @@ begin
   end;
 
   // Fechar a consulta e a conexão após o uso
-  DataModulePrincipal.FDQueryEmpresa.Close;
+  if dbType = 'SQLite' then
+    DataModulePrincipal.FDQueryEmpresa.Close
+  else if dbType = 'SQLServer' then
+    DataModulePrincipal.ADOQueryEmpresa.Close;
 end;
+
 
 procedure TNMPesquisaDeEmpresa.FormShow(Sender: TObject);
 begin

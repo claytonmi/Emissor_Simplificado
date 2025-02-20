@@ -162,6 +162,14 @@
             <Form>NMConfig</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="..\forms\NMAtivador.pas">
+            <Form>NMAtivadorChave</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\forms\FrmConexaoComMultiBanco.pas">
+            <Form>FrmConexaoBanco</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

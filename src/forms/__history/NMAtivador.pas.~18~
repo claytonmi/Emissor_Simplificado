@@ -1,0 +1,98 @@
+unit NMAtivador;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, Registry;
+
+type
+  TNMAtivadorChave = class(TForm)
+    EditChave: TEdit;
+    Ativar: TBitBtn;
+    EditEmail: TEdit;
+    LabChave: TLabel;
+    Label1: TLabel;
+    BtSair: TBitBtn;
+    procedure AtivarClick(Sender: TObject);
+    procedure BtSairClick(Sender: TObject);
+  private
+    function GerarChaveAtivacao(Email: string): string;
+    function VerificarAtivacao: Boolean;
+    procedure ArmazenarChaveNoRegistro(Chave: string);
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  NMAtivadorChave: TNMAtivadorChave;
+
+implementation
+
+{$R *.dfm}
+
+function TNMAtivadorChave.GerarChaveAtivacao(Email: string): string;
+begin
+  Result := StringReplace(Email, '@', '-', [rfReplaceAll]);
+  Result := StringReplace(Result, '.', '*', [rfReplaceAll]);
+  Result := Result + '-X04C9P4';
+end;
+
+procedure TNMAtivadorChave.AtivarClick(Sender: TObject);
+var
+  Email, Chave, ChaveGerada: string;
+begin
+  Email := Trim(EditEmail.Text);
+  Chave := Trim(EditChave.Text);
+  ChaveGerada := GerarChaveAtivacao(Email);
+  if Chave = ChaveGerada then
+  begin
+    ShowMessage('Ativação concluída com sucesso!');
+    ArmazenarChaveNoRegistro(Chave);
+    ModalResult := mrOk;  // Fecha a tela de ativação
+  end
+  else
+    ShowMessage('Chave inválida! Verifique os dados e tente novamente.');
+end;
+
+procedure TNMAtivadorChave.BtSairClick(Sender: TObject);
+begin
+   Application.Terminate;
+end;
+
+procedure TNMAtivadorChave.ArmazenarChaveNoRegistro(Chave: string);
+var
+  Reg: TRegistry;
+begin
+  Reg := TRegistry.Create;
+  try
+    Reg.RootKey := HKEY_CURRENT_USER;
+    if Reg.OpenKey('\Software\MeuSistema', True) then
+      Reg.WriteString('ChaveAtivacao', Chave);
+  finally
+    Reg.Free;
+  end;
+end;
+
+function TNMAtivadorChave.VerificarAtivacao: Boolean;
+var
+  Reg: TRegistry;
+  ChaveSalva: string;
+begin
+  Result := False;
+  Reg := TRegistry.Create;
+  try
+    Reg.RootKey := HKEY_CURRENT_USER;
+    if Reg.OpenKeyReadOnly('\Software\MeuSistema') then
+    begin
+      ChaveSalva := Reg.ReadString('ChaveAtivacao');
+      if ChaveSalva <> '' then
+        Result := True;
+    end;
+  finally
+    Reg.Free;
+  end;
+end;
+
+end.

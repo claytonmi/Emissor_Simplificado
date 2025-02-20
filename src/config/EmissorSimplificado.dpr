@@ -17,7 +17,9 @@ uses
   NMCadastroDeEmpresa in '..\forms\NMCadastroDeEmpresa.pas' {FCadastroDeEmpresa},
   NMPesquisaDeEmpresas in '..\forms\NMPesquisaDeEmpresas.pas' {NMPesquisaDeEmpresa},
   FrmSplashArt in '..\forms\FrmSplashArt.pas' {FrmSplash},
-  NMConfiguracao in '..\forms\NMConfiguracao.pas' {NMConfig};
+  NMConfiguracao in '..\forms\NMConfiguracao.pas' {NMConfig},
+  NMAtivador in '..\forms\NMAtivador.pas' {NMAtivadorChave},
+  FrmConexaoComMultiBanco in '..\forms\FrmConexaoComMultiBanco.pas' {FrmConexaoBanco};
 
 {$R *.res}
 
@@ -25,6 +27,7 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TFrmSplash, FrmSplash);
+  Application.CreateForm(TFrmConexaoBanco, FrmConexaoBanco);
   FrmSplash.Show;
   Application.Run;  // Exibe o Splash e executa o loop de eventos
 end.

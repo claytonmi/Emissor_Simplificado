@@ -9,7 +9,8 @@ uses
   FireDAC.Stan.Pool, FireDAC.Phys, FireDAC.Comp.UI, FireDAC.Stan.Error,
   FireDAC.Phys.Intf, FireDAC.Stan.ExprFuncs, FireDAC.Phys.SQLiteWrapper.Stat,
   Data.DB, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
-  FireDAC.Comp.DataSet, System.IOUtils, Vcl.Forms, Vcl.Dialogs, Winapi.Windows, SHFolder;
+  FireDAC.Comp.DataSet, System.IOUtils, Vcl.Forms, Dialogs, Winapi.Windows, SHFolder, FrmConexaoComMultiBanco, IniFiles,
+  Data.Win.ADODB;
 
 type
   TDataModulePrincipal = class(TDataModule)
@@ -31,6 +32,15 @@ type
     FDQueryRelatorioDePedidos: TFDQuery;
     DataSourceConfiguracao: TDataSource;
     FDQueryConfiguracao: TFDQuery;
+    ADOConnection: TADOConnection;
+    ADOQueryCliente: TADOQuery;
+    ADOQueryProduto: TADOQuery;
+    ADOQueryPedido: TADOQuery;
+    ADOQueryItemPedido: TADOQuery;
+    ADOQuerySistema: TADOQuery;
+    ADOQueryEmpresa: TADOQuery;
+    ADOQueryRelatorioDePedidos: TADOQuery;
+    ADOQueryConfiguracao: TADOQuery;
     procedure DataModuleCreate(Sender: TObject);
     procedure CriarTabelas;
 
@@ -41,6 +51,7 @@ type
     procedure CriarBancoDeDados(const DatabasePath: string; ComDadosTeste: Boolean);
     function VerificarOuCriarColuna(const Tabela, Coluna, Tipo: string): Boolean;
     function VerificarAtualizacaoSistema(VersaoAtual: string): Boolean;
+    procedure ConfigurarConexaoSQLServer(const Servidor, Usuario, Senha, Banco: string);
 
   public
     function  VersaoAtual: string;
@@ -48,8 +59,10 @@ type
   end;
 
 var
+  {TipoBanco,} dbType: string;
   DataModulePrincipal: TDataModulePrincipal;
 const
+
   VERSAO_ATUAL = '1.2';
 
 implementation
@@ -68,140 +81,292 @@ end;
 
 procedure TDataModulePrincipal.DataModuleCreate(Sender: TObject);
 var
-  BasePath, DatabasePath: string;
+  BasePath, IniFilePath, DatabasePath: string;
   Resposta: Integer;
+  Ini: TIniFile;
+  dbPath, Server, Database, User, Password, NomeBanco, ServidorSQL, UsuarioSQL, SenhaSQL: string;
 begin
   FrmSplashArt.FrmSplash.labEdit('Conectando ao banco de dados...');
   FrmSplashArt.FrmSplash.processCout(40);
   Sleep(500);
-  BasePath := IncludeTrailingPathDelimiter(TPath.GetDocumentsPath) + 'MeuSistema\';
 
-  if not TDirectory.Exists(BasePath) then
-  begin
-    try
-      TDirectory.CreateDirectory(BasePath);
-    except
-      on E: Exception do
-      begin
-        ShowMessage('Erro ao criar o diretório de dados: ' + E.Message);
-        Halt;
-      end;
-    end;
-  end;
+  IniFilePath := TPath.Combine(TPath.GetHomePath, 'config.ini');
+  Ini := TIniFile.Create(IniFilePath);
 
-  DatabasePath := BasePath + 'Vendas.db';
-
-  // Verifica se o banco existe
-  if not FileExists(DatabasePath) then
-  begin
-    // Pergunta ao usuário como deseja iniciar o sistema
-  Resposta := Application.MessageBox('Deseja iniciar com dados de teste?', 'Confirmação', MB_YESNO + MB_ICONQUESTION);
-
-  if Resposta = IDYES then
-  begin
-      FrmSplashArt.FrmSplash.labEdit('Inserindo dados de testes....');
-      FrmSplashArt.FrmSplash.processCout(50);
-      CriarBancoDeDados(DatabasePath, True)  // Banco com dados de teste
-  end
-  else
-  begin
-     CriarBancoDeDados(DatabasePath, False); // Banco zerado
-  end;
-
-  end;
-
-  // Configurar conexão e conectar
-  ConfigurarConexao(DatabasePath);
   try
-    FDConnection.Connected := True;
+    dbType := Ini.ReadString('Database', 'Tipo', '');
 
-    CriarTabelas;
-
-     // Verifica se a versão do banco de dados é a mesma que a do sistema
-
-    if not VerificarAtualizacaoSistema(VERSAO_ATUAL) then
+    // Para SQLite
+    if dbType = 'SQLite' then
     begin
-      // Adiciona novas colunas se necessário
-      VerificarOuCriarColuna('Pedido', 'Observacao', 'TEXT');
-      VerificarOuCriarColuna('Pedido', 'TotalPedido', 'REAL');
-      VerificarOuCriarColuna('ItemPedido', 'Desc', 'REAL');
-      VerificarOuCriarColuna('Cliente', 'Endereco', 'TEXT');
-      VerificarOuCriarColuna('Configuracao', 'UsarMoeda', 'TEXT');
-      VerificarOuCriarColuna('Configuracao', 'Idioma', 'TEXT');
-      if TabelaExiste('Configuracao') then
+      if FDConnection.Connected then
+        FDConnection.Connected := False;
+        FrmSplashArt.FrmSplash.labEdit('Conectando ao banco SQLite...');
+        FrmSplashArt.FrmSplash.processCout(43);
+        Sleep(500);
+
+      BasePath := Ini.ReadString('Database', 'CaminhoSQLite', '');
+      if not TDirectory.Exists(BasePath) then
       begin
-        // Inserir os registros na tabela Configuracao, somente se a tabela existir
-        if not RegistraConfiguracaoExistente('ExibirDataInsercaoNoOrcamento') then
-          FDConnection.ExecSQL(
-            'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
-            'VALUES (''ExibirDataInsercaoNoOrcamento'', ''S'');'
-          );
-        if not RegistraConfiguracaoExistente('ExibirDataInsercaoNoRelatorio') then
-          FDConnection.ExecSQL(
-            'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
-            'VALUES (''ExibirDataInsercaoNoRelatorio'', ''S'');'
-          );
-        if not RegistraConfiguracaoExistente('ExibirEmpresaNoRelatorio') then
-          FDConnection.ExecSQL(
-            'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
-            'VALUES (''ExibirEmpresaNoRelatorio'', ''S'');'
-          );
-        if not RegistraConfiguracaoExistente('CaminhoDoBackupDoBanco') then
-          FDConnection.ExecSQL(
-            'INSERT INTO Configuracao (NomeConfiguracao, CaminhoBackup, FLATIVO) ' +
-            'VALUES (''CaminhoDoBackupDoBanco'', ''C:\Users\Default\Downloads'', ''S'');'
-          );
-        if not RegistraConfiguracaoExistente('QtdDiasParaLimparBanco') then
-          FDConnection.ExecSQL(
-            'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
-            'VALUES (''QtdDiasParaLimparBanco'', ''S'');'
-          );
-        if not RegistraConfiguracaoExistente('MoedaApresentadaNoRelatorio') then
-          FDConnection.ExecSQL(
-            'INSERT INTO Configuracao (NomeConfiguracao, UsarMoeda, FLATIVO) ' +
-            'VALUES (''MoedaApresentadaNoRelatorio'', ''Real Brasileiro'', ''S'');'
-          );
-        if not RegistraConfiguracaoExistente('UsaIdiomaNoRelatorio') then
-          FDConnection.ExecSQL(
-            'INSERT INTO Configuracao (NomeConfiguracao, Idioma, FLATIVO) ' +
-            'VALUES (''UsaIdiomaNoRelatorio'', ''Português'', ''S'');'
-          );
+        try
+          TDirectory.CreateDirectory(BasePath);
+        except
+          on E: Exception do
+          begin
+            ShowMessage('Erro ao criar o diretório de dados: ' + E.Message);
+            Halt;
+          end;
+        end;
+      end;
+
+      DatabasePath := BasePath + '\Vendas.db';
+      if not FileExists(DatabasePath) then
+      begin
+        Resposta := Application.MessageBox('Deseja iniciar com dados de teste?', 'Confirmação', MB_YESNO + MB_ICONQUESTION);
+        if Resposta = IDYES then
+        begin
+          FrmSplashArt.FrmSplash.labEdit('Inserindo dados de testes....');
+          FrmSplashArt.FrmSplash.processCout(50);
+          CriarBancoDeDados(DatabasePath, True)
+        end
+        else
+          CriarBancoDeDados(DatabasePath, False);
+      end;
+      // Configurar conexão e conectar
+      ConfigurarConexao(DatabasePath);
+      if not FDConnection.Connected then
+        FDConnection.Connected := True;
+
+      CriarTabelas;
+
+      if not VerificarAtualizacaoSistema(VERSAO_ATUAL) then
+      begin
+         // Adiciona novas colunas se necessário
+          VerificarOuCriarColuna('Pedido', 'Observacao', 'TEXT');
+          VerificarOuCriarColuna('Pedido', 'TotalPedido', 'REAL');
+          VerificarOuCriarColuna('ItemPedido', 'Desc', 'REAL');
+          VerificarOuCriarColuna('Cliente', 'Endereco', 'TEXT');
+          VerificarOuCriarColuna('Configuracao', 'UsarMoeda', 'TEXT');
+          VerificarOuCriarColuna('Configuracao', 'Idioma', 'TEXT');
+          if TabelaExiste('Configuracao') then
+          begin
+            // Inserir os registros na tabela Configuracao, somente se a tabela existir
+            if not RegistraConfiguracaoExistente('ExibirDataInsercaoNoOrcamento') then
+              FDConnection.ExecSQL(
+                'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
+                'VALUES (''ExibirDataInsercaoNoOrcamento'', ''S'');'
+              );
+            if not RegistraConfiguracaoExistente('ExibirDataInsercaoNoRelatorio') then
+              FDConnection.ExecSQL(
+                'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
+                'VALUES (''ExibirDataInsercaoNoRelatorio'', ''S'');'
+              );
+            if not RegistraConfiguracaoExistente('ExibirEmpresaNoRelatorio') then
+              FDConnection.ExecSQL(
+                'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
+                'VALUES (''ExibirEmpresaNoRelatorio'', ''S'');'
+              );
+            if not RegistraConfiguracaoExistente('CaminhoDoBackupDoBanco') then
+              FDConnection.ExecSQL(
+                'INSERT INTO Configuracao (NomeConfiguracao, CaminhoBackup, FLATIVO) ' +
+                'VALUES (''CaminhoDoBackupDoBanco'', ''C:\Users\Default\Downloads'', ''S'');'
+              );
+            if not RegistraConfiguracaoExistente('QtdDiasParaLimparBanco') then
+              FDConnection.ExecSQL(
+                'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
+                'VALUES (''QtdDiasParaLimparBanco'', ''S'');'
+              );
+            if not RegistraConfiguracaoExistente('MoedaApresentadaNoRelatorio') then
+              FDConnection.ExecSQL(
+                'INSERT INTO Configuracao (NomeConfiguracao, UsarMoeda, FLATIVO) ' +
+                'VALUES (''MoedaApresentadaNoRelatorio'', ''Real Brasileiro'', ''S'');'
+              );
+            if not RegistraConfiguracaoExistente('UsaIdiomaNoRelatorio') then
+              FDConnection.ExecSQL(
+                'INSERT INTO Configuracao (NomeConfiguracao, Idioma, FLATIVO) ' +
+                'VALUES (''UsaIdiomaNoRelatorio'', ''Português'', ''S'');'
+              );
+        end;
+      end;
+
+      if FDConnection.Connected then
+      begin
+        FrmSplashArt.FrmSplash.labEdit('Conectando tabelas ao sistema...');
+        FrmSplashArt.FrmSplash.processCout(65);
+        Sleep(100);
+        DataSourceItemPedido.DataSet := FDQueryItemPedido;
+        FDQueryItemPedido.Active := True;
+        Sleep(100);
+        DataSourcePedido.DataSet :=  FDQueryPedido;
+        FDQueryPedido.Active := True;
+        Sleep(100);
+        DataSourceCliente.DataSet := FDQueryCliente;
+        FDQueryCliente.Active := True;
+        Sleep(100);
+        DataSourceProduto.DataSet := FDQueryProduto;
+        FDQueryProduto.Active := True;
+        Sleep(100);
+        DataSourceSistema.DataSet := FDQuerySistema;
+        FDQuerySistema.Active := True;
+        Sleep(100);
+        DataSourceEmpresa.DataSet := FDQueryEmpresa;
+        FDQueryEmpresa.Active := True;
+        Sleep(100);
+        DataSourceRelatorioDePedidos.DataSet := FDQueryRelatorioDePedidos;
+        FDQueryRelatorioDePedidos.Active := True;
+        Sleep(100);
+        DataSourceConfiguracao.DataSet :=  FDQueryConfiguracao;
+        FDQueryConfiguracao.Active := True;
+      end
+      else
+      begin
+        FrmSplashArt.FrmSplash.labEdit('A conexão com o banco de dados não foi estabelecida...');
+        FrmSplashArt.FrmSplash.processCout(65);
+        Sleep(500);
+      end;
+    end
+    // Para SQL Server
+    else if dbType = 'SQL Server' then
+    begin
+      if FDConnection.Connected then
+        FDConnection.Connected := False;
+      FrmSplashArt.FrmSplash.labEdit('Conectando ao banco SQL Server...');
+      FrmSplashArt.FrmSplash.processCout(43);
+      Sleep(500);
+      try
+        // Ler os valores do arquivo INI
+        NomeBanco := Ini.ReadString('Database', 'NomeBanco', '');
+        ServidorSQL := Ini.ReadString('Database', 'ServidorSQLServer', '');
+        UsuarioSQL := Ini.ReadString('Database', 'UsuarioSQLServer', '');
+        SenhaSQL := Ini.ReadString('Database', 'SenhaSQLServer', '');
+
+        ADOConnection.Connected := False;
+        ADOConnection.LoginPrompt := False;
+        ADOConnection.ConnectionString :=
+          'Provider=SQLOLEDB.1;' +        // Driver OLE DB para SQL Server
+          'Persist Security Info=False;' +
+          'User ID=' + UsuarioSQL + ';' + // Usuário do SQL Server
+          'Password=' + SenhaSQL + ';' +  // Senha do SQL Server
+          'Initial Catalog=' + NomeBanco + ';' + // Nome do banco de dados
+          'Data Source=' + ServidorSQL + ';';   // Servidor do banco
+
+        try
+          ADOConnection.Connected := True;
+          FrmSplashArt.FrmSplash.labEdit('Conexão com SQL Server estabelecida com sucesso....');
+          Sleep(500);
+        except
+          on E: Exception do
+            ShowMessage('Erro ao conectar ao SQL Server: ' + E.Message);
+        end;
+
+        if not ADOConnection.Connected then
+          ADOConnection.Connected := True;
+
+        CriarTabelas;
+
+        if not VerificarAtualizacaoSistema(VERSAO_ATUAL) then
+        begin
+          // Inserir registros na tabela Configuracao no SQL Server
+          if TabelaExiste('Configuracao') then
+          begin
+            // Inserir os registros na tabela Configuracao, somente se a tabela existir
+            if not RegistraConfiguracaoExistente('ExibirDataInsercaoNoOrcamento') then
+              ADOConnection.Execute(
+                'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
+                'VALUES (''ExibirDataInsercaoNoOrcamento'', ''S'');'
+              );
+            if not RegistraConfiguracaoExistente('ExibirDataInsercaoNoRelatorio') then
+              ADOConnection.Execute(
+                'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
+                'VALUES (''ExibirDataInsercaoNoRelatorio'', ''S'');'
+              );
+            if not RegistraConfiguracaoExistente('ExibirEmpresaNoRelatorio') then
+              ADOConnection.Execute(
+                'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
+                'VALUES (''ExibirEmpresaNoRelatorio'', ''S'');'
+              );
+            if not RegistraConfiguracaoExistente('CaminhoDoBackupDoBanco') then
+              ADOConnection.Execute(
+                'INSERT INTO Configuracao (NomeConfiguracao, CaminhoBackup, FLATIVO) ' +
+                'VALUES (''CaminhoDoBackupDoBanco'', ''C:\Users\Default\Downloads'', ''S'');'
+              );
+            if not RegistraConfiguracaoExistente('QtdDiasParaLimparBanco') then
+              ADOConnection.Execute(
+                'INSERT INTO Configuracao (NomeConfiguracao, FLATIVO) ' +
+                'VALUES (''QtdDiasParaLimparBanco'', ''S'');'
+              );
+            if not RegistraConfiguracaoExistente('MoedaApresentadaNoRelatorio') then
+              ADOConnection.Execute(
+                'INSERT INTO Configuracao (NomeConfiguracao, UsarMoeda, FLATIVO) ' +
+                'VALUES (''MoedaApresentadaNoRelatorio'', ''Real Brasileiro'', ''S'');'
+              );
+            if not RegistraConfiguracaoExistente('UsaIdiomaNoRelatorio') then
+              ADOConnection.Execute(
+                'INSERT INTO Configuracao (NomeConfiguracao, Idioma, FLATIVO) ' +
+                'VALUES (''UsaIdiomaNoRelatorio'', ''Português'', ''S'');'
+              );
+          end;
+        end;
+
+        if ADOConnection.Connected then
+        begin
+          FrmSplashArt.FrmSplash.labEdit('Conectando tabelas ao sistema...');
+          FrmSplashArt.FrmSplash.processCout(65);
+          Sleep(100);
+          DataSourceItemPedido.DataSet := ADOQueryItemPedido;
+          ADOQueryItemPedido.Active := True;
+          Sleep(100);
+          DataSourcePedido.DataSet :=  ADOQueryPedido;
+          ADOQueryPedido.Active := True;
+          Sleep(100);
+          DataSourceCliente.DataSet := ADOQueryCliente;
+          ADOQueryCliente.Active := True;
+          Sleep(100);
+          DataSourceProduto.DataSet := ADOQueryProduto;
+          ADOQueryProduto.Active := True;
+          Sleep(100);
+          DataSourceSistema.DataSet := ADOQuerySistema;
+          ADOQuerySistema.Active := True;
+          Sleep(100);
+          DataSourceEmpresa.DataSet := ADOQueryEmpresa;
+          ADOQueryEmpresa.Active := True;
+          Sleep(100);
+          DataSourceRelatorioDePedidos.DataSet := ADOQueryRelatorioDePedidos;
+          ADOQueryRelatorioDePedidos.Active := True;
+          Sleep(100);
+          DataSourceConfiguracao.DataSet :=  ADOQueryConfiguracao;
+          ADOQueryConfiguracao.Active := True;
+        end
+        else
+        begin
+          FrmSplashArt.FrmSplash.labEdit('A conexão com o banco de dados não foi estabelecida...');
+          FrmSplashArt.FrmSplash.processCout(65);
+          Sleep(500);
+        end;
+      finally
+        Ini.Free; // Liberar o arquivo INI da memória
       end;
     end;
 
-    if FDConnection.Connected then
-    begin
-      FrmSplashArt.FrmSplash.labEdit('Conectando tabelas ao sistema....');
-      FrmSplashArt.FrmSplash.processCout(65);
-      Sleep(200);
-      FDQueryItemPedido.Active := True;
-      FDQueryPedido.Active := True;
-      FDQueryCliente.Active := True;
-      FDQueryProduto.Active := True;
-      FDQuerySistema.Active := True;
-      FDQueryEmpresa.Active := True;
-      FDQueryRelatorioDePedidos.Active := True;
-      FDQueryConfiguracao.Active := True;
-    end
-    else
-      FrmSplashArt.FrmSplash.labEdit('A conexão com o banco de dados não foi estabelecida....');
-      FrmSplashArt.FrmSplash.processCout(65);
-      Sleep(1000);
-  except
-    on E: Exception do
-    begin
-      ShowMessage('Erro ao conectar ou criar o banco de dados: ' + E.Message +
-        sLineBreak + 'Caminho do banco de dados: ' + DatabasePath);
-      FDConnection.Connected := False;
-      Halt;
-    end;
-  end;
+    FrmSplashArt.FrmSplash.labEdit('Banco de dados conectado com sucesso...');
+    FrmSplashArt.FrmSplash.processCout(90);
+    Sleep(1000);
+  finally
 
-  FrmSplashArt.FrmSplash.labEdit('Banco de dados conectado com sucesso...');
-  FrmSplashArt.FrmSplash.processCout(90);
-  Sleep(1000);
+  end;
 end;
 
+
+procedure TDataModulePrincipal.ConfigurarConexaoSQLServer(const Servidor, Usuario, Senha, Banco: string);
+begin
+  FDConnection.Params.Clear;
+  FDConnection.Params.DriverID := 'MSSQL';  // Para SQL Server
+  FDConnection.Params.Database := Banco;
+  FDConnection.Params.Values['User_Name'] := Usuario;
+  FDConnection.Params.Values['Password'] := Senha;
+  FDConnection.Params.Values['Server'] := Servidor;
+  FDConnection.LoginPrompt := False;
+end;
 
 procedure TDataModulePrincipal.ConfigurarConexao(const DatabasePath: string);
 begin
@@ -222,50 +387,68 @@ var
   I: Integer;
 begin
   ConfigurarConexao(DatabasePath);
-  FDConnection.Connected := True;
 
-  // Criação das tabelas
-  CriarTabelas;
+  try
+    FDConnection.Connected := True;
 
-  // Se o usuário escolheu iniciar com dados de teste, insere os dados
-  if ComDadosTeste then
-  begin
-    if FDConnection.ExecSQLScalar('SELECT COUNT(*) FROM Produto') = 0 then
+    // Criação das tabelas
+    CriarTabelas;
+
+    // Se o usuário escolheu iniciar com dados de teste, insere os dados
+    if ComDadosTeste then
     begin
-      FDConnection.StartTransaction;
-      try
-        for I := 1 to 50 do
-        begin
-          FDConnection.ExecSQL(
-            'INSERT INTO Produto (NomeProduto, Preco) VALUES (:NomeProduto, :Preco)',
-            ['Produto de testes ' + IntToStr(I), 0.07]
-          );
+      if FDConnection.ExecSQLScalar('SELECT COUNT(*) FROM Produto') = 0 then
+      begin
+        FDConnection.StartTransaction;
+        try
+          for I := 1 to 50 do
+          begin
+            FDConnection.ExecSQL(
+              'INSERT INTO Produto (NomeProduto, Preco) VALUES (:NomeProduto, :Preco)',
+              ['Produto de testes ' + IntToStr(I), 0.07]
+            );
 
-          FDConnection.ExecSQL(
-            'INSERT INTO Cliente (Nome, Telefone, Email) VALUES (:Nome, :Telefone, :Email)',
-            ['Cliente de testes ' + IntToStr(I), '(48) 9 9999-9999', 'testes' + IntToStr(I) + '@teste.com']
-          );
+            FDConnection.ExecSQL(
+              'INSERT INTO Cliente (Nome, Telefone, Email) VALUES (:Nome, :Telefone, :Email)',
+              ['Cliente de testes ' + IntToStr(I), '(48) 9 9999-9999', 'testes' + IntToStr(I) + '@teste.com']
+            );
+          end;
+          FDConnection.Commit;  // Confirma as alterações
+        except
+          FDConnection.Rollback;  // Reverte as alterações em caso de erro
+          raise;
         end;
-        FDConnection.Commit;
-      except
-        FDConnection.Rollback;
-        raise;
       end;
     end;
+  finally
+    FDConnection.Connected := False;  // Garante que a conexão seja fechada
   end;
 end;
+
 
 function TDataModulePrincipal.VerificarExibirDataInsercao: Boolean;
 begin
   Result := False; // Valor padrão caso não encontre o registro
-  with FDQueryConfiguracao do
+
+  if dbType = 'SQL Server' then
   begin
-    Close;
-    SQL.Text := 'SELECT FLAtivo FROM Configuracao WHERE NomeConfiguracao = :Nome';
-    ParamByName('Nome').AsString := 'ExibirDataInsercaoNoOrcamento';
-    Open;
-    if not IsEmpty then
-      Result := FieldByName('FLAtivo').AsString = 'S'; // Retorna True se for 'S'
+    // SQL Server - Usando ADOConnection
+    ADOQueryConfiguracao.Close;
+    ADOQueryConfiguracao.SQL.Text := 'SELECT FLAtivo FROM Configuracao WHERE NomeConfiguracao = :Nome';
+    ADOQueryConfiguracao.Parameters.ParamByName('Nome').Value := 'ExibirDataInsercaoNoOrcamento';
+    ADOQueryConfiguracao.Open;
+    if not ADOQueryConfiguracao.IsEmpty then
+      Result := ADOQueryConfiguracao.FieldByName('FLAtivo').AsString = 'S'; // Retorna True se for 'S'
+  end
+  else if dbType = 'SQLite' then
+  begin
+    // SQLite - Usando FDQuery
+    FDQueryConfiguracao.Close;
+    FDQueryConfiguracao.SQL.Text := 'SELECT FLAtivo FROM Configuracao WHERE NomeConfiguracao = :Nome';
+    FDQueryConfiguracao.ParamByName('Nome').AsString := 'ExibirDataInsercaoNoOrcamento';
+    FDQueryConfiguracao.Open;
+    if not FDQueryConfiguracao.IsEmpty then
+      Result := FDQueryConfiguracao.FieldByName('FLAtivo').AsString = 'S'; // Retorna True se for 'S'
   end;
 end;
 
@@ -274,6 +457,9 @@ begin
   FrmSplashArt.FrmSplash.labEdit('Analisando tabelas....');
   FrmSplashArt.FrmSplash.processCout(55);
   Sleep(500);
+
+  if dbType = 'SQLite' then
+  begin
   // Criação da tabela Pedido
  if not TabelaExiste('Pedido') then
   FDConnection.ExecSQL(
@@ -367,15 +553,126 @@ if not TabelaExiste('ItemPedido') then
 
     FDConnection.ExecSQL('INSERT INTO Sistema (VersaoSistema) VALUES (''0.0'');');
   end;
+  end
+  else if dbType = 'SQL Server' then
+  begin
+       // Criação da tabela Pedido
+       if not TabelaExiste('Pedido') then
+        ADOConnection.Execute(
+          'CREATE TABLE Pedido (' +
+          'IDVenda INT IDENTITY(1,1) PRIMARY KEY, ' +
+          'IDCliente INT, ' +
+          'NomeCliente NVARCHAR(255), ' +
+          'TelefoneCliente NVARCHAR(50), ' +
+          'EmailCliente NVARCHAR(255), ' +
+          'FlStatus CHAR(1) DEFAULT ''A'', ' +
+          'Observacao NVARCHAR(MAX), ' +
+          'TotalPedido DECIMAL(18,2), ' +
+          'Data DATE DEFAULT GETDATE());'
+        );
+       // Criação da tabela ItemPedido
+      if not TabelaExiste('ItemPedido') then
+        ADOConnection.Execute(
+          'CREATE TABLE ItemPedido (' +
+          'IDItem INT IDENTITY(1,1) PRIMARY KEY, ' +
+          'IDVenda INT, ' +
+          'IDProduto INT, ' +
+          'NomeProduto NVARCHAR(255), ' +
+          'Valor DECIMAL(18,2), ' +
+          'Desconto DECIMAL(18,2), ' +
+          'Quantidade INT, ' +
+          'Total DECIMAL(18,2), ' +
+          'DataInsercao DATE DEFAULT GETDATE(), ' +
+          'FOREIGN KEY(IDVenda) REFERENCES Pedido(IDVenda));'
+        );
+
+      // Criação da tabela Cliente
+      if not TabelaExiste('Cliente') then
+        ADOConnection.Execute(
+          'CREATE TABLE Cliente (' +
+          'IDCliente INT IDENTITY(1,1) PRIMARY KEY, ' +
+          'Nome NVARCHAR(255), ' +
+          'Telefone NVARCHAR(50), ' +
+          'Email NVARCHAR(255), ' +
+          'Endereco NVARCHAR(255));'
+        );
+
+      // Criação da tabela Produto
+      if not TabelaExiste('Produto') then
+        ADOConnection.Execute(
+          'CREATE TABLE Produto (' +
+          'IDProduto INT IDENTITY(1,1) PRIMARY KEY, ' +
+          'NomeProduto NVARCHAR(255), ' +
+          'Preco DECIMAL(18,2));'
+        );
+
+      // Criação da tabela Empresa
+      if not TabelaExiste('Empresa') then
+        ADOConnection.Execute(
+          'CREATE TABLE Empresa (' +
+          'IDEmpresa INT IDENTITY(1,1) PRIMARY KEY, ' +
+          'NomeEmpresa NVARCHAR(255), ' +
+          'Telefone NVARCHAR(50), ' +
+          'NomeFantasia NVARCHAR(255), ' +
+          'CNPJ NVARCHAR(20), ' +
+          'Endereco NVARCHAR(255), ' +
+          'Bairro NVARCHAR(100), ' +
+          'Cidade NVARCHAR(100), ' +
+          'Estado NVARCHAR(50), ' +
+          'ImgLogo VARBINARY(MAX), ' +
+          'FlDefault CHAR(1) DEFAULT ''S'');'
+        );
+
+      // Criação da tabela Configuracao
+      if not TabelaExiste('Configuracao') then
+        ADOConnection.Execute(
+          'CREATE TABLE Configuracao (' +
+          'IDConfiguracao INT IDENTITY(1,1) PRIMARY KEY, ' +
+          'NomeConfiguracao NVARCHAR(255) NOT NULL, ' +
+          'CaminhoBackup NVARCHAR(255), ' +
+          'QtdDias INT DEFAULT 0, ' +
+          'UsarMoeda NVARCHAR(50), ' +
+          'Idioma NVARCHAR(20), ' +
+          'FLATIVO CHAR(1) NOT NULL CHECK(FLATIVO IN (''S'', ''N'')));'
+        );
+
+      // Criação da tabela Sistema
+      if not TabelaExiste('Sistema') then
+      begin
+        ADOConnection.Execute(
+          'CREATE TABLE Sistema (' +
+          'IDSistema INT IDENTITY(1,1) PRIMARY KEY, ' +
+          'VersaoSistema NVARCHAR(50), ' +
+          'FlPrimeiroAcesso CHAR(1) DEFAULT ''P'');'
+        );
+        ADOConnection.Execute('INSERT INTO Sistema (VersaoSistema) VALUES (''0.0'');');
+      end;
+
+  end;
+
 end;
 
 function TDataModulePrincipal.RegistraConfiguracaoExistente(NomeConfiguracao: string): Boolean;
 begin
   Result := False;
-  FDQueryConfiguracao.SQL.Text := 'SELECT COUNT(*) FROM Configuracao WHERE NomeConfiguracao = :NomeConfiguracao';
-  FDQueryConfiguracao.ParamByName('NomeConfiguracao').AsString := NomeConfiguracao;
-  FDQueryConfiguracao.Open;
-  Result := FDQueryConfiguracao.Fields[0].AsInteger > 0;
+
+  // Verifica o tipo de banco de dados
+  if dbType = 'SQL Server' then
+  begin
+    // SQL Server: Usando ADOConnection
+    ADOQueryConfiguracao.SQL.Text := 'SELECT COUNT(*) FROM Configuracao WHERE NomeConfiguracao = :NomeConfiguracao';
+    ADOQueryConfiguracao.Parameters.ParamByName('NomeConfiguracao').Value := NomeConfiguracao;
+    ADOQueryConfiguracao.Open;
+    Result := ADOQueryConfiguracao.Fields[0].AsInteger > 0;
+  end
+  else if dbType = 'SQLite' then
+  begin
+    // SQLite: Usando FDQuery
+    FDQueryConfiguracao.SQL.Text := 'SELECT COUNT(*) FROM Configuracao WHERE NomeConfiguracao = :NomeConfiguracao';
+    FDQueryConfiguracao.ParamByName('NomeConfiguracao').AsString := NomeConfiguracao;
+    FDQueryConfiguracao.Open;
+    Result := FDQueryConfiguracao.Fields[0].AsInteger > 0;
+  end;
 end;
 
 function TDataModulePrincipal.VerificarAtualizacaoSistema(VersaoAtual: string): Boolean;
@@ -386,102 +683,197 @@ begin
   FrmSplashArt.FrmSplash.processCout(55);
   Sleep(500);
   Result := False;
-  // Obtém a versão do banco de dados
-  FDQuerySistema.SQL.Text := 'SELECT VersaoSistema FROM Sistema LIMIT 1';
-  FDQuerySistema.Open;
 
-  if not FDQuerySistema.IsEmpty then
+ if dbType = 'SQL Server' then
   begin
-    VersaoBanco := FDQuerySistema.FieldByName('VersaoSistema').AsString;
-
-    // Se a versão do banco for igual à versão do sistema, retorna verdadeiro
-    if VersaoBanco = VersaoAtual then
+    // Obtém a versão do banco de dados para SQL Server
+    ADOQuerySistema.SQL.Text := 'SELECT VersaoSistema FROM Sistema';
+    ADOQuerySistema.Open;
+    if not ADOQuerySistema.IsEmpty then
     begin
-      Result := True;
-    end
-    else if (VersaoBanco < VersaoAtual) then
-    begin
-      if Assigned(FrmSplash) then
-      FrmSplashArt.FrmSplash.labEdit('Atualizados banco de dados...');
-      FrmSplashArt.FrmSplash.processCout(70);
-      Sleep(600);
-      FDQuerySistema.Close;  // Certifique-se de fechar o query após o uso
-      // Atualiza a versão no banco de dados
-      FDConnection.ExecSQL('UPDATE Sistema SET VersaoSistema = '''+VersaoAtual+''';');
-      Sleep(300);
-
-      try
-        Result := False;  // Retorna verdadeiro após a atualização bem-sucedida
-      except
-        on E: Exception do
-        begin
-          ShowMessage('Erro ao atualizar a versão do sistema: ' + E.Message);
-          Result := True;
+      VersaoBanco := ADOQuerySistema.FieldByName('VersaoSistema').AsString;
+      // Se a versão do banco for igual à versão do sistema, retorna verdadeiro
+      if VersaoBanco = VersaoAtual then
+      begin
+        Result := True;
+      end
+      else if (VersaoBanco < VersaoAtual) then
+      begin
+        if Assigned(FrmSplash) then
+          FrmSplashArt.FrmSplash.labEdit('Atualizando banco de dados...');
+        FrmSplashArt.FrmSplash.processCout(70);
+        Sleep(600);
+        ADOQuerySistema.Close;
+        // Atualiza a versão no banco de dados
+        ADOConnection.Execute('UPDATE Sistema SET VersaoSistema = '''+VersaoAtual+''';');
+        try
+          Result := False;  // Retorna verdadeiro após a atualização bem-sucedida
+        except
+          on E: Exception do
+          begin
+            ShowMessage('Erro ao atualizar a versão do sistema: ' + E.Message);
+            Result := True;
+          end;
         end;
       end;
+    end
+    else
+    begin
+      ShowMessage('Tabela "Sistema" não foi encontrada no SQL Server.');
     end;
   end
-  else
+  else if dbType = 'SQLite' then
   begin
-    ShowMessage('Tabela "Sistema" está vazia ou não foi encontrada.');
+    // Obtém a versão do banco de dados para SQLite
+    FDQuerySistema.SQL.Text := 'SELECT VersaoSistema FROM Sistema LIMIT 1';
+    FDQuerySistema.Open;
+    if not FDQuerySistema.IsEmpty then
+    begin
+      VersaoBanco := FDQuerySistema.FieldByName('VersaoSistema').AsString;
+      // Se a versão do banco for igual à versão do sistema, retorna verdadeiro
+      if VersaoBanco = VersaoAtual then
+      begin
+        Result := True;
+      end
+      else if (VersaoBanco < VersaoAtual) then
+      begin
+        if Assigned(FrmSplash) then
+          FrmSplashArt.FrmSplash.labEdit('Atualizando banco de dados...');
+        FrmSplashArt.FrmSplash.processCout(70);
+        Sleep(600);
+        FDQuerySistema.Close;
+        // Atualiza a versão no banco de dados
+        FDConnection.ExecSQL('UPDATE Sistema SET VersaoSistema = '''+VersaoAtual+''';');
+        Sleep(300);
+        try
+          Result := False;  // Retorna verdadeiro após a atualização bem-sucedida
+        except
+          on E: Exception do
+          begin
+            ShowMessage('Erro ao atualizar a versão do sistema: ' + E.Message);
+            Result := True;
+          end;
+        end;
+      end;
+    end
+    else
+    begin
+      ShowMessage('Tabela "Sistema" não foi encontrada no SQLite.');
+    end;
   end;
-
-
-end;
+ end;
 
 
 function TDataModulePrincipal.VerificarOuCriarColuna(const Tabela, Coluna, Tipo: string): Boolean;
 var
-  Query: TFDQuery;
+  Query: TObject;  // Pode ser TADOQuery ou TFDQuery
   ColunaExiste: Boolean;
 begin
   ColunaExiste := False;
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := FDConnection;
-    Query.SQL.Text := 'PRAGMA table_info(' + Tabela + ');';
-    Query.Open;
+  // Verificação do tipo de banco de dados
+  if dbType = 'SQL Server' then
+  begin
+    // SQL Server: Usar TADOQuery para consultar e modificar o banco
+    Query := TADOQuery.Create(nil);
+    try
+      (Query as TADOQuery).Connection := ADOConnection; // Usa ADOConnection para SQL Server
+      (Query as TADOQuery).SQL.Text := 'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''' + Tabela + ''' AND COLUMN_NAME = ''' + Coluna + '''';
+      (Query as TADOQuery).Open;
 
-    // Percorre as colunas da tabela para verificar se já existe
-    while not Query.Eof do
-    begin
-      if Query.FieldByName('name').AsString = Coluna then
+      // Verifica se a coluna existe
+      ColunaExiste := not (Query as TADOQuery).IsEmpty;
+
+      // Se a coluna não existir, adiciona
+      if not ColunaExiste then
       begin
-        ColunaExiste := True;
-        Break;
+        ADOConnection.Execute('ALTER TABLE ' + Tabela + ' ADD ' + Coluna + ' ' + Tipo);
       end;
-      Query.Next;
-    end;
 
-    // Se a coluna não existir, adiciona
-    if not ColunaExiste then
-    begin
-      FDConnection.ExecSQL('ALTER TABLE ' + Tabela + ' ADD COLUMN ' + Coluna + ' ' + Tipo + ';');
+      Result := not ColunaExiste; // Retorna True se criou a coluna, False se já existia
+    finally
+      (Query as TADOQuery).Free;
     end;
+  end
+  else if dbType = 'SQLite' then
+  begin
+    // SQLite: Usar TFDQuery para consultar e modificar o banco
+    Query := TFDQuery.Create(nil);
+    try
+      (Query as TFDQuery).Connection := FDConnection; // Usa FDConnection para SQLite
+      (Query as TFDQuery).SQL.Text := 'PRAGMA table_info(' + Tabela + ');';
+      (Query as TFDQuery).Open;
 
-    Result := not ColunaExiste; // Retorna True se criou a coluna, False se já existia
-  finally
-    Query.Free;
+      // Percorre as colunas da tabela para verificar se já existe
+      while not (Query as TFDQuery).Eof do
+      begin
+        if (Query as TFDQuery).FieldByName('name').AsString = Coluna then
+        begin
+          ColunaExiste := True;
+          Break;
+        end;
+        (Query as TFDQuery).Next;
+      end;
+
+      // Se a coluna não existir, adiciona
+      if not ColunaExiste then
+      begin
+        FDConnection.ExecSQL('ALTER TABLE ' + Tabela + ' ADD COLUMN ' + Coluna + ' ' + Tipo + ';');
+      end;
+
+      Result := not ColunaExiste; // Retorna True se criou a coluna, False se já existia
+    finally
+      (Query as TFDQuery).Free;
+    end;
+  end
+  else
+  begin
+    raise Exception.Create('Tipo de banco de dados desconhecido!');
   end;
 end;
+
+
 
 
 function TDataModulePrincipal.TabelaExiste(const TabelaNome: string): Boolean;
 var
-  QueryTemp: TFDQuery;
+  QueryTemp: TComponent;
 begin
   Result := False;
-  QueryTemp := TFDQuery.Create(nil);
-  try
-    QueryTemp.Connection := FDConnection;
-    QueryTemp.SQL.Text := 'SELECT name FROM sqlite_master WHERE type="table" AND name="' + TabelaNome + '"';
-    QueryTemp.Open;
-    Result := not QueryTemp.IsEmpty;
-  finally
-    QueryTemp.Free;
+
+  // Usar TADOQuery para SQL Server e TFDQuery para SQLite
+  if dbType = 'SQL Server' then
+  begin
+    QueryTemp := TADOQuery.Create(nil);
+    try
+      (QueryTemp as TADOQuery).Connection := ADOConnection;
+      // SQL Server: Verifica se a tabela existe na base de dados
+      (QueryTemp as TADOQuery).SQL.Text := 'SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = :TabelaNome';
+      (QueryTemp as TADOQuery).Parameters.ParamByName('TabelaNome').Value := TabelaNome;
+
+      (QueryTemp as TADOQuery).Open;
+      Result := not (QueryTemp as TADOQuery).IsEmpty;
+    finally
+      QueryTemp.Free;
+    end;
+  end
+  else if dbType = 'SQLite' then
+  begin
+    QueryTemp := TFDQuery.Create(nil);
+    try
+      (QueryTemp as TFDQuery).Connection := FDConnection;
+      // SQLite: Verifica se a tabela existe
+      (QueryTemp as TFDQuery).SQL.Text := 'SELECT name FROM sqlite_master WHERE type="table" AND name=:TabelaNome';
+      (QueryTemp as TFDQuery).ParamByName('TabelaNome').AsString := TabelaNome;
+
+      (QueryTemp as TFDQuery).Open;
+      Result := not (QueryTemp as TFDQuery).IsEmpty;
+    finally
+      QueryTemp.Free;
+    end;
   end;
 end;
 
 
-end.
 
+
+end.

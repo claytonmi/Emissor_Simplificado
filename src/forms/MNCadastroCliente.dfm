@@ -306,7 +306,6 @@ object FCadastroCliente: TFCadastroCliente
     Font.Style = []
     ParentColor = False
     ParentFont = False
-    ExplicitTop = 150
     ExplicitWidth = 3
   end
   object Label4: TLabel

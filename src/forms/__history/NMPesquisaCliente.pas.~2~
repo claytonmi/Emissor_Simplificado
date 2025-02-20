@@ -1,0 +1,68 @@
+unit NMPesquisaCliente;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, uDataModulePrincipal,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.DBCtrls;
+
+type
+  TNMDePesquisaCliente = class(TForm)
+    LBSelecioneOCliente: TLabel;
+    DBComboBoxPesquisaCliente: TComboBox;
+    procedure FormCreate(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  NMDePesquisaCliente: TNMDePesquisaCliente;
+
+implementation
+
+{$R *.dfm}
+
+procedure TNMDePesquisaCliente.FormCreate(Sender: TObject);
+begin
+  // Limpa os itens anteriores do ComboBox
+  DBComboBoxPesquisaCliente.Clear;
+
+  // Verifica o tipo de banco de dados
+  if dbType = 'SQLite' then
+  begin
+    // Para SQLite, mantém o código original com FDQuery
+    DataModulePrincipal.FDQueryCliente.SQL.Text := 'SELECT IDCliente, nome FROM Cliente';
+    DataModulePrincipal.FDQueryCliente.Open;
+
+    // Preenche o ComboBox com os dados dos clientes
+    while not DataModulePrincipal.FDQueryCliente.Eof do
+    begin
+      DBComboBoxPesquisaCliente.Items.AddObject(
+        DataModulePrincipal.FDQueryCliente.FieldByName('nome').AsString,
+        TObject(DataModulePrincipal.FDQueryCliente.FieldByName('IDCliente').AsInteger)
+      );
+      DataModulePrincipal.FDQueryCliente.Next;
+    end;
+  end
+  else if dbType = 'SQLServer' then
+  begin
+    // Para SQL Server, usa o ADOQuery
+    DataModulePrincipal.ADOQueryCliente.SQL.Text := 'SELECT IDCliente, nome FROM Cliente';
+    DataModulePrincipal.ADOQueryCliente.Open;
+
+    // Preenche o ComboBox com os dados dos clientes
+    while not DataModulePrincipal.ADOQueryCliente.Eof do
+    begin
+      DBComboBoxPesquisaCliente.Items.AddObject(
+        DataModulePrincipal.ADOQueryCliente.FieldByName('nome').AsString,
+        TObject(DataModulePrincipal.ADOQueryCliente.FieldByName('IDCliente').AsInteger)
+      );
+      DataModulePrincipal.ADOQueryCliente.Next;
+    end;
+  end;
+end;
+
+
+end.

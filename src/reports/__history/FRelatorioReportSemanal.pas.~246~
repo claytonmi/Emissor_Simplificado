@@ -1,0 +1,434 @@
+unit FRelatorioReportSemanal;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uDataModulePrincipal, RLReport,
+  Vcl.ExtCtrls, Data.DB,
+  Vcl.StdCtrls;
+
+type
+  TNMRelatorioReport = class(TForm)
+    RLReport1: TRLReport;
+    RLBandCabecalho: TRLBand;
+    RLBandTitulo: TRLBand;
+    RLBandTituloDasColunas: TRLBand;
+    RLBandRodape: TRLBand;
+    RLLabelTitulo: TRLLabel;
+    RLLabelPeriodo: TRLLabel;
+    RLLabelEmpresa: TRLLabel;
+    RLLabelEmpresaFantasia: TRLLabel;
+    RLLabelEmpresaCNPJ: TRLLabel;
+    RLLabelEmpresaEndereco: TRLLabel;
+    RLLabelTelefone: TRLLabel;
+    RLDBImage1: TRLDBImage;
+    RLLabelTotalGeral: TRLLabel;
+    RLBandDetail: TRLBand;
+    RLDBTextQuantidade: TRLDBText;
+    RLDBTextValor: TRLDBText;
+    RLDBTextData: TRLDBText;
+    RLDBTextTotal: TRLDBText;
+    RLBandSubTotalPedido: TRLBand;
+    RLDBTextProduto: TRLDBText;
+    RLGroupPedidos: TRLGroup;
+    LabelNomeCliente: TRLDBText;
+    LabelTelefoneCliente: TRLDBText;
+    LabelIDVenda: TRLDBText;
+    LabelData: TRLDBText;
+    RLLabelNome: TRLLabel;
+    RLLabelTel: TRLLabel;
+    RLLabelNuOrc: TRLLabel;
+    RLLabeldt: TRLLabel;
+    RLDBResult1: TRLDBResult;
+    RLLabelMoedaTotal: TRLLabel;
+    RLLabel6: TRLLabel;
+    RLSystemInfo1: TRLSystemInfo;
+    RLDBMemo1: TRLDBMemo;
+    RLLabelObs: TRLLabel;
+    RLBand1: TRLBand;
+    RLLabelProduto: TRLLabel;
+    RLLabelQuantidade: TRLLabel;
+    RLLabelValor: TRLLabel;
+    RLLabelDataDeInsercao: TRLLabel;
+    RLLabelTotal: TRLLabel;
+    RLLabelEnder: TRLLabel;
+    RLDBEnderecoCliente: TRLDBText;
+    RLLabelMoeda: TRLLabel;
+    procedure GerarRelatorio(DataInicial: TDateTime; DataFim: TDateTime; NomeCliente: string;
+      IDEmpresa: Integer);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  NMRelatorioReport: TNMRelatorioReport;
+  NovoLabel: TRLLabel;
+
+implementation
+
+{$R *.dfm}
+
+procedure TNMRelatorioReport.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+begin
+  DataModulePrincipal.FDQueryItemPedido.Close;
+  DataModulePrincipal.FDQueryPedido.Close;
+end;
+
+procedure TNMRelatorioReport.GerarRelatorio(DataInicial: TDateTime; DataFim: TDateTime;
+  NomeCliente: string; IDEmpresa: Integer);
+var
+  DataFinal: TDateTime;
+  TotalGeral, TotalPedido: Currency;
+  LinhaAtual, CenterX, WidthPage: Integer;
+  NovoLabel: TRLLabel;
+  EmpresaNome, EmpresaFantasia, EmpresaCNPJ, EmpresaEndereco,
+  EmpresaTelefone, MoedaConfigurada, SimboloMoeda, IdiomaRelatorio: string;
+  LogoEmpresa: TRLImage;
+  LogoStream: TMemoryStream;
+  ExibirData, DataFinalFormatada, DataInicialFormatada  : String;
+begin
+  DataFinal := DataFim;
+  TotalGeral := 0;
+
+    // Obtém o idioma do relatório
+    if dbType = 'SQLite' then
+    begin
+      with DataModulePrincipal.FDQueryConfiguracao do
+      begin
+        Close;
+        SQL.Text := 'SELECT Idioma FROM Configuracao WHERE NomeConfiguracao = :Nome';
+        ParamByName('Nome').AsString := 'UsaIdiomaNoRelatorio';
+        Open;
+        IdiomaRelatorio := FieldByName('Idioma').AsString;
+      end;
+      with DataModulePrincipal.FDQueryConfiguracao do
+      begin
+        Close;
+        SQL.Text := 'SELECT UsarMoeda FROM Configuracao WHERE NomeConfiguracao = :Nome';
+        ParamByName('Nome').AsString := 'MoedaApresentadaNoRelatorio';
+        Open;
+        MoedaConfigurada := FieldByName('UsarMoeda').AsString;
+      end;
+    end
+    else if dbType = 'SQL Server' then
+    begin
+      with DataModulePrincipal.ADOQueryConfiguracao do
+      begin
+        Close;
+        SQL.Text := 'SELECT Idioma FROM Configuracao WHERE NomeConfiguracao = :Nome';
+        Parameters.ParamByName('Nome').Value := 'UsaIdiomaNoRelatorio';
+        Open;
+        IdiomaRelatorio := FieldByName('Idioma').AsString;
+      end;
+      with DataModulePrincipal.ADOQueryConfiguracao do
+      begin
+        Close;
+        SQL.Text := 'SELECT UsarMoeda FROM Configuracao WHERE NomeConfiguracao = :Nome';
+        Parameters.ParamByName('Nome').Value := 'MoedaApresentadaNoRelatorio';
+        Open;
+        MoedaConfigurada := FieldByName('UsarMoeda').AsString;
+      end;
+    end;
+  // Definindo o símbolo da moeda com base na configuração
+  if MoedaConfigurada = 'Real Brasileiro' then
+    SimboloMoeda := 'R$'
+  else if MoedaConfigurada = 'Dólar Americano' then
+    SimboloMoeda := '$'
+  else if MoedaConfigurada = 'Euro' then
+    SimboloMoeda := '€'
+  else if MoedaConfigurada = 'Dólar Canadense' then
+    SimboloMoeda := 'C$'
+  else
+    SimboloMoeda := 'R$';  // Valor padrão
+  // Atualiza o RLLabelMoeda com o símbolo da moeda
+  RLLabelMoeda.Caption := SimboloMoeda;
+  RLLabelMoedaTotal.Caption := 'Total ' + SimboloMoeda + ':';
+
+  // Obtém o valor da configuração ExibirDataInsercaoNoRelatorio
+  if dbType = 'SQLite' then
+  begin
+    with DataModulePrincipal.FDQueryConfiguracao do
+    begin
+      Close;
+      SQL.Text := 'SELECT FLATIVO FROM Configuracao WHERE NomeConfiguracao = :Nome';
+      ParamByName('Nome').AsString := 'ExibirDataInsercaoNoRelatorio';
+      Open;
+      ExibirData := FieldByName('FLATIVO').AsString;
+    end;
+  end
+  else if dbType = 'SQL Server' then
+  begin
+    with DataModulePrincipal.ADOQueryConfiguracao do
+    begin
+      Close;
+      SQL.Text := 'SELECT FLATIVO FROM Configuracao WHERE NomeConfiguracao = :Nome';
+      Parameters.ParamByName('Nome').Value := 'ExibirDataInsercaoNoRelatorio';
+      Open;
+      ExibirData := FieldByName('FLATIVO').AsString;
+    end;
+  end;
+
+    RLDBTextData.Visible := ExibirData  = 'S';
+    RLLabelDataDeInsercao.Visible := ExibirData  = 'S';
+  if ExibirData = 'S' then
+  begin
+    RLLabelQuantidade.left := 266;
+    RLLabelValor.left := 390;
+    RLDBTextQuantidade.left := 266;
+    RLDBTextValor.left := 390;
+  end
+  else
+  begin
+    RLLabelQuantidade.left := 322;
+    RLLabelValor.left := 472;
+    RLDBTextQuantidade.left := 322;
+    RLDBTextValor.left := 472;
+  end;
+
+
+
+  // Se a empresa for especificada, buscar dados da empresa
+    if IDEmpresa > 0 then
+    begin
+      if dbType = 'SQLite' then
+      begin
+        DataModulePrincipal.FDQueryEmpresa.Close;
+        DataModulePrincipal.FDQueryEmpresa.SQL.Text :=
+          'SELECT NomeEmpresa, NomeFantasia, CNPJ, Endereco, Telefone, ImgLogo ' +
+          'FROM Empresa WHERE IDEmpresa = :IDEmpresa';
+        DataModulePrincipal.FDQueryEmpresa.ParamByName('IDEmpresa').AsInteger := IDEmpresa;
+        DataModulePrincipal.FDQueryEmpresa.Open;
+
+        if not DataModulePrincipal.FDQueryEmpresa.IsEmpty then
+        begin
+          EmpresaNome := DataModulePrincipal.FDQueryEmpresa.FieldByName('NomeEmpresa').AsString;
+          EmpresaFantasia := DataModulePrincipal.FDQueryEmpresa.FieldByName('NomeFantasia').AsString;
+          EmpresaCNPJ := DataModulePrincipal.FDQueryEmpresa.FieldByName('CNPJ').AsString;
+          EmpresaEndereco := DataModulePrincipal.FDQueryEmpresa.FieldByName('Endereco').AsString;
+          EmpresaTelefone := DataModulePrincipal.FDQueryEmpresa.FieldByName('Telefone').AsString;
+        end;
+      end
+      else if dbType = 'SQL Server' then
+      begin
+        DataModulePrincipal.ADOQueryEmpresa.Close;
+        DataModulePrincipal.ADOQueryEmpresa.SQL.Text :=
+          'SELECT NomeEmpresa, NomeFantasia, CNPJ, Endereco, Telefone, ImgLogo ' +
+          'FROM Empresa WHERE IDEmpresa = :IDEmpresa';
+        DataModulePrincipal.ADOQueryEmpresa.Parameters.ParamByName('IDEmpresa').Value := IDEmpresa;
+        DataModulePrincipal.ADOQueryEmpresa.Open;
+
+        if not DataModulePrincipal.ADOQueryEmpresa.IsEmpty then
+        begin
+          EmpresaNome := DataModulePrincipal.ADOQueryEmpresa.FieldByName('NomeEmpresa').AsString;
+          EmpresaFantasia := DataModulePrincipal.ADOQueryEmpresa.FieldByName('NomeFantasia').AsString;
+          EmpresaCNPJ := DataModulePrincipal.ADOQueryEmpresa.FieldByName('CNPJ').AsString;
+          EmpresaEndereco := DataModulePrincipal.ADOQueryEmpresa.FieldByName('Endereco').AsString;
+          EmpresaTelefone := DataModulePrincipal.ADOQueryEmpresa.FieldByName('Telefone').AsString;
+        end;
+      end;
+
+      RLBandTitulo.Top := 169;
+      RLBandCabecalho.Visible := True;
+    end
+    else
+    begin
+      RLBandTitulo.Top := 38;
+      RLBandCabecalho.Visible := False;
+    end;
+
+
+     // Consulta pedidos no intervalo de datas e para o cliente específico
+    if dbType = 'SQLite' then
+    begin
+      DataModulePrincipal.FDQueryRelatorioDePedidos.Close;
+      DataModulePrincipal.FDQueryRelatorioDePedidos.SQL.Text :=
+        'SELECT ' +
+        '    p.IDVenda, ' +
+        '    p.NomeCliente, ' +
+        '    c.Endereco, ' +
+        '    p.TelefoneCliente, ' +
+        '    p.Data AS DataPedido, ' +
+        '    p.Observacao, ' +
+        '    p.TotalPedido, ' +
+        '    i.NomeProduto, ' +
+        '    i.Quantidade, ' +
+        '    i.Valor, ' +
+        '    i.DataInsercao, ' +
+        '    i.Total, ' +
+        '    (SELECT SUM(i2.Total) ' +
+        '     FROM ItemPedido i2 ' +
+        '     INNER JOIN Pedido p2 ON i2.IDVenda = p2.IDVenda ' +
+        '     WHERE p2.Data BETWEEN :DataInicial AND :DataFinal ' +
+        '     AND p2.NomeCliente = :NomeCliente) AS TotalGeral ' +
+        'FROM ' +
+        '    Pedido p ' +
+        'INNER JOIN ' +
+        '    ItemPedido i ON p.IDVenda = i.IDVenda ' +
+        'LEFT JOIN ' +
+        '    Cliente c ON p.IDCliente = c.IDCliente ' +
+        'WHERE ' +
+        '    p.Data BETWEEN :DataInicial AND :DataFinal ' +
+        '    AND p.NomeCliente = :NomeCliente ' +
+        'ORDER BY ' +
+        '    p.IDVenda, i.DataInsercao';
+
+      DataModulePrincipal.FDQueryRelatorioDePedidos.ParamByName('DataInicial').AsDate := DataInicial;
+      DataModulePrincipal.FDQueryRelatorioDePedidos.ParamByName('DataFinal').AsDate := DataFinal;
+      DataModulePrincipal.FDQueryRelatorioDePedidos.ParamByName('NomeCliente').AsString := NomeCliente;
+      DataModulePrincipal.FDQueryRelatorioDePedidos.Open;
+    end
+    else if dbType = 'SQL Server' then
+    begin
+    DataModulePrincipal.ADOQueryRelatorioDePedidos.Close;
+    DataModulePrincipal.ADOQueryRelatorioDePedidos.SQL.Text :=
+      'SELECT ' +
+      '    p.IDVenda, ' +
+      '    p.NomeCliente, ' +
+      '    c.Endereco, ' +
+      '    p.TelefoneCliente, ' +
+      '    p.Data AS DataPedido, ' +
+      '    p.Observacao, ' +
+      '    p.TotalPedido, ' +
+      '    i.NomeProduto, ' +
+      '    i.Quantidade, ' +
+      '    i.Valor, ' +
+      '    i.DataInsercao, ' +
+      '    i.Total, ' +
+
+      '     FROM ItemPedido i2 ' +
+      '     INNER JOIN Pedido p2 ON i2.IDVenda = p2.IDVenda ' +
+      '     WHERE p2.Data BETWEEN :DataInicial AND :DataFinal ' +
+      '     AND p2.NomeCliente = :NomeCliente) AS TotalGeral ' +
+      'FROM ' +
+      '    Pedido p ' +
+      'INNER JOIN ' +
+      '    ItemPedido i ON p.IDVenda = i.IDVenda ' +
+      'LEFT JOIN ' +
+      '    Cliente c ON p.IDCliente = c.IDCliente ' +
+      'WHERE ' +
+      '    p.Data BETWEEN :DataInicial AND :DataFinal ' +
+      '    AND p.NomeCliente = :NomeCliente ' +
+      'ORDER BY ' +
+      '    p.IDVenda, i.DataInsercao';
+
+
+    // Não formate a data manualmente, passe o TDateTime diretamente
+       with DataModulePrincipal.ADOQueryRelatorioDePedidos.Parameters do
+      begin
+        ParamByName('DataInicial').Value := DataInicial;
+        ParamByName('DataFinal').Value := DataFinal;
+        ParamByName('NomeCliente').Value := NomeCliente;
+      end;
+
+      try
+        DataModulePrincipal.ADOQueryRelatorioDePedidos.Open;
+      except
+        on E: Exception do
+          ShowMessage('Erro ao executar consulta: ' + E.Message);
+      end;
+    end;
+
+
+    if dbType = 'SQLite' then
+    begin
+      if DataModulePrincipal.FDQueryRelatorioDePedidos.IsEmpty then
+      begin
+        ShowMessage('Nenhum pedido encontrado para o cliente no intervalo especificado.');
+        Exit;
+      end;
+    end
+    else if dbType = 'SQL Server' then
+    begin
+      if DataModulePrincipal.ADOQueryRelatorioDePedidos.IsEmpty then
+      begin
+        ShowMessage('Nenhum pedido encontrado para o cliente no intervalo especificado.');
+        Exit;
+      end;
+    end;
+
+  // **Cabeçalho do Relatório**
+  if IDEmpresa > 0 then
+  begin
+    // Nome Fantasia da Empresa (Destacado)
+    RLLabelEmpresaFantasia.Caption := EmpresaFantasia;
+    RLLabelEmpresaFantasia.Font.Size := 14;
+    RLLabelEmpresaFantasia.Font.Style := [fsBold];
+    // Nome Empresarial
+    RLLabelEmpresa.Caption := EmpresaNome;
+    RLLabelEmpresa.Font.Size := 10;
+    // CNPJ da Empresa
+    RLLabelEmpresaCNPJ.Caption := 'CNPJ: ' + EmpresaCNPJ;
+    RLLabelEmpresaCNPJ.Font.Size := 10;
+    // Endereço da Empresa
+    RLLabelEmpresaEndereco.Caption := EmpresaEndereco;
+    RLLabelEmpresaEndereco.Font.Size := 10;
+    // Telefone da Empresa
+    RLLabelTelefone.Caption := 'Telefone: ' + EmpresaTelefone;
+    RLLabelTelefone.Font.Size := 10;
+
+  end;
+
+  if dbType = 'SQLite' then
+  begin
+    TotalGeral := DataModulePrincipal.FDQueryRelatorioDePedidos.FieldByName('TotalGeral').AsCurrency;
+  end
+  else if dbType = 'SQL Server' then
+  begin
+    TotalGeral := DataModulePrincipal.ADOQueryRelatorioDePedidos.FieldByName('TotalGeral').AsCurrency;
+  end;
+
+  if IdiomaRelatorio = 'Inglês' then
+    begin
+      LabelNomeCliente.Left:=230;
+      LabelTelefoneCliente.Left:=206;
+      LabelIDVenda.Left:=483;
+      RLLabelTitulo.Caption := 'Budget Reports';
+      RLLabelPeriodo.Caption := 'Period: ' + DateToStr(DataInicial) + ' to ' + DateToStr(DataFinal);
+      RLLabelNome.Caption := 'Customer:';
+      RLLabelNuOrc.Caption := 'Order No.:';
+      RLLabelTel.Caption := 'Phone:';
+      RLLabelEnder.Caption := 'Address:';
+      RLLabelObs.Caption := 'Notes:';
+      RLLabeldt.Caption := 'Date:';
+      RLLabelProduto.Caption := 'Product';
+      RLLabelQuantidade.Caption := 'Quantity';
+      RLLabelValor.Caption := 'Value';
+      RLLabelDataDeInsercao.Caption := 'Insert Date';
+      RLLabelTotal.Caption := 'Total';
+      RLLabelMoedaTotal.Caption := 'Total ' + SimboloMoeda + ':';
+      RLLabelTotalGeral.Caption := 'Total Amount: $ ' + FormatFloat('0.00', TotalGeral);
+    end
+    else
+    begin
+      LabelNomeCliente.Left:=213;
+      LabelTelefoneCliente.Left:=221;
+      LabelIDVenda.Left:=510;
+      RLLabelTitulo.Caption := 'Relatórios de Orçamentos';
+      RLLabelPeriodo.Caption := 'Período: ' + DateToStr(DataInicial) + ' a ' + DateToStr(DataFinal);
+      RLLabelNome.Caption := 'Cliente:';
+      RLLabelNuOrc.Caption := 'Nº Orçamento:';
+      RLLabelTel.Caption := 'Telefone:';
+      RLLabelEnder.Caption := 'Endereço:';
+      RLLabelObs.Caption := 'Observações:';
+      RLLabeldt.Caption := 'Data:';
+      RLLabelProduto.Caption := 'Produto';
+      RLLabelQuantidade.Caption := 'Quantidade';
+      RLLabelValor.Caption := 'Valor';
+      RLLabelDataDeInsercao.Caption := 'Data';
+      RLLabelTotal.Caption := 'Total';
+      RLLabelMoedaTotal.Caption := 'Total ' + SimboloMoeda + ':';
+      RLLabelTotalGeral.Caption := 'Total Geral: R$ ' + FormatFloat('0.00', TotalGeral);
+    end;
+    RLLabelTotalGeral.Font.Size := 9;
+    RLLabelTotalGeral.Font.Style := [fsBold];
+
+    RLReport1.PreviewModal;
+end;
+
+end.

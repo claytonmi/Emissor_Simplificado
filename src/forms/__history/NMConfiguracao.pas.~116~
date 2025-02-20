@@ -1,0 +1,368 @@
+unit NMConfiguracao;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, uDataModulePrincipal, System.StrUtils, Vcl.FileCtrl,
+  Vcl.Buttons, Vcl.Samples.Spin;
+
+type
+  TNMConfig = class(TForm)
+    GroupBoxCamposOrcamento: TGroupBox;
+    Panel1: TPanel;
+    Panel2: TPanel;
+    BtSalvarConfig: TButton;
+    BtZerarConfig: TButton;
+    GroupBoxRelatorio: TGroupBox;
+    CheckBoxDataDeInsercaoDoItemRelatorio: TCheckBox;
+    GroupBoxTelaOrcamento: TGroupBox;
+    CheckBoxDataInsercaoDoItem: TCheckBox;
+    CheckBoxEmpresaVisivelNoCabecalho: TCheckBox;
+    LabelCaminhoBackup: TLabel;
+    EditCaminhoBackup: TEdit;
+    ButtonSelecionarCaminhoBackup: TBitBtn;
+    SpinEditQtdDiasLimpar: TSpinEdit;
+    LbDiasBackup: TLabel;
+    BalloonHint: TBalloonHint;
+    BtInfo: TBitBtn;
+    ComboBoxMoedaUtilizada: TComboBox;
+    Label2: TLabel;
+    ComboBoxIdioma: TComboBox;
+    Label1: TLabel;
+    procedure FormCreate(Sender: TObject);
+    procedure BtZerarConfigClick(Sender: TObject);
+    procedure BtSalvarConfigClick(Sender: TObject);
+    procedure ButtonSelecionarCaminhoBackupClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure BtInfoClick(Sender: TObject);
+    procedure EditCaminhoBackupMouseEnter(Sender: TObject);
+    procedure SpinEditQtdDiasLimparMouseMove(Sender: TObject;
+      Shift: TShiftState; X, Y: Integer);
+  private
+    TutorialAtivo: boolean;
+    AtualizaDtOrcamento: Boolean;
+    procedure CarregarConfiguracoes;
+    procedure ResetarConfiguracoesVerdadeiro;
+    procedure SalvarConfiguracoes;
+  public
+    { Public declarations }
+  end;
+
+var
+  NMConfig: TNMConfig;
+
+implementation
+
+uses
+  MNPrincipal;
+
+{$R *.dfm}
+
+procedure TNMConfig.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+if CheckBoxDataInsercaoDoItem.Checked <> AtualizaDtOrcamento then
+begin
+    EmissorPrincipal.AtualizarConfiguracoes;
+end;
+
+
+  Action := caFree;
+end;
+
+procedure TNMConfig.FormCreate(Sender: TObject);
+begin
+   CarregarConfiguracoes;
+end;
+
+procedure TNMConfig.BtInfoClick(Sender: TObject);
+begin
+  TutorialAtivo:= true;
+  if TutorialAtivo then
+  begin
+  // Exibe o balão de dica sobre o campo EditCaminhoBackup
+  BalloonHint.Title := 'Caminho de Backup';
+  BalloonHint.Description := 'Este campo serve para armazenar o backup do banco e deve ser um caminho com permissão de criação, como Desktop.';
+  BalloonHint.ShowHint(EditCaminhoBackup);
+  end;
+end;
+
+procedure TNMConfig.BtSalvarConfigClick(Sender: TObject);
+begin
+  SalvarConfiguracoes;
+end;
+
+procedure TNMConfig.BtZerarConfigClick(Sender: TObject);
+begin
+  ResetarConfiguracoesVerdadeiro;
+end;
+
+procedure TNMConfig.ButtonSelecionarCaminhoBackupClick(Sender: TObject);
+var
+  PastaSelecionada: string;
+begin
+  if SelectDirectory('Selecione a pasta para backup', '', PastaSelecionada) then
+    EditCaminhoBackup.Text := PastaSelecionada;
+end;
+
+procedure TNMConfig.SalvarConfiguracoes;
+begin
+  try
+    if dbType = 'SQLite' then
+    begin
+      if not DataModulePrincipal.FDConnection.InTransaction then
+        DataModulePrincipal.FDConnection.StartTransaction;
+      with DataModulePrincipal.FDQueryConfiguracao do
+      begin
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET FLATIVO = :FLATIVO WHERE NomeConfiguracao = :Nome';
+        ParamByName('Nome').AsString := 'ExibirDataInsercaoNoOrcamento';
+        ParamByName('FLATIVO').AsString := IfThen(CheckBoxDataInsercaoDoItem.Checked, 'S', 'N');
+        ExecSQL;
+
+        Close;
+        ParamByName('Nome').AsString := 'ExibirDataInsercaoNoRelatorio';
+        ParamByName('FLATIVO').AsString := IfThen(CheckBoxDataDeInsercaoDoItemRelatorio.Checked, 'S', 'N');
+        ExecSQL;
+
+        Close;
+        ParamByName('Nome').AsString := 'ExibirEmpresaNoRelatorio';
+        ParamByName('FLATIVO').AsString := IfThen(CheckBoxEmpresaVisivelNoCabecalho.Checked, 'S', 'N');
+        ExecSQL;
+
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET CaminhoBackup = :Caminho WHERE NomeConfiguracao = ''CaminhoDoBackupDoBanco''';
+        ParamByName('Caminho').AsString := EditCaminhoBackup.Text;
+        ExecSQL;
+
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET QtdDias = :QtdDiasLimpa WHERE NomeConfiguracao = ''QtdDiasParaLimparBanco''';
+        ParamByName('QtdDiasLimpa').AsInteger := SpinEditQtdDiasLimpar.Value;
+        ExecSQL;
+
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET UsarMoeda = :Moeda WHERE NomeConfiguracao = ''MoedaApresentadaNoRelatorio''';
+        ParamByName('Moeda').AsString := ComboBoxMoedaUtilizada.Text;
+        ExecSQL;
+
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET Idioma = :idioma WHERE NomeConfiguracao = ''UsaIdiomaNoRelatorio''';
+        ParamByName('idioma').AsString := ComboBoxIdioma.Text;
+        ExecSQL;
+      end;
+      DataModulePrincipal.FDConnection.Commit;
+    end
+    else if dbType = 'SQL Server' then
+    begin
+      if not DataModulePrincipal.ADOConnection.InTransaction then
+        DataModulePrincipal.ADOConnection.BeginTrans;
+      with DataModulePrincipal.ADOQueryConfiguracao do
+      begin
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET FLATIVO = :FLATIVO WHERE NomeConfiguracao = :Nome';
+        Parameters.ParamByName('Nome').Value := 'ExibirDataInsercaoNoOrcamento';
+        Parameters.ParamByName('FLATIVO').Value := IfThen(CheckBoxDataInsercaoDoItem.Checked, 'S', 'N');
+        ExecSQL;
+
+        Close;
+        Parameters.ParamByName('Nome').Value := 'ExibirDataInsercaoNoRelatorio';
+        Parameters.ParamByName('FLATIVO').Value := IfThen(CheckBoxDataDeInsercaoDoItemRelatorio.Checked, 'S', 'N');
+        ExecSQL;
+
+        Close;
+        Parameters.ParamByName('Nome').Value := 'ExibirEmpresaNoRelatorio';
+        Parameters.ParamByName('FLATIVO').Value := IfThen(CheckBoxEmpresaVisivelNoCabecalho.Checked, 'S', 'N');
+        ExecSQL;
+
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET CaminhoBackup = :Caminho WHERE NomeConfiguracao = ''CaminhoDoBackupDoBanco''';
+        Parameters.ParamByName('Caminho').Value := EditCaminhoBackup.Text;
+        ExecSQL;
+
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET QtdDias = :QtdDiasLimpa WHERE NomeConfiguracao = ''QtdDiasParaLimparBanco''';
+        Parameters.ParamByName('QtdDiasLimpa').Value := SpinEditQtdDiasLimpar.Value;
+        ExecSQL;
+
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET UsarMoeda = :Moeda WHERE NomeConfiguracao = ''MoedaApresentadaNoRelatorio''';
+        Parameters.ParamByName('Moeda').Value := ComboBoxMoedaUtilizada.Text;
+        ExecSQL;
+
+        Close;
+        SQL.Text := 'UPDATE Configuracao SET Idioma = :idioma WHERE NomeConfiguracao = ''UsaIdiomaNoRelatorio''';
+        Parameters.ParamByName('idioma').Value := ComboBoxIdioma.Text;
+        ExecSQL;
+      end;
+      DataModulePrincipal.ADOConnection.CommitTrans;
+    end
+    else
+      ShowMessage('Tipo de banco de dados não reconhecido.');
+    ShowMessage('Configurações salvas com sucesso!');
+  except
+    on E: Exception do
+    begin
+      if dbType = 'SQLite' then
+        DataModulePrincipal.FDConnection.Rollback
+      else if dbType = 'SQL Server' then
+        DataModulePrincipal.ADOConnection.RollbackTrans;
+      ShowMessage('Erro ao salvar configurações: ' + E.Message);
+    end;
+  end;
+end;
+
+
+procedure TNMConfig.SpinEditQtdDiasLimparMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+begin
+TutorialAtivo:= false;
+BalloonHint.HideHint;
+end;
+
+procedure TNMConfig.ResetarConfiguracoesVerdadeiro;
+begin
+  // Define todos os checkboxes como ativos
+  CheckBoxDataInsercaoDoItem.Checked := True;
+  CheckBoxDataDeInsercaoDoItemRelatorio.Checked := True;
+  CheckBoxEmpresaVisivelNoCabecalho.Checked := True;
+  EditCaminhoBackup.Text := 'C:\Users\Default\Downloads';
+  SpinEditQtdDiasLimpar.Value := 0;
+
+  // Limpa as opções existentes no ComboBox
+  ComboBoxMoedaUtilizada.Clear;
+  // Adiciona as opções de moedas (essas opções podem ser carregadas de uma tabela ou definidas manualmente)
+  ComboBoxMoedaUtilizada.Items.Add('Real Brasileiro');
+  ComboBoxMoedaUtilizada.Items.Add('Dólar Americano');
+  ComboBoxMoedaUtilizada.Items.Add('Euro');
+  ComboBoxMoedaUtilizada.Items.Add('Dólar Canadense');
+  // Agora, selecione o valor padrão (Real Brasileiro)
+  ComboBoxMoedaUtilizada.ItemIndex := ComboBoxMoedaUtilizada.Items.IndexOf('Real Brasileiro');
+
+  ComboBoxIdioma.Clear;
+  // Adiciona as opções de moedas (essas opções podem ser carregadas de uma tabela ou definidas manualmente)
+  ComboBoxIdioma.Items.Add('Português');
+  ComboBoxIdioma.Items.Add('Inglês');
+  // Agora, selecione o valor padrão (Real Brasileiro)
+  ComboBoxIdioma.ItemIndex := ComboBoxIdioma.Items.IndexOf('Português');
+end;
+
+
+procedure TNMConfig.CarregarConfiguracoes;
+begin
+  if dbType = 'SQLite' then
+  begin
+    with DataModulePrincipal.FDQueryConfiguracao do
+    begin
+      try
+        Close;
+        SQL.Text := 'SELECT * FROM Configuracao';
+        Open;
+      except
+        on E: Exception do
+        begin
+          ShowMessage('Erro ao carregar configurações do SQLite: ' + E.Message);
+          Exit;
+        end;
+      end;
+    end;
+  end
+  else if dbType = 'SQL Server' then
+  begin
+    with DataModulePrincipal.ADOQueryConfiguracao do
+    begin
+      try
+        Close;
+        SQL.Text := 'SELECT * FROM Configuracao';
+        Open;
+      except
+        on E: Exception do
+        begin
+          ShowMessage('Erro ao carregar configurações do SQL Server: ' + E.Message);
+          Exit;
+        end;
+      end;
+    end;
+  end
+  else
+  begin
+    ShowMessage('Tipo de banco de dados não reconhecido.');
+    Exit;
+  end;
+
+  // Carregar os tipos de moeda no ComboBox
+  ComboBoxMoedaUtilizada.Items.Clear;
+  ComboBoxMoedaUtilizada.Items.Add('Real Brasileiro');
+  ComboBoxMoedaUtilizada.Items.Add('Dólar Americano');
+  ComboBoxMoedaUtilizada.Items.Add('Euro');
+  ComboBoxMoedaUtilizada.Items.Add('Dólar Canadense');
+  ComboBoxMoedaUtilizada.Style := csDropDownList;
+
+  // Carregar os idiomas do relatório no ComboBox
+  ComboBoxIdioma.Items.Clear;
+  ComboBoxIdioma.Items.Add('Português');
+  ComboBoxIdioma.Items.Add('Inglês');
+  ComboBoxIdioma.Style := csDropDownList;
+
+  // Selecionar o componente correto para leitura dos dados
+  if dbType = 'SQLite' then
+    with DataModulePrincipal.FDQueryConfiguracao do
+  else
+    with DataModulePrincipal.ADOQueryConfiguracao do
+  begin
+    while not Eof do
+    begin
+      if FieldByName('NomeConfiguracao').AsString = 'ExibirDataInsercaoNoOrcamento' then
+      begin
+        CheckBoxDataInsercaoDoItem.Checked := FieldByName('FLATIVO').AsString = 'S';
+        AtualizaDtOrcamento := CheckBoxDataInsercaoDoItem.Checked;
+      end
+      else if FieldByName('NomeConfiguracao').AsString = 'ExibirDataInsercaoNoRelatorio' then
+        CheckBoxDataDeInsercaoDoItemRelatorio.Checked := FieldByName('FLATIVO').AsString = 'S'
+      else if FieldByName('NomeConfiguracao').AsString = 'ExibirEmpresaNoRelatorio' then
+        CheckBoxEmpresaVisivelNoCabecalho.Checked := FieldByName('FLATIVO').AsString = 'S';
+
+      if FieldByName('NomeConfiguracao').AsString = 'CaminhoDoBackupDoBanco' then
+        EditCaminhoBackup.Text := FieldByName('CaminhoBackup').AsString;
+
+      if FieldByName('NomeConfiguracao').AsString = 'QtdDiasParaLimparBanco' then
+        SpinEditQtdDiasLimpar.Value := FieldByName('QtdDias').AsInteger;
+
+      if FieldByName('NomeConfiguracao').AsString = 'MoedaApresentadaNoRelatorio' then
+      begin
+        if ComboBoxMoedaUtilizada.Items.IndexOf(FieldByName('UsarMoeda').AsString) <> -1 then
+          ComboBoxMoedaUtilizada.ItemIndex := ComboBoxMoedaUtilizada.Items.IndexOf(FieldByName('UsarMoeda').AsString)
+        else
+        begin
+          ShowMessage('Moeda ' + FieldByName('UsarMoeda').AsString + ' não encontrada no ComboBox.');
+          ComboBoxMoedaUtilizada.ItemIndex := -1;
+        end;
+      end;
+
+      if FieldByName('NomeConfiguracao').AsString = 'UsaIdiomaNoRelatorio' then
+      begin
+        if ComboBoxIdioma.Items.IndexOf(FieldByName('Idioma').AsString) <> -1 then
+          ComboBoxIdioma.ItemIndex := ComboBoxIdioma.Items.IndexOf(FieldByName('Idioma').AsString)
+        else
+        begin
+          ShowMessage('Idioma ' + FieldByName('Idioma').AsString + ' não encontrado no ComboBox.');
+          ComboBoxIdioma.ItemIndex := -1;
+        end;
+      end;
+      Next;
+    end;
+    Close;
+  end;
+end;
+
+procedure TNMConfig.EditCaminhoBackupMouseEnter(Sender: TObject);
+begin
+  if TutorialAtivo then
+  begin
+  // Exibe o balão de dica sobre o campo EditCaminhoBackup
+  BalloonHint.Title := 'Limpeza de Tabelas';
+  BalloonHint.Description := 'Este campo serve para limpar as tabelas de orçamentos e itens de orçamento, mas só após a conclusão do backup. Se o valor for 0, não irá apagar nada. Se o valor for 30, irá apagar pedidos com mais de 30 dias.';
+  BalloonHint.ShowHint(SpinEditQtdDiasLimpar);
+  end;
+end;
+
+end.

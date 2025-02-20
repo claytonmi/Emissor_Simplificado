@@ -1,0 +1,60 @@
+unit NMAtivador;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, Registry;
+
+type
+  TNMAtivadorChave = class(TForm)
+    EditChave: TEdit;
+    Ativar: TBitBtn;
+    EditEmail: TEdit;
+    LabChave: TLabel;
+    Label1: TLabel;
+    procedure AtivarClick(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  NMAtivadorChave: TNMAtivadorChave;
+
+implementation
+
+{$R *.dfm}
+
+function TFrmAtivacao.GerarChaveAtivacao(Email: string): string;
+begin
+  Result := StringReplace(Email, '@', '-', [rfReplaceAll]);
+  Result := StringReplace(Result, '.', '*', [rfReplaceAll]);
+  Result := Result + '-XYZ123'; // Adiciona um sufixo fixo
+end;
+
+procedure TNMAtivadorChave.AtivarClick(Sender: TObject);
+var
+  Email, Chave, ChaveGerada: string;
+begin
+  // O e-mail e chave inseridos pelo cliente
+  Email := EditEmail.Text;
+  Chave := EditChave.Text;
+
+  // Gerando a chave com base no e-mail inserido
+  ChaveGerada := GerarChaveAtivacao(Email);
+
+  // Comparando a chave inserida com a chave gerada
+  if Chave = ChaveGerada then
+  begin
+    ShowMessage('Ativação concluída!');
+    // Salvar a chave no registro ou arquivo local para não pedir novamente
+  end
+  else
+  begin
+    ShowMessage('Chave inválida!');
+  end;
+end;
+
+end.

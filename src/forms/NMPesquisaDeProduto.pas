@@ -25,21 +25,44 @@ implementation
 
 procedure TNMPesquisaProduto.FormCreate(Sender: TObject);
 begin
-    // Preenche o combo com os produto
-  DataModulePrincipal.FDQueryProduto.SQL.Text := 'SELECT IDProduto, NomeProduto FROM Produto';
-  DataModulePrincipal.FDQueryProduto.Open;
   // Limpa os itens anteriores do ComboBox
   DBComboBoxPesquisaProduto.Clear;
-  // Preenche o ComboBox com os dados dos produto
-  while not DataModulePrincipal.FDQueryProduto.Eof do
+
+  // Verifica o tipo de banco de dados
+  if dbType = 'SQLite' then
   begin
-    DBComboBoxPesquisaProduto.Items.AddObject(
-      DataModulePrincipal.FDQueryProduto.FieldByName('NomeProduto').AsString,
-      TObject(DataModulePrincipal.FDQueryProduto.FieldByName('IDProduto').AsInteger)
-    );
-    DataModulePrincipal.FDQueryProduto.Next;
+    // Para SQLite, mantém o código original com FDQuery
+    DataModulePrincipal.FDQueryProduto.SQL.Text := 'SELECT IDProduto, NomeProduto FROM Produto';
+    DataModulePrincipal.FDQueryProduto.Open;
+
+    // Preenche o ComboBox com os dados dos produtos
+    while not DataModulePrincipal.FDQueryProduto.Eof do
+    begin
+      DBComboBoxPesquisaProduto.Items.AddObject(
+        DataModulePrincipal.FDQueryProduto.FieldByName('NomeProduto').AsString,
+        TObject(DataModulePrincipal.FDQueryProduto.FieldByName('IDProduto').AsInteger)
+      );
+      DataModulePrincipal.FDQueryProduto.Next;
+    end;
+  end
+  else if dbType = 'SQL Server' then
+  begin
+    // Para SQL Server, usa o ADOQuery
+    DataModulePrincipal.ADOQueryProduto.SQL.Text := 'SELECT IDProduto, NomeProduto FROM Produto';
+    DataModulePrincipal.ADOQueryProduto.Open;
+
+    // Preenche o ComboBox com os dados dos produtos
+    while not DataModulePrincipal.ADOQueryProduto.Eof do
+    begin
+      DBComboBoxPesquisaProduto.Items.AddObject(
+        DataModulePrincipal.ADOQueryProduto.FieldByName('NomeProduto').AsString,
+        TObject(DataModulePrincipal.ADOQueryProduto.FieldByName('IDProduto').AsInteger)
+      );
+      DataModulePrincipal.ADOQueryProduto.Next;
+    end;
   end;
 end;
+
 
 end.
 

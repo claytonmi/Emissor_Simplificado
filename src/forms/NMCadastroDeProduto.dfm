@@ -299,8 +299,6 @@ object NMCadastroProduto: TNMCadastroProduto
     Font.Style = []
     ParentColor = False
     ParentFont = False
-    ExplicitLeft = -10
-    ExplicitTop = 151
     ExplicitWidth = 3
   end
   object EdNomeProduto: TEdit

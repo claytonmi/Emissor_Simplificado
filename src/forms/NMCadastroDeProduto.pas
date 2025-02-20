@@ -81,6 +81,7 @@ begin
     BalloonHint.HideHint;
     FStep := 0;  // Avança para o próximo passo
   end;
+
   if Trim(EdNomeProduto.Text) = '' then
     raise Exception.Create('O nome do produto é obrigatório.');
 
@@ -91,35 +92,63 @@ begin
     if FProdutoID = 0 then
     begin
       // Inserindo novo produto
-      DataModulePrincipal.FDQueryProduto.SQL.Text := 'INSERT INTO Produto (NomeProduto, Preco) VALUES (:NomeProduto, :Preco)';
-      DataModulePrincipal.FDQueryProduto.ParamByName('NomeProduto').AsString := EdNomeProduto.Text;
-      DataModulePrincipal.FDQueryProduto.ParamByName('Preco').AsFloat := StrToFloat(EdPreco.Text);
+      if dbType = 'SQLite' then
+      begin
+        // Para SQLite, usa FDQuery
+        DataModulePrincipal.FDQueryProduto.SQL.Text := 'INSERT INTO Produto (NomeProduto, Preco) VALUES (:NomeProduto, :Preco)';
+        DataModulePrincipal.FDQueryProduto.ParamByName('NomeProduto').AsString := EdNomeProduto.Text;
+        DataModulePrincipal.FDQueryProduto.ParamByName('Preco').AsFloat := StrToFloat(EdPreco.Text);
+      end
+      else if dbType = 'SQL Server' then
+      begin
+        // Para SQL Server, usa ADOQuery
+        DataModulePrincipal.ADOQueryProduto.SQL.Text := 'INSERT INTO Produto (NomeProduto, Preco) VALUES (:NomeProduto, :Preco)';
+        DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('NomeProduto').Value := EdNomeProduto.Text;
+        DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('Preco').Value := StrToFloat(EdPreco.Text);
+      end;
     end
     else
     begin
       // Editando produto existente
-      DataModulePrincipal.FDQueryProduto.SQL.Text :=
-        'UPDATE Produto SET NomeProduto = :NomeProduto, Preco = :Preco WHERE IDProduto = :IDProduto';
-      DataModulePrincipal.FDQueryProduto.ParamByName('NomeProduto').AsString := EdNomeProduto.Text;
-      DataModulePrincipal.FDQueryProduto.ParamByName('Preco').AsFloat := StrToFloat(EdPreco.Text);
-      DataModulePrincipal.FDQueryProduto.ParamByName('IDProduto').AsInteger := FProdutoID;
+      if dbType = 'SQLite' then
+      begin
+        // Para SQLite, usa FDQuery
+        DataModulePrincipal.FDQueryProduto.SQL.Text := 'UPDATE Produto SET NomeProduto = :NomeProduto, Preco = :Preco WHERE IDProduto = :IDProduto';
+        DataModulePrincipal.FDQueryProduto.ParamByName('NomeProduto').AsString := EdNomeProduto.Text;
+        DataModulePrincipal.FDQueryProduto.ParamByName('Preco').AsFloat := StrToFloat(EdPreco.Text);
+        DataModulePrincipal.FDQueryProduto.ParamByName('IDProduto').AsInteger := FProdutoID;
+      end
+      else if dbType = 'SQL Server' then
+      begin
+        // Para SQL Server, usa ADOQuery
+        DataModulePrincipal.ADOQueryProduto.SQL.Text := 'UPDATE Produto SET NomeProduto = :NomeProduto, Preco = :Preco WHERE IDProduto = :IDProduto';
+        DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('NomeProduto').Value := EdNomeProduto.Text;
+        DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('Preco').Value := StrToFloat(EdPreco.Text);
+        DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('IDProduto').Value := FProdutoID;
+      end;
     end;
 
-    DataModulePrincipal.FDQueryProduto.ExecSQL;
+    // Executa a consulta (tanto para SQLite quanto para SQL Server)
+    if dbType = 'SQLite' then
+      DataModulePrincipal.FDQueryProduto.ExecSQL
+    else if dbType = 'SQL Server' then
+      DataModulePrincipal.ADOQueryProduto.ExecSQL;
 
+    // Limpar campos e exibir mensagem de sucesso
     LimparCampos;
     FProdutoID := 0;
-    LBSucesso.font.color :=  clGreen;
+    LBSucesso.font.color := clGreen;
     LBSucesso.Caption := 'Produto salvo com sucesso';
   except
     on E: Exception do
     begin
       ShowMessage('Erro ao salvar o produto: ' + E.Message);
       LBSucesso.Caption := 'Erro ao salvar produto';
-      LBSucesso.font.color :=  clRed;
+      LBSucesso.font.color := clRed;
     end;
   end;
 end;
+
 
 procedure TNMCadastroProduto.BtEditarClick(Sender: TObject);
 var
@@ -143,30 +172,73 @@ end;
 
 procedure TNMCadastroProduto.PreencherCamposParaEdicao(ProdutoID: Integer);
 begin
-  FProdutoID := ProdutoID;  // Armazena o ID do cliente em uma variável global
-  // Consulta os dados do cliente no banco de dados
-  DataModulePrincipal.FDQueryProduto.SQL.Text := 'SELECT * FROM Produto WHERE IDProduto = :IDProduto';
-  DataModulePrincipal.FDQueryProduto.Params.ParamByName('IDProduto').AsInteger := FProdutoID;
-  DataModulePrincipal.FDQueryProduto.Open;
-  // Preenche os campos com os dados do cliente
-  EdNomeProduto.Text := DataModulePrincipal.FDQueryProduto.FieldByName('NomeProduto').AsString;
-  EdPreco.Text := DataModulePrincipal.FDQueryProduto.FieldByName('Preco').AsString;
+  FProdutoID := ProdutoID;  // Armazena o ID do produto em uma variável global
+
+  // Verifica o tipo de banco de dados
+  if dbType = 'SQLite' then
+  begin
+    // Para SQLite, mantém o código original com FDQuery
+    DataModulePrincipal.FDQueryProduto.SQL.Text := 'SELECT * FROM Produto WHERE IDProduto = :IDProduto';
+    DataModulePrincipal.FDQueryProduto.Params.ParamByName('IDProduto').AsInteger := FProdutoID;
+    DataModulePrincipal.FDQueryProduto.Open;
+
+    // Preenche os campos com os dados do produto
+    EdNomeProduto.Text := DataModulePrincipal.FDQueryProduto.FieldByName('NomeProduto').AsString;
+    EdPreco.Text := DataModulePrincipal.FDQueryProduto.FieldByName('Preco').AsString;
+
+    DataModulePrincipal.FDQueryProduto.Close;
+  end
+  else if dbType = 'SQL Server' then
+  begin
+    // Para SQL Server, usa o ADOQuery e o método Parameters.ParamByName
+    DataModulePrincipal.ADOQueryProduto.SQL.Text := 'SELECT * FROM Produto WHERE IDProduto = :IDProduto';
+    DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('IDProduto').Value := FProdutoID;
+    DataModulePrincipal.ADOQueryProduto.Open;
+
+    // Preenche os campos com os dados do produto
+    EdNomeProduto.Text := DataModulePrincipal.ADOQueryProduto.FieldByName('NomeProduto').AsString;
+    EdPreco.Text := DataModulePrincipal.ADOQueryProduto.FieldByName('Preco').AsString;
+
+    DataModulePrincipal.ADOQueryProduto.Close;
+  end;
 end;
+
 
 procedure TNMCadastroProduto.CarregarProduto(ID: Integer);
 begin
-  DataModulePrincipal.FDQueryProduto.SQL.Text := 'SELECT NomeProduto, Preco FROM Produto WHERE IDProduto = :IDProduto';
-  DataModulePrincipal.FDQueryProduto.ParamByName('IDProduto').AsInteger := ID;
-  DataModulePrincipal.FDQueryProduto.Open;
-
-  if not DataModulePrincipal.FDQueryProduto.IsEmpty then
+  // Verifica o tipo de banco de dados
+  if dbType = 'SQLite' then
   begin
-    EdNomeProduto.Text := DataModulePrincipal.FDQueryProduto.FieldByName('NomeProduto').AsString;
-    EdPreco.Text := DataModulePrincipal.FDQueryProduto.FieldByName('Preco').AsString;
-  end;
+    // Para SQLite, mantém o código original com FDQuery
+    DataModulePrincipal.FDQueryProduto.SQL.Text := 'SELECT NomeProduto, Preco FROM Produto WHERE IDProduto = :IDProduto';
+    DataModulePrincipal.FDQueryProduto.ParamByName('IDProduto').AsInteger := ID;
+    DataModulePrincipal.FDQueryProduto.Open;
 
-  DataModulePrincipal.FDQueryProduto.Close;
+    if not DataModulePrincipal.FDQueryProduto.IsEmpty then
+    begin
+      EdNomeProduto.Text := DataModulePrincipal.FDQueryProduto.FieldByName('NomeProduto').AsString;
+      EdPreco.Text := DataModulePrincipal.FDQueryProduto.FieldByName('Preco').AsString;
+    end;
+
+    DataModulePrincipal.FDQueryProduto.Close;
+  end
+  else if dbType = 'SQL Server' then
+  begin
+    // Para SQL Server, usa o ADOQuery
+    DataModulePrincipal.ADOQueryProduto.SQL.Text := 'SELECT NomeProduto, Preco FROM Produto WHERE IDProduto = :IDProduto';
+    DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('IDProduto').Value := ID;
+    DataModulePrincipal.ADOQueryProduto.Open;
+
+    if not DataModulePrincipal.ADOQueryProduto.IsEmpty then
+    begin
+      EdNomeProduto.Text := DataModulePrincipal.ADOQueryProduto.FieldByName('NomeProduto').AsString;
+      EdPreco.Text := DataModulePrincipal.ADOQueryProduto.FieldByName('Preco').AsString;
+    end;
+
+    DataModulePrincipal.ADOQueryProduto.Close;
+  end;
 end;
+
 
 procedure TNMCadastroProduto.EdNomeProdutoKeyPress(Sender: TObject;
   var Key: Char);

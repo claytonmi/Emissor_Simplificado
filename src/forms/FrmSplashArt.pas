@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, MNPrincipal,
-  Vcl.Imaging.pngimage;
+  Vcl.Imaging.pngimage, NMAtivador, Registry, FrmConexaoComMultiBanco, IOUtils;
 
 type
   TFrmSplash = class(TForm)
@@ -64,6 +64,7 @@ begin
     MessageBox(0, 'O programa já está em execução.', 'Aviso', MB_OK or MB_ICONWARNING);
     ExitProcess(0);
   end;
+
   labEdit('Inicializando...');
   ProgressBar1.Position := 0;
   Timer1.Enabled := True;
@@ -77,21 +78,79 @@ begin
 end;
 
 procedure TFrmSplash.IniciarSistema;
+var
+  Reg: TRegistry;
+  ChaveSalva: string;
+  IniFilePath: string;
 begin
-  labEdit('Verificando Banco de Dados...');
+  labEdit('Verificando ativação...');
+  processCout(10);
+  Application.ProcessMessages;
+  // Verificar ativação no Registro do Windows
+  Reg := TRegistry.Create;
+  try
+    Reg.RootKey := HKEY_CURRENT_USER;
+    if Reg.OpenKeyReadOnly('\Software\MeuSistema') then
+      ChaveSalva := Reg.ReadString('ChaveAtivacao')
+    else
+      ChaveSalva := '';
+    if ChaveSalva = '' then
+    begin
+      ShowMessage('O sistema não está ativado. Por favor, insira a chave de ativação.');
+      NMAtivadorChave := TNMAtivadorChave.Create(nil);
+      try
+        NMAtivadorChave.ShowModal;
+      finally
+        NMAtivadorChave.Free;
+      end;
+      if not Reg.OpenKeyReadOnly('\Software\MeuSistema') or (Reg.ReadString('ChaveAtivacao') = '') then
+      begin
+        ShowMessage('Ativação não realizada. O sistema será fechado.');
+        Application.Terminate;
+        Exit;
+      end;
+    end;
+  finally
+    Reg.Free;
+  end;
+  // Caminho do arquivo .ini
+  IniFilePath := TPath.Combine(TPath.GetHomePath, 'config.ini');
+  labEdit('Verificando Configuração do Banco de Dados...');
   processCout(20);
+  Application.ProcessMessages;
+  // Verifica se o arquivo de configuração existe
+  if not FileExists(IniFilePath) then
+  begin
+    ShowMessage('Nenhuma configuração de banco encontrada. Configure antes de continuar.');
+    FrmConexaoBanco := TFrmConexaoBanco.Create(nil);
+    try
+      FrmConexaoBanco.ShowModal;
+    finally
+      FrmConexaoBanco.Free;
+    end;
+    // Após fechar o formulário, verificar se o .ini foi criado
+    if not FileExists(IniFilePath) then
+    begin
+      ShowMessage('Configuração não realizada. O sistema será fechado.');
+      Application.Terminate;
+      Exit;
+    end;
+  end;
+  // Prossegue com a inicialização do banco
+  labEdit('Carregando Banco de Dados...');
+  processCout(50);
   Application.ProcessMessages;
   try
     DataModulePrincipal := TDataModulePrincipal.Create(nil);
     Application.ProcessMessages;
     labEdit('Carregamento concluído!');
-    FrmSplashArt.FrmSplash.processCout(100);
+    processCout(100);
     Application.ProcessMessages;
     Sleep(500);
     // Esconde o splash
     FrmSplash.Hide;
     Application.MainFormOnTaskbar := True;
-    // Cria o formulário principal e exibe
+    // Cria e exibe o formulário principal
     Application.CreateForm(TEmissorPrincipal, EmissorPrincipal);
     EmissorPrincipal.Show;
   except
