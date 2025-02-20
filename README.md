@@ -1,4 +1,4 @@
-# 🚀 Emissor Simplificado de pedido
+# 🚀 Emissor Simplificado de Orçamento
 O Emissor Simplificado de Orçamentos foi desenvolvido para facilitar a geração de orçamentos rápidos e organizados, sem emissão de nota fiscal.
 
 Inicialmente, o sistema foi criado para gerar orçamentos de impressões em folhas A4, mas sua flexibilidade permite adaptá-lo para diversos segmentos, como serviços de manutenção, reparos, entre outros.
@@ -16,6 +16,9 @@ Projetado para ser leve e eficiente, sendo ideal para até 50 clientes e 50 prod
 - ✅ Cadastro de produtos
 - 📊 Geração de relatórios
 - 📝 Emissão simplificada de orçamentos
+- 🛠️ Painel de configuração
+- 💱 Escolha de moeda
+- 🌍 Tradução do relatório (Português/Inglês)
 - ⚠️ Não emite nota fiscal
 
 ## 💻 Requisitos
