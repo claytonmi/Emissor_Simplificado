@@ -7,9 +7,9 @@ Inicialmente, o sistema foi criado para gerar orçamentos de impressões em folh
 ![Windows](https://img.shields.io/badge/Compatível-Windows-blue?style=for-the-badge&logo=windows)
 
 ## 📝 Informações
-Este é um sistema de vendas desenvolvido em Delphi 11 utilizando SQLite.
+Este é um sistema de vendas desenvolvido em Delphi 11, agora com suporte a SQLite e SQL Server como banco de dados.
 
-Projetado para ser leve e eficiente, sendo ideal para até 50 clientes e 50 produtos.
+Projetado para ser leve e eficiente, sendo ideal para pequenas empresas e autônomos que precisam gerar orçamentos de forma simples e rápida.
 
 ## 📌 Funcionalidades
 - ✅ Cadastro de clientes
@@ -19,14 +19,26 @@ Projetado para ser leve e eficiente, sendo ideal para até 50 clientes e 50 prod
 - 🛠️ Painel de configuração
 - 💱 Escolha de moeda
 - 🌍 Tradução do relatório (Português/Inglês)
+- ⚙️ Suporte a SQLite e SQL Server
 - ⚠️ Não emite nota fiscal
 
 ## 💻 Requisitos
 - Sistema Operacional: Windows 10 ou superior
 - Armazenamento: Apenas alguns MB
-- Banco de Dados: Nenhum banco externo necessário (uso de SQLite)
+- **Banco de Dados**:
+  - SQLite (Banco de dados local, sem necessidade de instalação adicional)
+  - SQL Server (Requer configuração e credenciais de acesso)
 
-  ## 📦 Como Instalar
+## ⚙️ Configuração do Banco de Dados
+
+Ao iniciar o sistema pela primeira vez, você poderá escolher entre **SQLite** ou **SQL Server**:
+- **SQLite**: Basta selecionar um diretório para armazenar o banco de dados.
+- **SQL Server**: Informe as credenciais de acesso ao banco.
+  
+Essas configurações serão armazenadas em um arquivo `.ini` dentro da pasta Roaming do usuário, permitindo fácil alteração futura.
+
+
+## 📦 Como Instalar
 1. Baixe o arquivo [`Emissor_Simplificado.exe`](https://github.com/claytonmi/Emissor_Simplificado/raw/main/Instalador/EmissorSimplificado.exe)
 2. Execute no Windows
 3. Pronto! 🚀
