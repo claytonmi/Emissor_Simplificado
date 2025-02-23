@@ -330,7 +330,6 @@ begin
         ParamByName('SubNomeCliente').Value := NomeCliente;
       end;
 
-
       try
         DataModulePrincipal.ADOQueryRelatorioDePedidos.Open;
       except

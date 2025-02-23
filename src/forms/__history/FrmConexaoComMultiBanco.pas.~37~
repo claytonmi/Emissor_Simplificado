@@ -1,0 +1,159 @@
+unit FrmConexaoComMultiBanco;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Buttons, ShellAPI, IniFiles,Vcl.FileCtrl, IOUtils;
+
+type
+  TFrmConexaoBanco = class(TForm)
+    RadioGroupServidor: TRadioGroup;
+    Panel1: TPanel;
+    Panel2: TPanel;
+    EditCaminhoBancoSqlite: TEdit;
+    BitBtnPesquisarCaminho: TBitBtn;
+    ButtonSalvarConfiguração: TButton;
+    EditUser_Name: TEdit;
+    EditPassword: TEdit;
+    EditBanco: TEdit;
+    EditServer: TEdit;
+    Labelip: TLabel;
+    LabelBanco: TLabel;
+    LabelUser: TLabel;
+    LabelSenha: TLabel;
+    BtnVerSenha: TBitBtn;
+    procedure FormCreate(Sender: TObject);
+    procedure RadioGroupServidorClick(Sender: TObject);
+    procedure BitBtnPesquisarCaminhoClick(Sender: TObject);
+    procedure ButtonSalvarConfiguraçãoClick(Sender: TObject);
+    procedure BtnVerSenhaMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure BtnVerSenhaMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  FrmConexaoBanco: TFrmConexaoBanco;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFrmConexaoBanco.BitBtnPesquisarCaminhoClick(Sender: TObject);
+var
+  CaminhoSelecionado: string;
+begin
+  // Usando o diálogo para selecionar a pasta
+  if SelectDirectory('Selecione o diretório para o banco SQLite', '', CaminhoSelecionado) then
+  begin
+    // Preencher o campo com o caminho selecionado
+    EditCaminhoBancoSqlite.Text := CaminhoSelecionado;
+  end;
+end;
+
+procedure TFrmConexaoBanco.BtnVerSenhaMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  EditPassword.PasswordChar := #0;
+end;
+
+procedure TFrmConexaoBanco.BtnVerSenhaMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  EditPassword.PasswordChar := '*';
+end;
+
+procedure TFrmConexaoBanco.ButtonSalvarConfiguraçãoClick(Sender: TObject);
+var
+  IniFile: TIniFile;
+  ConfigPath: string;
+begin
+ // Define um caminho seguro para salvar o INI (pasta de documentos do usuário)
+  ConfigPath := TPath.Combine(TPath.GetHomePath, 'config.ini');
+
+  // Caminho do arquivo INI
+  IniFile := TIniFile.Create(ConfigPath);
+  try
+    // Verificar o tipo de banco selecionado no RadioGroup
+    if RadioGroupServidor.ItemIndex = 0 then
+    begin
+      // Se for SQLite, salvar apenas o caminho
+      IniFile.WriteString('Database', 'Tipo', 'SQLite');
+      IniFile.WriteString('Database', 'CaminhoSQLite', EditCaminhoBancoSqlite.Text);
+    end
+    else if RadioGroupServidor.ItemIndex = 1 then
+    begin
+      // Se for SQL Server, salvar todos os dados necessários, menos o caminho do SQLite
+      IniFile.WriteString('Database', 'Tipo', 'SQL Server');
+      IniFile.WriteString('Database', 'NomeBanco', EditBanco.Text); // Nome do Banco
+      IniFile.WriteString('Database', 'ServidorSQLServer', EditServer.Text); // IP ou nome do servidor
+      IniFile.WriteString('Database', 'UsuarioSQLServer', EditUser_Name.Text); // Nome de usuário
+      IniFile.WriteString('Database', 'SenhaSQLServer', EditPassword.Text);
+    end
+    else
+    begin
+      // Caso nenhum banco seja selecionado, exibir mensagem de erro
+      ShowMessage('Selecione um tipo de banco válido!');
+      Exit;
+    end;
+    // Exibir mensagem de sucesso
+    ShowMessage('Configuração salva com sucesso em: ' + ConfigPath);
+  finally
+    IniFile.Free;
+  end;
+end;
+
+procedure TFrmConexaoBanco.FormCreate(Sender: TObject);
+begin
+  RadioGroupServidor.ItemIndex := 0;  // Por padrão, seleciona SQLite
+  EditCaminhoBancoSqlite.Visible := True;
+  BitBtnPesquisarCaminho.Visible := True;
+  EditServer.Visible := False;
+  EditBanco.Visible := False;
+  EditUser_Name.Visible := False;
+  EditPassword.Visible := False;
+  BtnVerSenha.Visible := False;
+  Labelip.Caption := 'Caminho no Sistema';
+  LabelBanco.Visible := False;
+  LabelUser.Visible := False;
+  LabelSenha.Visible := False;
+end;
+
+procedure TFrmConexaoBanco.RadioGroupServidorClick(Sender: TObject);
+begin
+  if RadioGroupServidor.ItemIndex = 0 then  // SQLite
+  begin
+    EditCaminhoBancoSqlite.Visible := True;
+    BitBtnPesquisarCaminho.Visible := True;
+    EditServer.Visible := False;
+    EditBanco.Visible := False;
+    EditUser_Name.Visible := False;
+    EditPassword.Visible := False;
+    Labelip.Caption := 'Caminho no Sistema';
+    LabelBanco.Visible := False;
+    LabelUser.Visible := False;
+    LabelSenha.Visible := False;
+    BtnVerSenha.Visible := False;
+  end
+  else if RadioGroupServidor.ItemIndex = 1 then  // SQL Server
+  begin
+    EditCaminhoBancoSqlite.Visible := False;
+    BitBtnPesquisarCaminho.Visible := False;
+    EditServer.Visible := True;
+    EditBanco.Visible := True;
+    EditUser_Name.Visible := True;
+    EditPassword.Visible := True;
+      Labelip.Caption := 'Servidor/Host';
+    LabelBanco.Visible := True;
+    LabelUser.Visible := True;
+    LabelSenha.Visible := True;
+    BtnVerSenha.Visible := True;
+  end;
+end;
+
+end.

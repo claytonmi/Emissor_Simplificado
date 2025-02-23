@@ -291,9 +291,9 @@ object EmissorPrincipal: TEmissorPrincipal
     ExplicitTop = 651
     ExplicitWidth = 712
     object RodaPeVersion: TPanel
-      Left = 1
+      Left = 161
       Top = 1
-      Width = 185
+      Width = 161
       Height = 19
       Align = alLeft
       BorderStyle = bsSingle
@@ -320,6 +320,21 @@ object EmissorPrincipal: TEmissorPrincipal
       ParentFont = False
       TabOrder = 1
       ExplicitLeft = 522
+    end
+    object RodaPeBanco: TPanel
+      Left = 1
+      Top = 1
+      Width = 160
+      Height = 19
+      Align = alLeft
+      BorderStyle = bsSingle
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Segoe UI'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 2
     end
   end
   object Panel1: TPanel
@@ -781,15 +796,17 @@ object EmissorPrincipal: TEmissorPrincipal
         Caption = 'Backup do banco'
         OnClick = Backupdobanco1Click
       end
-      object N2: TMenuItem
-        Caption = '-'
+      object MigradorSqliteParaSqlServer: TMenuItem
+        Caption = 'Migrar para SQL Server'
+        Visible = False
+        OnClick = MigradorSqliteParaSqlServerClick
       end
       object ComousaroSistema1: TMenuItem
-        Caption = 'Usando Or'#231'amento'
-        OnClick = ComousaroSistema1Click
+        Caption = '-'
       end
       object N3: TMenuItem
-        Caption = '-'
+        Caption = 'Usando Or'#231'amento'
+        OnClick = ComousaroSistema1Click
       end
       object Informaes1: TMenuItem
         Caption = 'Informa'#231#245'es'
@@ -800,5 +817,10 @@ object EmissorPrincipal: TEmissorPrincipal
   object BalloonHintComoUsar: TBalloonHint
     Left = 656
     Top = 8
+  end
+  object TimerHora: TTimer
+    OnTimer = TimerHoraTimer
+    Left = 672
+    Top = 80
   end
 end

@@ -16,7 +16,7 @@ uses
   FireDAC.Comp.Client, FireDAC.Stan.ExprFuncs, FireDAC.Phys.SQLiteWrapper.Stat,
   FireDAC.Phys.SQLiteDef, FireDAC.Phys.SQLite, FireDAC.Stan.Param, FireDAC.DatS,
   FireDAC.DApt.Intf, FireDAC.DApt, FireDAC.Comp.DataSet, Vcl.DBCtrls,
-  Vcl.Buttons, Math, Vcl.ComCtrls,  NMConfiguracao;
+  Vcl.Buttons, Math, Vcl.ComCtrls,  NMConfiguracao, FrmMigrarSQLiteParaSQLServer;
 
 type
   TEmissorPrincipal = class(TForm)
@@ -77,10 +77,12 @@ type
     Configurao2: TMenuItem;
     Backupdobanco1: TMenuItem;
     BalloonHintComoUsar: TBalloonHint;
-    N2: TMenuItem;
+    MigradorSqliteParaSqlServer: TMenuItem;
     ComousaroSistema1: TMenuItem;
     N3: TMenuItem;
     Informaes1: TMenuItem;
+    RodaPeBanco: TPanel;
+    TimerHora: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure MNCadastrodeClienteClick(Sender: TObject);
     procedure MNCadastroProdutoClick(Sender: TObject);
@@ -116,6 +118,8 @@ type
     procedure StringGridListSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure Informaes1Click(Sender: TObject);
+    procedure TimerHoraTimer(Sender: TObject);
+    procedure MigradorSqliteParaSqlServerClick(Sender: TObject);
 
   private
     { Private declarations }
@@ -940,6 +944,11 @@ begin
   end;
 end;
 
+procedure TEmissorPrincipal.TimerHoraTimer(Sender: TObject);
+begin
+ RodaPeHora.Caption := 'Hora: ' + FormatDateTime('hh:nn:ss', Now);
+end;
+
 procedure TEmissorPrincipal.BtInserirItemClick(Sender: TObject);
 var
   IDProduto, IDVenda, Qtd: Integer;
@@ -1615,9 +1624,15 @@ procedure TEmissorPrincipal.FormCreate(Sender: TObject);
 begin
   if not Assigned(DataModulePrincipal) then
     DataModulePrincipal := TDataModulePrincipal.Create(Self);
-
+   if dbType = 'SQLite' then
+   begin
+      MigradorSqliteParaSqlServer.Visible := true;
+   end else
+   begin
+      MigradorSqliteParaSqlServer.Visible := false;
+   end;
   RodaPeVersion.Caption := 'Versão:' + DataModulePrincipal.VersaoAtual;
-  RodaPeHora.Caption := 'Hora: ' + TimeToStr(Now);
+  RodaPeBanco.Caption := 'Banco: ' + dbType;
   AtualizarConfiguracoes;
   CarregarUltimoPedido;
 end;
@@ -2204,6 +2219,16 @@ begin
   end;
 end;
 
+procedure TEmissorPrincipal.MigradorSqliteParaSqlServerClick(Sender: TObject);
+begin
+    NMMigrarSQLiteParaSQLServer := TNMMigrarSQLiteParaSQLServer.Create(nil);
+    try
+      NMMigrarSQLiteParaSQLServer.ShowModal; // Exibe o formulário modalmente
+    finally
+      NMMigrarSQLiteParaSQLServer.Free; // Libera a memória após o fechamento
+    end;
+end;
+
 procedure TEmissorPrincipal.MNCadastrodeClienteClick(Sender: TObject);
 begin
   FCadastroCliente := TFCadastroCliente.Create(Self);
@@ -2434,6 +2459,34 @@ begin
           StringGridList.Cells[3, i] := FieldByName('Quantidade').AsString;
           StringGridList.Cells[4, i] := FormatFloat('0.00', FieldByName('Desconto').AsFloat);
           StringGridList.Cells[5, i] := FormatFloat('0.00', FieldByName('Total').AsFloat);
+          if not FieldByName('DataInsercao').IsNull then
+          begin
+            try
+              // Captura o valor da data como string
+              var DataStrin := FieldByName('DataInsercao').AsString;
+
+              // Tenta extrair os componentes da data manualmente (ano, mês e dia)
+              var Ano := StrToInt(Copy(DataStrin, 1, 4));   // Ex: 2025
+              var Mes := StrToInt(Copy(DataStrin, 6, 2));   // Ex: 02
+              var Dia := StrToInt(Copy(DataStrin, 9, 2));   // Ex: 18
+
+              // Converte a data para TDateTime
+              var Data := EncodeDate(Ano, Mes, Dia);
+
+              // Formata a data para o formato desejado
+              StringGridList.Cells[6, i] := FormatDateTime('dd/mm/yyyy', Data);
+            except
+              on E: EConvertError do
+              begin
+                // Caso o erro de conversão aconteça, mostra o valor original
+                StringGridList.Cells[6, i] := 'Erro ao formatar data: ';
+              end;
+            end;
+          end
+          else
+          begin
+            StringGridList.Cells[6, i] := 'Data não disponível';
+          end;
 
           // Soma os valores de desconto e total
           TotalDesconto := TotalDesconto + FieldByName('Desconto').AsFloat;

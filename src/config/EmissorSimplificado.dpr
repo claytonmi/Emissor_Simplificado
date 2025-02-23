@@ -19,7 +19,8 @@ uses
   FrmSplashArt in '..\forms\FrmSplashArt.pas' {FrmSplash},
   NMConfiguracao in '..\forms\NMConfiguracao.pas' {NMConfig},
   NMAtivador in '..\forms\NMAtivador.pas' {NMAtivadorChave},
-  FrmConexaoComMultiBanco in '..\forms\FrmConexaoComMultiBanco.pas' {FrmConexaoBanco};
+  FrmConexaoComMultiBanco in '..\forms\FrmConexaoComMultiBanco.pas' {FrmConexaoBanco},
+  FrmMigrarSQLiteParaSQLServer in '..\forms\FrmMigrarSQLiteParaSQLServer.pas' {NMMigrarSQLiteParaSQLServer};
 
 {$R *.res}
 
@@ -27,7 +28,7 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TFrmSplash, FrmSplash);
-  Application.CreateForm(TFrmConexaoBanco, FrmConexaoBanco);
+  Application.CreateForm(TNMMigrarSQLiteParaSQLServer, NMMigrarSQLiteParaSQLServer);
   FrmSplash.Show;
   Application.Run;  // Exibe o Splash e executa o loop de eventos
 end.

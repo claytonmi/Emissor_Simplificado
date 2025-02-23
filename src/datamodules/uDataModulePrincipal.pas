@@ -42,10 +42,10 @@ type
     ADOQueryRelatorioDePedidos: TADOQuery;
     ADOQueryConfiguracao: TADOQuery;
     procedure DataModuleCreate(Sender: TObject);
-    procedure CriarTabelas;
+
 
   private
-    function TabelaExiste(const TabelaNome: string): Boolean;
+
     function RegistraConfiguracaoExistente(NomeConfiguracao: string): Boolean;
     procedure ConfigurarConexao(const DatabasePath: string);
     procedure CriarBancoDeDados(const DatabasePath: string; ComDadosTeste: Boolean);
@@ -54,8 +54,12 @@ type
     procedure ConfigurarConexaoSQLServer(const Servidor, Usuario, Senha, Banco: string);
 
   public
+    dbTypeMigracao: string;
+    function TabelaExiste(const TabelaNome: string): Boolean;
+    procedure CriarTabelas;
     function  VersaoAtual: string;
     function VerificarExibirDataInsercao: Boolean;
+
   end;
 
 var
@@ -89,7 +93,7 @@ begin
   FrmSplashArt.FrmSplash.labEdit('Conectando ao banco de dados...');
   FrmSplashArt.FrmSplash.processCout(40);
   Sleep(500);
-
+  dbTypeMigracao:='';
   IniFilePath := TPath.Combine(TPath.GetHomePath, 'config.ini');
   Ini := TIniFile.Create(IniFilePath);
 
@@ -458,7 +462,7 @@ begin
   FrmSplashArt.FrmSplash.processCout(55);
   Sleep(500);
 
-  if dbType = 'SQLite' then
+  if (dbType = 'SQLite') and (dbTypeMigracao = '') then
   begin
   // Criação da tabela Pedido
  if not TabelaExiste('Pedido') then
@@ -554,7 +558,7 @@ if not TabelaExiste('ItemPedido') then
     FDConnection.ExecSQL('INSERT INTO Sistema (VersaoSistema) VALUES (''0.0'');');
   end;
   end
-  else if dbType = 'SQL Server' then
+  else if (dbType = 'SQL Server') or (dbTypeMigracao = 'SQL Server') then
   begin
        // Criação da tabela Pedido
        if not TabelaExiste('Pedido') then
@@ -841,7 +845,7 @@ begin
   Result := False;
 
   // Usar TADOQuery para SQL Server e TFDQuery para SQLite
-  if dbType = 'SQL Server' then
+  if (dbType = 'SQL Server') or (dbTypeMigracao = 'SQL Server') then
   begin
     QueryTemp := TADOQuery.Create(nil);
     try
@@ -856,7 +860,7 @@ begin
       QueryTemp.Free;
     end;
   end
-  else if dbType = 'SQLite' then
+  else if (dbType = 'SQLite') and (dbTypeMigracao = '') then
   begin
     QueryTemp := TFDQuery.Create(nil);
     try

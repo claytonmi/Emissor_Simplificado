@@ -4,7 +4,7 @@ object NMRelatorioReport: TNMRelatorioReport
   AutoSize = True
   Caption = 'NMRelatorioReport'
   ClientHeight = 1062
-  ClientWidth = 794
+  ClientWidth = 798
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

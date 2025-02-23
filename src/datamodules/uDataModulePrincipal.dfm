@@ -4,7 +4,7 @@ object DataModulePrincipal: TDataModulePrincipal
   Width = 795
   object FDConnection: TFDConnection
     Params.Strings = (
-      'Database=C:\Users\clayt\OneDrive\Documentos\MeuSistema\Vendas.db'
+      'Database=C:\Users\clayt\OneDrive\Documentos\Nova pasta\Vendas.db'
       'DriverID=SQLite')
     FetchOptions.AssignedValues = [evAutoClose]
     ResourceOptions.AssignedValues = [rvCmdExecTimeout]

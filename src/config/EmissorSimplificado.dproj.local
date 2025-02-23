@@ -6,14 +6,14 @@
     <Transaction>2025/01/19 10:25:46.000.136,E:\Projetos Delphi\EmissorSimplificado\MNPrincipal.dfm=E:\Projetos Delphi\Unit1.dfm</Transaction>
     <Transaction>2025/01/19 10:25:57.000.705,E:\Projetos Delphi\EmissorSimplificado\ProjetoPrincipal.dproj=E:\Projetos Delphi\Project1.dproj</Transaction>
     <Transaction>2025/01/19 10:26:18.000.909,=E:\Projetos Delphi\EmissorSimplificado\Unit1.pas</Transaction>
-    <Transaction>2025/01/19 10:29:42.000.181,E:\Projetos Delphi\EmissorSimplificado\MNRelatorioSemanal.dfm=E:\Projetos Delphi\EmissorSimplificado\Unit1.dfm</Transaction>
     <Transaction>2025/01/19 10:29:42.000.181,E:\Projetos Delphi\EmissorSimplificado\MNRelatorioSemanal.pas=E:\Projetos Delphi\EmissorSimplificado\Unit1.pas</Transaction>
+    <Transaction>2025/01/19 10:29:42.000.181,E:\Projetos Delphi\EmissorSimplificado\MNRelatorioSemanal.dfm=E:\Projetos Delphi\EmissorSimplificado\Unit1.dfm</Transaction>
     <Transaction>2025/01/19 18:08:04.000.074,=E:\Projetos Delphi\EmissorSimplificado\Unit1.pas</Transaction>
     <Transaction>2025/01/19 18:08:52.000.577,E:\Projetos Delphi\EmissorSimplificado\MNCadastroCliente.pas=E:\Projetos Delphi\EmissorSimplificado\Unit1.pas</Transaction>
     <Transaction>2025/01/19 18:08:52.000.577,E:\Projetos Delphi\EmissorSimplificado\MNCadastroCliente.dfm=E:\Projetos Delphi\EmissorSimplificado\Unit1.dfm</Transaction>
     <Transaction>2025/01/20 13:12:43.000.579,=E:\Projetos Delphi\EmissorSimplificado\Unit1.pas</Transaction>
-    <Transaction>2025/01/20 13:13:22.000.440,E:\Projetos Delphi\EmissorSimplificado\Unit1.dfm=E:\Projetos Delphi\EmissorSimplificado\uDataModulePrincipal.dfm</Transaction>
     <Transaction>2025/01/20 13:13:22.000.440,E:\Projetos Delphi\EmissorSimplificado\Unit1.pas=E:\Projetos Delphi\EmissorSimplificado\uDataModulePrincipal.pas</Transaction>
+    <Transaction>2025/01/20 13:13:22.000.440,E:\Projetos Delphi\EmissorSimplificado\Unit1.dfm=E:\Projetos Delphi\EmissorSimplificado\uDataModulePrincipal.dfm</Transaction>
     <Transaction>2025/01/20 17:05:56.000.323,=E:\Projetos Delphi\EmissorSimplificado\Unit1.pas</Transaction>
     <Transaction>2025/01/20 17:06:50.000.848,E:\Projetos Delphi\EmissorSimplificado\NMPesquisaCliente.dfm=E:\Projetos Delphi\EmissorSimplificado\Unit1.dfm</Transaction>
     <Transaction>2025/01/20 17:06:50.000.848,E:\Projetos Delphi\EmissorSimplificado\NMPesquisaCliente.pas=E:\Projetos Delphi\EmissorSimplificado\Unit1.pas</Transaction>
@@ -41,12 +41,12 @@
     <Transaction>2025/01/30 15:34:04.000.764,E:\Projetos Delphi\EmissorSimplificado\src\forms\MNCadastroCliente.pas=E:\Projetos Delphi\EmissorSimplificado\MNCadastroCliente.pas</Transaction>
     <Transaction>2025/01/30 15:34:15.000.525,E:\Projetos Delphi\EmissorSimplificado\src\datamodules\uDataModulePrincipal.dfm=E:\Projetos Delphi\EmissorSimplificado\uDataModulePrincipal.dfm</Transaction>
     <Transaction>2025/01/30 15:34:15.000.525,E:\Projetos Delphi\EmissorSimplificado\src\datamodules\uDataModulePrincipal.pas=E:\Projetos Delphi\EmissorSimplificado\uDataModulePrincipal.pas</Transaction>
-    <Transaction>2025/01/30 15:34:27.000.610,E:\Projetos Delphi\EmissorSimplificado\src\forms\NMPesquisaCliente.dfm=E:\Projetos Delphi\EmissorSimplificado\NMPesquisaCliente.dfm</Transaction>
     <Transaction>2025/01/30 15:34:27.000.610,E:\Projetos Delphi\EmissorSimplificado\src\forms\NMPesquisaCliente.pas=E:\Projetos Delphi\EmissorSimplificado\NMPesquisaCliente.pas</Transaction>
-    <Transaction>2025/01/30 15:34:38.000.909,E:\Projetos Delphi\EmissorSimplificado\src\reports\MNRelatorioSemanal.dfm=E:\Projetos Delphi\EmissorSimplificado\src\forms\MNRelatorioSemanal.dfm</Transaction>
+    <Transaction>2025/01/30 15:34:27.000.610,E:\Projetos Delphi\EmissorSimplificado\src\forms\NMPesquisaCliente.dfm=E:\Projetos Delphi\EmissorSimplificado\NMPesquisaCliente.dfm</Transaction>
     <Transaction>2025/01/30 15:34:38.000.909,E:\Projetos Delphi\EmissorSimplificado\src\reports\MNRelatorioSemanal.pas=E:\Projetos Delphi\EmissorSimplificado\src\forms\MNRelatorioSemanal.pas</Transaction>
-    <Transaction>2025/01/30 15:34:52.000.379,E:\Projetos Delphi\EmissorSimplificado\src\forms\NMInformacoes.dfm=E:\Projetos Delphi\EmissorSimplificado\NMInformacoes.dfm</Transaction>
+    <Transaction>2025/01/30 15:34:38.000.909,E:\Projetos Delphi\EmissorSimplificado\src\reports\MNRelatorioSemanal.dfm=E:\Projetos Delphi\EmissorSimplificado\src\forms\MNRelatorioSemanal.dfm</Transaction>
     <Transaction>2025/01/30 15:34:52.000.379,E:\Projetos Delphi\EmissorSimplificado\src\forms\NMInformacoes.pas=E:\Projetos Delphi\EmissorSimplificado\NMInformacoes.pas</Transaction>
+    <Transaction>2025/01/30 15:34:52.000.379,E:\Projetos Delphi\EmissorSimplificado\src\forms\NMInformacoes.dfm=E:\Projetos Delphi\EmissorSimplificado\NMInformacoes.dfm</Transaction>
     <Transaction>2025/01/30 15:35:04.000.978,E:\Projetos Delphi\EmissorSimplificado\src\forms\NMCadastroDeProduto.pas=E:\Projetos Delphi\EmissorSimplificado\NMCadastroDeProduto.pas</Transaction>
     <Transaction>2025/01/30 15:35:04.000.978,E:\Projetos Delphi\EmissorSimplificado\src\forms\NMCadastroDeProduto.dfm=E:\Projetos Delphi\EmissorSimplificado\NMCadastroDeProduto.dfm</Transaction>
     <Transaction>2025/01/30 15:35:14.000.331,E:\Projetos Delphi\EmissorSimplificado\src\forms\NMPesquisaDeProduto.dfm=E:\Projetos Delphi\EmissorSimplificado\NMPesquisaDeProduto.dfm</Transaction>
@@ -69,11 +69,14 @@
     <Transaction>2025/02/06 21:11:34.000.858,E:\Projetos Delphi\EmissorSimplificado\src\config\Unit1.pas=E:\Projetos Delphi\EmissorSimplificado\src\forms\NMConfiguracao.pas</Transaction>
     <Transaction>2025/02/06 21:11:34.000.858,E:\Projetos Delphi\EmissorSimplificado\src\config\Unit1.dfm=E:\Projetos Delphi\EmissorSimplificado\src\forms\NMConfiguracao.dfm</Transaction>
     <Transaction>2025/02/12 21:12:06.000.326,=E:\Projetos Delphi\EmissorSimplificado\src\config\Unit1.pas</Transaction>
-    <Transaction>2025/02/12 21:15:32.000.021,E:\Projetos Delphi\EmissorSimplificado\src\forms\NMAtivador.pas=E:\Projetos Delphi\EmissorSimplificado\src\config\Unit1.pas</Transaction>
     <Transaction>2025/02/12 21:15:32.000.021,E:\Projetos Delphi\EmissorSimplificado\src\forms\NMAtivador.dfm=E:\Projetos Delphi\EmissorSimplificado\src\config\Unit1.dfm</Transaction>
+    <Transaction>2025/02/12 21:15:32.000.021,E:\Projetos Delphi\EmissorSimplificado\src\forms\NMAtivador.pas=E:\Projetos Delphi\EmissorSimplificado\src\config\Unit1.pas</Transaction>
     <Transaction>2025/02/15 14:21:07.000.655,=E:\Projetos Delphi\EmissorSimplificado\src\config\Unit1.pas</Transaction>
     <Transaction>2025/02/15 14:23:18.000.744,E:\Projetos Delphi\EmissorSimplificado\src\forms\FrmConexaoComMultiBanco.pas=E:\Projetos Delphi\EmissorSimplificado\src\config\Unit1.pas</Transaction>
     <Transaction>2025/02/15 14:23:18.000.744,E:\Projetos Delphi\EmissorSimplificado\src\forms\FrmConexaoComMultiBanco.dfm=E:\Projetos Delphi\EmissorSimplificado\src\config\Unit1.dfm</Transaction>
+    <Transaction>2025/02/20 17:44:36.000.286,=E:\Projetos Delphi\EmissorSimplificado\src\config\Unit1.pas</Transaction>
+    <Transaction>2025/02/20 17:50:17.000.255,E:\Projetos Delphi\EmissorSimplificado\src\forms\FrmMigrarSQLiteParaSQLServer.dfm=E:\Projetos Delphi\EmissorSimplificado\src\config\Unit1.dfm</Transaction>
+    <Transaction>2025/02/20 17:50:17.000.255,E:\Projetos Delphi\EmissorSimplificado\src\forms\FrmMigrarSQLiteParaSQLServer.pas=E:\Projetos Delphi\EmissorSimplificado\src\config\Unit1.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\src"/>
@@ -107,10 +110,12 @@
     <File Path="..\forms\NMAtivador.dfm"/>
     <File Path="..\forms\FrmConexaoComMultiBanco.pas"/>
     <File Path="..\forms\FrmConexaoComMultiBanco.dfm"/>
+    <File Path="..\forms\FrmMigrarSQLiteParaSQLServer.pas"/>
+    <File Path="..\forms\FrmMigrarSQLiteParaSQLServer.dfm"/>
     <File Path="..\reports"/>
-    <File Path="..\reports\MNRelatorioSemanal.pas"/>
-    <File Path="..\reports\MNRelatorioSemanal.dfm"/>
     <File Path="..\reports\FRelatorioReportSemanal.pas"/>
     <File Path="..\reports\FRelatorioReportSemanal.dfm"/>
+    <File Path="..\reports\MNRelatorioSemanal.pas"/>
+    <File Path="..\reports\MNRelatorioSemanal.dfm"/>
   </ProjectSortOrder>
 </BorlandProject>
