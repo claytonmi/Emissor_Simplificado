@@ -16,6 +16,7 @@ Projetado para ser leve e eficiente, sendo ideal para pequenas empresas e autôn
 - ✅ Cadastro de produtos
 - 📊 Geração de relatórios
 - 📝 Emissão simplificada de orçamentos
+- 🔄 **Migração de banco de dados (SQLite → SQL Server)**  
 - 🛠️ Painel de configuração
 - 💱 Escolha de moeda
 - 🌍 Tradução do relatório (Português/Inglês)
@@ -26,8 +27,8 @@ Projetado para ser leve e eficiente, sendo ideal para pequenas empresas e autôn
 - Sistema Operacional: Windows 10 ou superior
 - Armazenamento: Apenas alguns MB
 - **Banco de Dados**:
-  - SQLite (Banco de dados local, sem necessidade de instalação adicional)
-  - SQL Server (Requer configuração e credenciais de acesso)
+  - **SQLite**: Banco de dados local, sem necessidade de instalação adicional.  
+  - **SQL Server**: Requer configuração e credenciais de acesso.
 
 ## ⚙️ Configuração do Banco de Dados
 
