@@ -28,7 +28,6 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TFrmSplash, FrmSplash);
-  Application.CreateForm(TNMMigrarSQLiteParaSQLServer, NMMigrarSQLiteParaSQLServer);
   FrmSplash.Show;
   Application.Run;  // Exibe o Splash e executa o loop de eventos
 end.

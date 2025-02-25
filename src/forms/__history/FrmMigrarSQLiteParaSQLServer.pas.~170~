@@ -86,18 +86,41 @@ begin
 
   DataModulePrincipal.ADOConnection.Close;
   DataModulePrincipal.ADOConnection.LoginPrompt := False;
-  DataModulePrincipal.ADOConnection.ConnectionString :=
-    'Provider=SQLOLEDB;' +
-    'Data Source=' + EditServidor.Text + ';' +
-    'Initial Catalog=' + EditBanco.Text + ';' +
-    'User ID=' + EditUser.Text + ';' +
-    'Password=' + EditSenha.Text + ';';
+
+     if (EditUser.Text <> '') and (EditSenha.Text <> '') then
+        begin
+            // Autenticação com usuário e senha (SQL Server Authentication)
+            DataModulePrincipal.ADOConnection.ConnectionString :=
+              'Provider=SQLOLEDB;' +
+              'Data Source=' + EditServidor.Text + ';' +
+              'Initial Catalog=' + EditBanco.Text + ';' +
+              'User ID=' + EditUser.Text + ';' +
+              'Password=' + EditSenha.Text + ';';
+        end
+        else
+        begin
+            // Autenticação do Windows (Windows Authentication)
+            DataModulePrincipal.ADOConnection.ConnectionString :=
+              'Provider=SQLOLEDB.1;' +
+              'Integrated Security=SSPI;' +  // Usa o usuário do Windows
+              'Initial Catalog=' + EditBanco.Text + ';' +
+              'Data Source=' + EditServidor.Text + ';';
+        end;
+
   try
     DataModulePrincipal.ADOConnection.Connected := True;
     if DataModulePrincipal.ADOConnection.Connected then
     begin
       AdicionarLog('Conexão com SQL Server estabelecida com sucesso.');
-      MigrarDados;
+      try
+        MigrarDados;  // Agora, apenas erros dentro de MigrarDados serão capturados separadamente
+      except
+        on E: Exception do
+        begin
+          AdicionarLog('Erro ao migrar os dados: ' + E.Message);
+          Exit;
+        end;
+      end;
     end
     else
     begin
@@ -180,7 +203,6 @@ begin
     Application.MessageBox('Migração concluída com sucesso! O sistema será reiniciado ao fechar esta janela.', 'Aviso', MB_OK or MB_ICONINFORMATION);
 finally
   MapeamentoColunas.Free;
-  MapeamentoIDs.Free;
 end;
 end;
 
@@ -442,8 +464,15 @@ begin
     QrySQLServer.Open;
     while not QrySQLServer.Eof do
     begin
-      if ColunasSQLite.IndexOf(QrySQLServer.Fields[0].AsString) <> -1 then
-        ColunasValidas.Add(QrySQLServer.Fields[0].AsString);
+      var NomeColunaSQL := QrySQLServer.Fields[0].AsString;
+      var NomeColunaSQLite := NomeColunaSQL;
+      // Percorre o dicionário para encontrar o nome correspondente no SQLite
+      for var Chave in MapeamentoColunas.Keys do
+        if MapeamentoColunas[Chave] = NomeColunaSQL then
+          NomeColunaSQLite := Chave; // Nome original no SQLite
+      // Adiciona a coluna mapeada se existir no SQLite
+      if ColunasSQLite.IndexOf(NomeColunaSQLite) <> -1 then
+        ColunasValidas.Add(NomeColunaSQL);
       QrySQLServer.Next;
     end;
     QrySQLServer.Close;
@@ -465,37 +494,40 @@ begin
         var ValoresSQL := '';
         var InsertSQL := 'INSERT INTO ItemPedido (' + ColunasValidas.CommaText + ') VALUES (';
 
-        for var I := 0 to ColunasValidas.Count - 1 do
-        begin
-          var Campo := ColunasValidas[I];
-          if I > 0 then
-            ValoresSQL := ValoresSQL + ', ';
-
-          var Field := QrySQLite.FieldByName(Campo);
-
-          // Substituir IDVendaAntigo pelo IDVendaNovo
-          if Campo = 'IDVenda' then
-            ValoresSQL := ValoresSQL + IntToStr(IDVendaNovo)
-          else if Field.IsNull then
-            ValoresSQL := ValoresSQL + 'NULL'
-          else if Field.DataType in [ftString, ftWideString, ftMemo, ftWideMemo] then
-            ValoresSQL := ValoresSQL + QuotedStr(StringReplace(Trim(Field.AsString), '''', '''''', [rfReplaceAll]))
-          else if Field.DataType in [ftFloat, ftCurrency] then
+          for var I := 0 to ColunasValidas.Count - 1 do
           begin
-            var ValorFloat := StringReplace(Trim(Field.AsString), ',', '.', [rfReplaceAll]);
-            if ValorFloat.Contains('.') then
-              ValoresSQL := ValoresSQL + ValorFloat
+            var NomeColunaSQL := ColunasValidas[I]; // Nome da coluna no SQL Server
+            // Verifica se há um mapeamento de NomeColunaSQL -> NomeColunaSQLite
+            var NomeColunaSQLite := NomeColunaSQL;
+            for var Chave in MapeamentoColunas.Keys do
+              if MapeamentoColunas[Chave] = NomeColunaSQL then
+                NomeColunaSQLite := Chave; // Nome original no SQLite
+            if I > 0 then
+              ValoresSQL := ValoresSQL + ', ';
+            var Field := QrySQLite.FieldByName(NomeColunaSQLite); // Usa o nome correto no SQLite
+            // Substituir IDVendaAntigo pelo IDVendaNovo
+            if NomeColunaSQL = 'IDVenda' then
+              ValoresSQL := ValoresSQL + IntToStr(IDVendaNovo)
+            else if Field.IsNull then
+              ValoresSQL := ValoresSQL + 'NULL'
+            else if Field.DataType in [ftString, ftWideString, ftMemo, ftWideMemo] then
+              ValoresSQL := ValoresSQL + QuotedStr(StringReplace(Trim(Field.AsString), '''', '''''', [rfReplaceAll]))
+            else if Field.DataType in [ftFloat, ftCurrency] then
+            begin
+              var ValorFloat := StringReplace(Trim(Field.AsString), ',', '.', [rfReplaceAll]);
+              if ValorFloat.Contains('.') then
+                ValoresSQL := ValoresSQL + ValorFloat
+              else
+                ValoresSQL := ValoresSQL + ValorFloat + '.00';
+            end
+            else if Field.DataType = ftDate then
+            begin
+              var DataFormatada := FormatDateTime('yyyy-mm-dd', Field.AsDateTime);
+              ValoresSQL := ValoresSQL + QuotedStr(DataFormatada);
+            end
             else
-              ValoresSQL := ValoresSQL + ValorFloat + '.00';
-          end
-          else if Field.DataType = ftDate then
-          begin
-            var DataFormatada := FormatDateTime('yyyy-mm-dd', Field.AsDateTime);
-            ValoresSQL := ValoresSQL + QuotedStr(DataFormatada);
-          end
-          else
-            ValoresSQL := ValoresSQL + Field.AsString;
-        end;
+              ValoresSQL := ValoresSQL + Field.AsString;
+          end;
 
         InsertSQL := InsertSQL + ValoresSQL + ')';
 

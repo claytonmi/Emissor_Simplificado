@@ -86,12 +86,27 @@ begin
 
   DataModulePrincipal.ADOConnection.Close;
   DataModulePrincipal.ADOConnection.LoginPrompt := False;
-  DataModulePrincipal.ADOConnection.ConnectionString :=
-    'Provider=SQLOLEDB;' +
-    'Data Source=' + EditServidor.Text + ';' +
-    'Initial Catalog=' + EditBanco.Text + ';' +
-    'User ID=' + EditUser.Text + ';' +
-    'Password=' + EditSenha.Text + ';';
+
+ if (EditUser.Text <> '') and (EditSenha.Text <> '') then
+    begin
+        // Autenticação com usuário e senha (SQL Server Authentication)
+        DataModulePrincipal.ADOConnection.ConnectionString :=
+          'Provider=SQLOLEDB;' +
+          'Data Source=' + EditServidor.Text + ';' +
+          'Initial Catalog=' + EditBanco.Text + ';' +
+          'User ID=' + EditUser.Text + ';' +
+          'Password=' + EditSenha.Text + ';';
+    end
+    else
+    begin
+        // Autenticação do Windows (Windows Authentication)
+        DataModulePrincipal.ADOConnection.ConnectionString :=
+          'Provider=SQLOLEDB.1;' +
+          'Integrated Security=SSPI;' +  // Usa o usuário do Windows
+          'Initial Catalog=' + EditBanco.Text + ';' +
+          'Data Source=' + EditServidor.Text + ';';
+    end;
+
   try
     DataModulePrincipal.ADOConnection.Connected := True;
     if DataModulePrincipal.ADOConnection.Connected then
@@ -450,18 +465,14 @@ begin
     while not QrySQLServer.Eof do
     begin
       var NomeColunaSQL := QrySQLServer.Fields[0].AsString;
-
       var NomeColunaSQLite := NomeColunaSQL;
-
       // Percorre o dicionário para encontrar o nome correspondente no SQLite
       for var Chave in MapeamentoColunas.Keys do
         if MapeamentoColunas[Chave] = NomeColunaSQL then
           NomeColunaSQLite := Chave; // Nome original no SQLite
-
       // Adiciona a coluna mapeada se existir no SQLite
       if ColunasSQLite.IndexOf(NomeColunaSQLite) <> -1 then
         ColunasValidas.Add(NomeColunaSQL);
-
       QrySQLServer.Next;
     end;
     QrySQLServer.Close;
@@ -486,18 +497,14 @@ begin
           for var I := 0 to ColunasValidas.Count - 1 do
           begin
             var NomeColunaSQL := ColunasValidas[I]; // Nome da coluna no SQL Server
-
             // Verifica se há um mapeamento de NomeColunaSQL -> NomeColunaSQLite
             var NomeColunaSQLite := NomeColunaSQL;
             for var Chave in MapeamentoColunas.Keys do
               if MapeamentoColunas[Chave] = NomeColunaSQL then
                 NomeColunaSQLite := Chave; // Nome original no SQLite
-
             if I > 0 then
               ValoresSQL := ValoresSQL + ', ';
-
             var Field := QrySQLite.FieldByName(NomeColunaSQLite); // Usa o nome correto no SQLite
-
             // Substituir IDVendaAntigo pelo IDVendaNovo
             if NomeColunaSQL = 'IDVenda' then
               ValoresSQL := ValoresSQL + IntToStr(IDVendaNovo)

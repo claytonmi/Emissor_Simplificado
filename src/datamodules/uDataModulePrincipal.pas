@@ -246,13 +246,27 @@ begin
 
         ADOConnection.Connected := False;
         ADOConnection.LoginPrompt := False;
-        ADOConnection.ConnectionString :=
-          'Provider=SQLOLEDB.1;' +        // Driver OLE DB para SQL Server
-          'Persist Security Info=False;' +
-          'User ID=' + UsuarioSQL + ';' + // Usuário do SQL Server
-          'Password=' + SenhaSQL + ';' +  // Senha do SQL Server
-          'Initial Catalog=' + NomeBanco + ';' + // Nome do banco de dados
-          'Data Source=' + ServidorSQL + ';';   // Servidor do banco
+         // Verifica se usuário e senha foram informados
+        if (Trim(UsuarioSQL) <> '') and (Trim(SenhaSQL) <> '') then
+        begin
+            // Autenticação com usuário e senha (SQL Server Authentication)
+            ADOConnection.ConnectionString :=
+              'Provider=SQLOLEDB.1;' +
+              'Persist Security Info=False;' +
+              'User ID=' + UsuarioSQL + ';' +
+              'Password=' + SenhaSQL + ';' +
+              'Initial Catalog=' + NomeBanco + ';' +
+              'Data Source=' + ServidorSQL + ';';
+        end
+        else
+        begin
+            // Autenticação do Windows (Windows Authentication)
+            ADOConnection.ConnectionString :=
+              'Provider=SQLOLEDB.1;' +
+              'Integrated Security=SSPI;' +  // Usa o usuário do Windows
+              'Initial Catalog=' + NomeBanco + ';' +
+              'Data Source=' + ServidorSQL + ';';
+        end;
 
         try
           ADOConnection.Connected := True;

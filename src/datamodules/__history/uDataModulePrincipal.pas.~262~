@@ -45,7 +45,7 @@ type
 
 
   private
-    function TabelaExiste(const TabelaNome: string): Boolean;
+
     function RegistraConfiguracaoExistente(NomeConfiguracao: string): Boolean;
     procedure ConfigurarConexao(const DatabasePath: string);
     procedure CriarBancoDeDados(const DatabasePath: string; ComDadosTeste: Boolean);
@@ -54,7 +54,8 @@ type
     procedure ConfigurarConexaoSQLServer(const Servidor, Usuario, Senha, Banco: string);
 
   public
-
+    dbTypeMigracao: string;
+    function TabelaExiste(const TabelaNome: string): Boolean;
     procedure CriarTabelas;
     function  VersaoAtual: string;
     function VerificarExibirDataInsercao: Boolean;
@@ -66,7 +67,7 @@ var
   DataModulePrincipal: TDataModulePrincipal;
 const
 
-  VERSAO_ATUAL = '1.2';
+  VERSAO_ATUAL = '1.3';
 
 implementation
 
@@ -92,7 +93,7 @@ begin
   FrmSplashArt.FrmSplash.labEdit('Conectando ao banco de dados...');
   FrmSplashArt.FrmSplash.processCout(40);
   Sleep(500);
-
+  dbTypeMigracao:='';
   IniFilePath := TPath.Combine(TPath.GetHomePath, 'config.ini');
   Ini := TIniFile.Create(IniFilePath);
 
@@ -245,13 +246,27 @@ begin
 
         ADOConnection.Connected := False;
         ADOConnection.LoginPrompt := False;
-        ADOConnection.ConnectionString :=
-          'Provider=SQLOLEDB.1;' +        // Driver OLE DB para SQL Server
-          'Persist Security Info=False;' +
-          'User ID=' + UsuarioSQL + ';' + // Usuário do SQL Server
-          'Password=' + SenhaSQL + ';' +  // Senha do SQL Server
-          'Initial Catalog=' + NomeBanco + ';' + // Nome do banco de dados
-          'Data Source=' + ServidorSQL + ';';   // Servidor do banco
+         // Verifica se usuário e senha foram informados
+        if (Trim(UsuarioSQL) <> '') and (Trim(SenhaSQL) <> '') then
+        begin
+            // Autenticação com usuário e senha (SQL Server Authentication)
+            ADOConnection.ConnectionString :=
+              'Provider=SQLOLEDB.1;' +
+              'Persist Security Info=False;' +
+              'User ID=' + UsuarioSQL + ';' +
+              'Password=' + SenhaSQL + ';' +
+              'Initial Catalog=' + NomeBanco + ';' +
+              'Data Source=' + ServidorSQL + ';';
+        end
+        else
+        begin
+            // Autenticação do Windows (Windows Authentication)
+            ADOConnection.ConnectionString :=
+              'Provider=SQLOLEDB.1;' +
+              'Integrated Security=SSPI;' +  // Usa o usuário do Windows
+              'Initial Catalog=' + NomeBanco + ';' +
+              'Data Source=' + ServidorSQL + ';';
+        end;
 
         try
           ADOConnection.Connected := True;
@@ -461,7 +476,7 @@ begin
   FrmSplashArt.FrmSplash.processCout(55);
   Sleep(500);
 
-  if dbType = 'SQLite' then
+  if (dbType = 'SQLite') and (dbTypeMigracao = '') then
   begin
   // Criação da tabela Pedido
  if not TabelaExiste('Pedido') then
@@ -557,7 +572,7 @@ if not TabelaExiste('ItemPedido') then
     FDConnection.ExecSQL('INSERT INTO Sistema (VersaoSistema) VALUES (''0.0'');');
   end;
   end
-  else if dbType = 'SQL Server' then
+  else if (dbType = 'SQL Server') or (dbTypeMigracao = 'SQL Server') then
   begin
        // Criação da tabela Pedido
        if not TabelaExiste('Pedido') then
@@ -844,7 +859,7 @@ begin
   Result := False;
 
   // Usar TADOQuery para SQL Server e TFDQuery para SQLite
-  if dbType = 'SQL Server' then
+  if (dbType = 'SQL Server') or (dbTypeMigracao = 'SQL Server') then
   begin
     QueryTemp := TADOQuery.Create(nil);
     try
@@ -859,7 +874,7 @@ begin
       QueryTemp.Free;
     end;
   end
-  else if dbType = 'SQLite' then
+  else if (dbType = 'SQLite') and (dbTypeMigracao = '') then
   begin
     QueryTemp := TFDQuery.Create(nil);
     try

@@ -16,13 +16,20 @@ uses
   Vcl.Styles,
   NMCadastroDeEmpresa in '..\forms\NMCadastroDeEmpresa.pas' {FCadastroDeEmpresa},
   NMPesquisaDeEmpresas in '..\forms\NMPesquisaDeEmpresas.pas' {NMPesquisaDeEmpresa},
-  FrmSplashArt in '..\forms\FrmSplashArt.pas' {FrmSplash};
+  FrmSplashArt in '..\forms\FrmSplashArt.pas' {FrmSplash},
+  NMConfiguracao in '..\forms\NMConfiguracao.pas' {NMConfig},
+  NMAtivador in '..\forms\NMAtivador.pas' {NMAtivadorChave},
+  FrmConexaoComMultiBanco in '..\forms\FrmConexaoComMultiBanco.pas' {FrmConexaoBanco},
+  FrmMigrarSQLiteParaSQLServer in '..\forms\FrmMigrarSQLiteParaSQLServer.pas' {NMMigrarSQLiteParaSQLServer};
 
 {$R *.res}
 
 begin
   Application.Initialize;
-  Application.CreateForm(TFrmSplash, FrmSplash);  // Cria o Splash
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TFrmSplash, FrmSplash);
+  Application.CreateForm(TNMMigrarSQLiteParaSQLServer, NMMigrarSQLiteParaSQLServer);
+  FrmSplash.Show;
   Application.Run;  // Exibe o Splash e executa o loop de eventos
 end.
 
