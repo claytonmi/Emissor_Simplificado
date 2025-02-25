@@ -1,0 +1,25 @@
+📦 Como Instalar
+
+Baixe o arquivo Emissor_Simplificado.exe.
+
+Execute o arquivo no Windows.
+
+Informe a chave de ativação gerada no site: (https://emissorsimplificado.up.railway.app/).
+
+Nome do Produto: EmissorSimplificado
+
+Seu e-mail
+
+Escolha o banco de dados:
+
+SQLite: Basta selecionar um diretório onde o banco será salvo e concluir a instalação.
+
+SQL Server:
+
+Instale o SQL Server pelo site oficial: (https://go.microsoft.com/fwlink/p/?linkid=2216019&clcid=0x416&culture=pt-br&country=br).
+
+Crie um banco de dados no SQL Server.
+
+Informe os dados de conexão no sistema.
+
+O sistema realizará a configuração automaticamente.
