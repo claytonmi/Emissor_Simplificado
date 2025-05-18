@@ -1,0 +1,325 @@
+object FRelatorioFinancas: TFRelatorioFinancas
+  Left = 0
+  Top = 0
+  AutoSize = True
+  Caption = 'Relat'#243'rio De Finan'#231'as'
+  ClientHeight = 1061
+  ClientWidth = 794
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  TextHeight = 15
+  object RLReport: TRLReport
+    Left = 0
+    Top = 0
+    Width = 794
+    Height = 1123
+    DataSource = DataModulePrincipal.DataSourceRelatorioFinancas
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -13
+    Font.Name = 'Arial'
+    Font.Style = []
+    object RLBandCabecalho: TRLBand
+      Left = 38
+      Top = 38
+      Width = 718
+      Height = 99
+      BandType = btHeader
+      object RLLabelTitulo: TRLLabel
+        Left = 0
+        Top = 51
+        Width = 718
+        Height = 30
+        Align = faBottom
+        Alignment = taCenter
+        Caption = 'Relat'#243'rio de Finan'#231'as'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = 30
+        Font.Name = 'Arial Black'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+      object RLLabelPeriodo: TRLLabel
+        Left = 0
+        Top = 81
+        Width = 718
+        Height = 18
+        Align = faBottom
+        Alignment = taCenter
+        Caption = 'Periodo'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = 18
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+      end
+    end
+    object RLGroupVendas: TRLGroup
+      Left = 38
+      Top = 170
+      Width = 718
+      Height = 210
+      object RLBandDetalhes: TRLBand
+        Left = 0
+        Top = 0
+        Width = 718
+        Height = 28
+        object RLDBTextProduto: TRLDBText
+          Left = 32
+          Top = 6
+          Width = 80
+          Height = 15
+          DataField = 'NomeProduto'
+          DataSource = DataModulePrincipal.DataSourceRelatorioFinancas
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = 15
+          Font.Name = 'Arial'
+          Font.Style = []
+          ParentFont = False
+          Text = ''
+        end
+        object RLDBTextQuantidade: TRLDBText
+          Left = 250
+          Top = 6
+          Width = 112
+          Height = 15
+          DataField = 'QuantidadeVendida'
+          DataSource = DataModulePrincipal.DataSourceRelatorioFinancas
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = 15
+          Font.Name = 'Arial'
+          Font.Style = []
+          ParentFont = False
+          Text = ''
+        end
+        object RLDBTextValor: TRLDBText
+          Left = 382
+          Top = 6
+          Width = 68
+          Height = 15
+          DataField = 'PrecoCusto'
+          DataSource = DataModulePrincipal.DataSourceRelatorioFinancas
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = 15
+          Font.Name = 'Arial'
+          Font.Style = []
+          ParentFont = False
+          Text = ''
+        end
+        object RLDBTextTotal: TRLDBText
+          Left = 633
+          Top = 6
+          Width = 61
+          Height = 15
+          DataField = 'LucroTotal'
+          DataSource = DataModulePrincipal.DataSourceRelatorioFinancas
+          DisplayMask = '#,##0.00'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = 15
+          Font.Name = 'Arial'
+          Font.Style = []
+          ParentFont = False
+          Text = ''
+        end
+        object RLLabelMoeda: TRLLabel
+          Left = 612
+          Top = 6
+          Width = 18
+          Height = 15
+          Caption = 'R$'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = 15
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          ParentFont = False
+          Transparent = False
+        end
+        object RLDBText1: TRLDBText
+          Left = 503
+          Top = 6
+          Width = 70
+          Height = 15
+          DataField = 'PrecoVenda'
+          DataSource = DataModulePrincipal.DataSourceRelatorioFinancas
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = 15
+          Font.Name = 'Arial'
+          Font.Style = []
+          ParentFont = False
+          Text = ''
+        end
+      end
+      object RLBandTotalFinancas: TRLBand
+        Left = 0
+        Top = 28
+        Width = 718
+        Height = 48
+        BandType = btSummary
+        Color = clMenu
+        ParentColor = False
+        Transparent = False
+        object RLLabelMoedaTotal: TRLLabel
+          Left = 513
+          Top = 14
+          Width = 85
+          Height = 15
+          Caption = 'Total Geral R$:'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = 15
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          ParentFont = False
+          Transparent = False
+        end
+        object RLDBResult1: TRLDBResult
+          Left = 604
+          Top = 14
+          Width = 111
+          Height = 15
+          DataField = 'TotalGeral'
+          DataSource = DataModulePrincipal.DataSourceRelatorioFinancas
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = 15
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          ParentFont = False
+          Text = ''
+          Transparent = False
+        end
+      end
+    end
+    object RLBandRodaPe: TRLBand
+      Left = 38
+      Top = 380
+      Width = 718
+      Height = 80
+      BandType = btColumnFooter
+      object RLLabel6: TRLLabel
+        Left = 573
+        Top = 45
+        Width = 35
+        Height = 14
+        Caption = 'P'#225'gina'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = 14
+        Font.Name = 'Arial'
+        Font.Style = []
+        ParentFont = False
+      end
+      object RLSystemInfo1: TRLSystemInfo
+        Left = 625
+        Top = 45
+        Width = 72
+        Height = 14
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = 14
+        Font.Name = 'Arial'
+        Font.Style = []
+        Info = itPageNumber
+        ParentFont = False
+        Text = ''
+      end
+    end
+    object RLBandColunas: TRLBand
+      Left = 38
+      Top = 137
+      Width = 718
+      Height = 33
+      BandType = btColumnHeader
+      Color = clMenu
+      ParentColor = False
+      Transparent = False
+      object RLLabelProduto: TRLLabel
+        Left = 32
+        Top = 11
+        Width = 60
+        Height = 16
+        AutoSize = False
+        Caption = 'Produto'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = 17
+        Font.Name = 'Arial'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Transparent = False
+      end
+      object RLLabelQuantidade: TRLLabel
+        Left = 250
+        Top = 11
+        Width = 103
+        Height = 16
+        AutoSize = False
+        Caption = 'Qtd Vendidas'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = 17
+        Font.Name = 'Arial'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Transparent = False
+      end
+      object RLLabelValorCusto: TRLLabel
+        Left = 382
+        Top = 11
+        Width = 91
+        Height = 16
+        AutoSize = False
+        Caption = 'Valor Custo'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = 17
+        Font.Name = 'Arial'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Transparent = False
+      end
+      object RLLabelVenda: TRLLabel
+        Left = 503
+        Top = 11
+        Width = 90
+        Height = 16
+        AutoSize = False
+        Caption = 'Valor Venda'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = 17
+        Font.Name = 'Arial'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Transparent = False
+      end
+      object RLLabelTotal: TRLLabel
+        Left = 613
+        Top = 11
+        Width = 87
+        Height = 16
+        AutoSize = False
+        Caption = 'Total Lucro'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = 17
+        Font.Name = 'Arial'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Transparent = False
+      end
+    end
+  end
+end

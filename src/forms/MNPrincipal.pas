@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus,
-  MNRelatorioSemanal, NMPesquisaPedido, MNCadastroCliente, NMInformacoes, NMCadastroDeProduto, NMCadastroDeEmpresa,
+  MNRelatorioSemanal, NMPesquisaPedido, MNCadastroCliente, NMInformacoes, NMCadastroDeProduto, NMCadastroDeEmpresa, NMRelatorioDeFinancas,
   uDataModulePrincipal,
   System.IOUtils, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Grids,
   System.Generics.Collections,
@@ -83,6 +83,9 @@ type
     Informaes1: TMenuItem;
     RodaPeBanco: TPanel;
     TimerHora: TTimer;
+    RelatorioOraamentos: TMenuItem;
+    N2: TMenuItem;
+    NMFinancas: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure MNCadastrodeClienteClick(Sender: TObject);
     procedure MNCadastroProdutoClick(Sender: TObject);
@@ -101,7 +104,6 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtEditarPedidoClick(Sender: TObject);
     procedure CarregarPedidoEdicao(IDVenda: Integer);
-    procedure Relatrio1Click(Sender: TObject);
     procedure EdQtdItemKeyPress(Sender: TObject; var Key: Char);
     procedure EdQtdItemExit(Sender: TObject);
     procedure EdValorItemKeyPress(Sender: TObject; var Key: Char);
@@ -120,6 +122,8 @@ type
     procedure Informaes1Click(Sender: TObject);
     procedure TimerHoraTimer(Sender: TObject);
     procedure MigradorSqliteParaSqlServerClick(Sender: TObject);
+    procedure RelatorioOraamentosClick(Sender: TObject);
+    procedure NMFinancasClick(Sender: TObject);
 
   private
     { Private declarations }
@@ -173,6 +177,14 @@ begin
   end;
 end;
 
+
+procedure TEmissorPrincipal.RelatorioOraamentosClick(Sender: TObject);
+begin
+  if not Assigned(RelatorioSemanal) then
+    RelatorioSemanal := TRelatorioSemanal.Create(Self);
+
+  RelatorioSemanal.Show;
+end;
 
 procedure TEmissorPrincipal.Backupdobanco1Click(Sender: TObject);
 var
@@ -1627,9 +1639,11 @@ begin
    if dbType = 'SQLite' then
    begin
       MigradorSqliteParaSqlServer.Visible := true;
+      NMFinancas.Enabled := true;
    end else
    begin
       MigradorSqliteParaSqlServer.Visible := false;
+      NMFinancas.Enabled := true;
    end;
   RodaPeVersion.Caption := 'Versão:' + DataModulePrincipal.VersaoAtual;
   RodaPeBanco.Caption := 'Banco: ' + dbType;
@@ -1885,14 +1899,6 @@ begin
 end;
 
 
-
-procedure TEmissorPrincipal.Relatrio1Click(Sender: TObject);
-begin
-  if not Assigned(RelatorioSemanal) then
-    RelatorioSemanal := TRelatorioSemanal.Create(Self);
-
-  RelatorioSemanal.Show;
-end;
 
 procedure TEmissorPrincipal.CarregarProdutos;
 begin
@@ -2184,7 +2190,7 @@ begin
     Inc(CharCount);
 
     // Quebra a linha exatamente a cada 47 caracteres
-    if CharCount = 47 then
+    if CharCount = 90 then
     begin
       NovaTexto := NovaTexto + Linha + sLineBreak;
       Linha := '';
@@ -2287,6 +2293,14 @@ begin
     DataModulePrincipal.FDConnection.Commit
   else
     DataModulePrincipal.FDConnection.Rollback;
+end;
+
+procedure TEmissorPrincipal.NMFinancasClick(Sender: TObject);
+begin
+  if not Assigned(NMRelatorioFinancas) then
+    NMRelatorioFinancas := TNMRelatorioFinancas.Create(Self);
+
+  NMRelatorioFinancas.Show;
 end;
 
 procedure TEmissorPrincipal.BtEditarPedidoClick(Sender: TObject);

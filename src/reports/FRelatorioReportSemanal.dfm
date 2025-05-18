@@ -3,8 +3,8 @@ object NMRelatorioReport: TNMRelatorioReport
   Top = 0
   AutoSize = True
   Caption = 'NMRelatorioReport'
-  ClientHeight = 1062
-  ClientWidth = 798
+  ClientHeight = 1061
+  ClientWidth = 794
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -155,7 +155,7 @@ object NMRelatorioReport: TNMRelatorioReport
     end
     object RLBandRodape: TRLBand
       Left = 38
-      Top = 687
+      Top = 585
       Width = 718
       Height = 62
       BandType = btFooter
@@ -204,7 +204,7 @@ object NMRelatorioReport: TNMRelatorioReport
       Left = 38
       Top = 265
       Width = 718
-      Height = 422
+      Height = 320
       DataFields = 'IDVenda'
       object RLBandDetail: TRLBand
         Left = 0
@@ -269,6 +269,7 @@ object NMRelatorioReport: TNMRelatorioReport
           Height = 15
           DataField = 'Total'
           DataSource = DataModulePrincipal.DataSourceRelatorioDePedidos
+          DisplayMask = '#,##0.00'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = 15
@@ -421,6 +422,7 @@ object NMRelatorioReport: TNMRelatorioReport
           Height = 15
           DataField = 'DataPedido'
           DataSource = DataModulePrincipal.DataSourceRelatorioDePedidos
+          DisplayMask = 'dd/mm/yyyy'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = 15
@@ -487,9 +489,9 @@ object NMRelatorioReport: TNMRelatorioReport
           Transparent = False
         end
         object RLDBMemo1: TRLDBMemo
-          Left = 240
+          Left = 120
           Top = 82
-          Width = 309
+          Width = 560
           Height = 15
           Behavior = [beSiteExpander]
           DataField = 'Observacao'
@@ -503,7 +505,7 @@ object NMRelatorioReport: TNMRelatorioReport
           Transparent = False
         end
         object RLLabelObs: TRLLabel
-          Left = 162
+          Left = 42
           Top = 82
           Width = 72
           Height = 15

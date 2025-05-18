@@ -1,6 +1,7 @@
 object RelatorioSemanal: TRelatorioSemanal
   Left = 0
   Top = 0
+  BorderStyle = bsSingle
   Caption = 'Relat'#243'rio Peri'#243'dico'
   ClientHeight = 214
   ClientWidth = 296

@@ -20,7 +20,9 @@ uses
   NMConfiguracao in '..\forms\NMConfiguracao.pas' {NMConfig},
   NMAtivador in '..\forms\NMAtivador.pas' {NMAtivadorChave},
   FrmConexaoComMultiBanco in '..\forms\FrmConexaoComMultiBanco.pas' {FrmConexaoBanco},
-  FrmMigrarSQLiteParaSQLServer in '..\forms\FrmMigrarSQLiteParaSQLServer.pas' {NMMigrarSQLiteParaSQLServer};
+  FrmMigrarSQLiteParaSQLServer in '..\forms\FrmMigrarSQLiteParaSQLServer.pas' {NMMigrarSQLiteParaSQLServer},
+  FRelatorioDeFinancas in '..\reports\FRelatorioDeFinancas.pas' {FRelatorioFinancas},
+  NMRelatorioDeFinancas in '..\reports\NMRelatorioDeFinancas.pas' {NMRelatorioFinancas};
 
 {$R *.res}
 

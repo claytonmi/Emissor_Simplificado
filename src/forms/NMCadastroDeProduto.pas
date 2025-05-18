@@ -17,12 +17,16 @@ type
     BtInfo: TBitBtn;
     BalloonHint: TBalloonHint;
     LBSucesso: TLabel;
+    Label3: TLabel;
+    EdPrecoCusto: TEdit;
     procedure BtSalvarClick(Sender: TObject);
     procedure BtEditarClick(Sender: TObject);
     procedure BtInfoClick(Sender: TObject);
     procedure EdNomeProdutoKeyPress(Sender: TObject; var Key: Char);
     procedure EdPrecoKeyPress(Sender: TObject; var Key: Char);
     procedure EdPrecoExit(Sender: TObject);
+    procedure EdPrecoCustoKeyPress(Sender: TObject; var Key: Char);
+    procedure EdPrecoCustoExit(Sender: TObject);
   private
     FStep: integer;
     FProdutoID: Integer; // Armazena o ID do produto selecionado para edição
@@ -60,14 +64,21 @@ begin
     2:
       begin
         BalloonHint.HideHint;
-        BalloonHint.Title := 'Passo 2: Preço do Produto';
-        BalloonHint.Description := 'Agora informe o preço do produto no campo "Preço".';
-        BalloonHint.ShowHint(EdPreco);
+        BalloonHint.Title := 'Passo 2: Preço de custo do Produto';
+        BalloonHint.Description := 'Agora informe o preço de custo do produto no campo "Preço de custo".';
+        BalloonHint.ShowHint(EdPrecoCusto);
       end;
     3:
       begin
         BalloonHint.HideHint;
-        BalloonHint.Title := 'Passo 3: Salvar Cadastro';
+        BalloonHint.Title := 'Passo 3: Preço do Produto';
+        BalloonHint.Description := 'Agora informe o preço do produto no campo "Preço".';
+        BalloonHint.ShowHint(EdPreco);
+      end;
+    4:
+      begin
+        BalloonHint.HideHint;
+        BalloonHint.Title := 'Passo 4: Salvar Cadastro';
         BalloonHint.Description := 'Agora clique em "Salvar" para finalizar o cadastro do produto.';
         BalloonHint.ShowHint(BtSalvar);
       end;
@@ -88,6 +99,7 @@ begin
   if Trim(EdPreco.Text) = '' then
     raise Exception.Create('O preço do produto é obrigatório.');
 
+
   try
     if FProdutoID = 0 then
     begin
@@ -95,15 +107,17 @@ begin
       if dbType = 'SQLite' then
       begin
         // Para SQLite, usa FDQuery
-        DataModulePrincipal.FDQueryProduto.SQL.Text := 'INSERT INTO Produto (NomeProduto, Preco) VALUES (:NomeProduto, :Preco)';
+        DataModulePrincipal.FDQueryProduto.SQL.Text := 'INSERT INTO Produto (NomeProduto, PrecoCusto, Preco) VALUES (:NomeProduto, :PrecoCusto, :Preco)';
         DataModulePrincipal.FDQueryProduto.ParamByName('NomeProduto').AsString := EdNomeProduto.Text;
+        DataModulePrincipal.FDQueryProduto.ParamByName('PrecoCusto').AsFloat := StrToFloat(EdPrecoCusto.Text);
         DataModulePrincipal.FDQueryProduto.ParamByName('Preco').AsFloat := StrToFloat(EdPreco.Text);
       end
       else if dbType = 'SQL Server' then
       begin
         // Para SQL Server, usa ADOQuery
-        DataModulePrincipal.ADOQueryProduto.SQL.Text := 'INSERT INTO Produto (NomeProduto, Preco) VALUES (:NomeProduto, :Preco)';
+        DataModulePrincipal.ADOQueryProduto.SQL.Text := 'INSERT INTO Produto (NomeProduto, PrecoCusto, Preco) VALUES (:NomeProduto, :PrecoCusto, :Preco)';
         DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('NomeProduto').Value := EdNomeProduto.Text;
+        DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('PrecoCusto').Value := StrToFloat(EdPrecoCusto.Text);
         DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('Preco').Value := StrToFloat(EdPreco.Text);
       end;
     end
@@ -113,16 +127,18 @@ begin
       if dbType = 'SQLite' then
       begin
         // Para SQLite, usa FDQuery
-        DataModulePrincipal.FDQueryProduto.SQL.Text := 'UPDATE Produto SET NomeProduto = :NomeProduto, Preco = :Preco WHERE IDProduto = :IDProduto';
+        DataModulePrincipal.FDQueryProduto.SQL.Text := 'UPDATE Produto SET NomeProduto = :NomeProduto, PrecoCusto = :PrecoCusto, Preco = :Preco WHERE IDProduto = :IDProduto';
         DataModulePrincipal.FDQueryProduto.ParamByName('NomeProduto').AsString := EdNomeProduto.Text;
+        DataModulePrincipal.FDQueryProduto.ParamByName('PrecoCusto').AsFloat := StrToFloat(EdPrecoCusto.Text);
         DataModulePrincipal.FDQueryProduto.ParamByName('Preco').AsFloat := StrToFloat(EdPreco.Text);
         DataModulePrincipal.FDQueryProduto.ParamByName('IDProduto').AsInteger := FProdutoID;
       end
       else if dbType = 'SQL Server' then
       begin
         // Para SQL Server, usa ADOQuery
-        DataModulePrincipal.ADOQueryProduto.SQL.Text := 'UPDATE Produto SET NomeProduto = :NomeProduto, Preco = :Preco WHERE IDProduto = :IDProduto';
+        DataModulePrincipal.ADOQueryProduto.SQL.Text := 'UPDATE Produto SET NomeProduto = :NomeProduto, PrecoCusto = :PrecoCusto, Preco = :Preco WHERE IDProduto = :IDProduto';
         DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('NomeProduto').Value := EdNomeProduto.Text;
+        DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('PrecoCusto').Value := StrToFloat(EdPrecoCusto.Text);
         DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('Preco').Value := StrToFloat(EdPreco.Text);
         DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('IDProduto').Value := FProdutoID;
       end;
@@ -184,6 +200,7 @@ begin
 
     // Preenche os campos com os dados do produto
     EdNomeProduto.Text := DataModulePrincipal.FDQueryProduto.FieldByName('NomeProduto').AsString;
+    EdPrecoCusto.Text := DataModulePrincipal.FDQueryProduto.FieldByName('PrecoCusto').AsString;
     EdPreco.Text := DataModulePrincipal.FDQueryProduto.FieldByName('Preco').AsString;
 
     DataModulePrincipal.FDQueryProduto.Close;
@@ -197,6 +214,7 @@ begin
 
     // Preenche os campos com os dados do produto
     EdNomeProduto.Text := DataModulePrincipal.ADOQueryProduto.FieldByName('NomeProduto').AsString;
+    EdPrecoCusto.Text := DataModulePrincipal.ADOQueryProduto.FieldByName('PrecoCusto').AsString;
     EdPreco.Text := DataModulePrincipal.ADOQueryProduto.FieldByName('Preco').AsString;
 
     DataModulePrincipal.ADOQueryProduto.Close;
@@ -210,13 +228,14 @@ begin
   if dbType = 'SQLite' then
   begin
     // Para SQLite, mantém o código original com FDQuery
-    DataModulePrincipal.FDQueryProduto.SQL.Text := 'SELECT NomeProduto, Preco FROM Produto WHERE IDProduto = :IDProduto';
+    DataModulePrincipal.FDQueryProduto.SQL.Text := 'SELECT NomeProduto, PrecoCusto, Preco FROM Produto WHERE IDProduto = :IDProduto';
     DataModulePrincipal.FDQueryProduto.ParamByName('IDProduto').AsInteger := ID;
     DataModulePrincipal.FDQueryProduto.Open;
 
     if not DataModulePrincipal.FDQueryProduto.IsEmpty then
     begin
       EdNomeProduto.Text := DataModulePrincipal.FDQueryProduto.FieldByName('NomeProduto').AsString;
+      EdPrecoCusto.Text := DataModulePrincipal.FDQueryProduto.FieldByName('PrecoCusto').AsString;
       EdPreco.Text := DataModulePrincipal.FDQueryProduto.FieldByName('Preco').AsString;
     end;
 
@@ -225,13 +244,14 @@ begin
   else if dbType = 'SQL Server' then
   begin
     // Para SQL Server, usa o ADOQuery
-    DataModulePrincipal.ADOQueryProduto.SQL.Text := 'SELECT NomeProduto, Preco FROM Produto WHERE IDProduto = :IDProduto';
+    DataModulePrincipal.ADOQueryProduto.SQL.Text := 'SELECT NomeProduto, PrecoCusto, Preco FROM Produto WHERE IDProduto = :IDProduto';
     DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('IDProduto').Value := ID;
     DataModulePrincipal.ADOQueryProduto.Open;
 
     if not DataModulePrincipal.ADOQueryProduto.IsEmpty then
     begin
       EdNomeProduto.Text := DataModulePrincipal.ADOQueryProduto.FieldByName('NomeProduto').AsString;
+      EdPrecoCusto.Text := DataModulePrincipal.ADOQueryProduto.FieldByName('PrecoCusto').AsString;
       EdPreco.Text := DataModulePrincipal.ADOQueryProduto.FieldByName('Preco').AsString;
     end;
 
@@ -248,6 +268,38 @@ begin
     FStep := 2;  // Avança para o próximo passo
     ShowHintForStep(FStep);
   end;
+end;
+
+procedure TNMCadastroProduto.EdPrecoCustoExit(Sender: TObject);
+begin
+  // Substituir ponto por vírgula quando o usuário sair do campo
+  EdPrecoCusto.Text := StringReplace(EdPrecoCusto.Text, '.', ',', [rfReplaceAll]);
+  // Verificar se o valor inserido tem um formato numérico válido
+  try
+    StrToFloat(EdPrecoCusto.Text); // Tenta converter para número
+  except
+    on E: EConvertError do
+    begin
+      ShowMessage('Valor inválido! Insira um preço válido no formato 0,00');
+      EdPrecoCusto.SetFocus;
+    end;
+  end;
+end;
+
+procedure TNMCadastroProduto.EdPrecoCustoKeyPress(Sender: TObject;
+  var Key: Char);
+begin
+  if FStep = 2 then
+  begin
+    FStep := 3;  // Avança para o próximo passo
+    ShowHintForStep(FStep);
+  end;
+    // Permitir apenas números, vírgula e backspace
+  if not (Key in ['0'..'9', ',', #8]) then
+    Key := #0; // Cancela a tecla pressionada, se não for válida
+  // Se o campo já tiver uma vírgula, impedir mais vírgulas
+  if (Key = ',') and (Pos(',', EdPrecoCusto.Text) > 0) then
+    Key := #0; // Impede mais de uma vírgula
 end;
 
 procedure TNMCadastroProduto.EdPrecoExit(Sender: TObject);
@@ -284,6 +336,7 @@ end;
 procedure TNMCadastroProduto.LimparCampos;
 begin
   EdNomeProduto.Clear;
+  EdPrecoCusto.Clear;
   EdPreco.Clear;
 end;
 
