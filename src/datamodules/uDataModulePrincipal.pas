@@ -70,7 +70,7 @@ var
   DataModulePrincipal: TDataModulePrincipal;
 const
 
-  VERSAO_ATUAL = '1.4';
+  VERSAO_ATUAL = '1.5';
 
 implementation
 
@@ -155,6 +155,7 @@ begin
           VerificarOuCriarColuna('Cliente', 'Endereco', 'TEXT');
           VerificarOuCriarColuna('Configuracao', 'UsarMoeda', 'TEXT');
           VerificarOuCriarColuna('Produto', 'PrecoCusto', 'REAL');
+          VerificarOuCriarColuna('Produto', 'IDEmpresa', 'INTEGER');
           VerificarOuCriarColuna('Configuracao', 'Idioma', 'TEXT');
           if TabelaExiste('Configuracao') then
           begin
@@ -292,6 +293,7 @@ begin
         if not VerificarAtualizacaoSistema(VERSAO_ATUAL) then
         begin
           VerificarOuCriarColuna('Produto', 'PrecoCusto', 'DECIMAL(18,2)');
+          VerificarOuCriarColuna('Produto', 'IDEmpresa', 'INT');
           // Inserir registros na tabela Configuracao no SQL Server
           if TabelaExiste('Configuracao') then
           begin
@@ -536,6 +538,7 @@ if not TabelaExiste('ItemPedido') then
     FDConnection.ExecSQL(
       'CREATE TABLE IF NOT EXISTS Produto (' +
       'IDProduto INTEGER PRIMARY KEY AUTOINCREMENT, ' +
+      'IDEmpresa INTEGER,'+
       'NomeProduto TEXT, ' +
       'PrecoCusto REAL, ' +
       'Preco REAL);'
@@ -632,6 +635,7 @@ if not TabelaExiste('ItemPedido') then
         ADOConnection.Execute(
           'CREATE TABLE Produto (' +
           'IDProduto INT IDENTITY(1,1) PRIMARY KEY, ' +
+          'IDEmpresa INT'+
           'NomeProduto NVARCHAR(255), ' +
           'PrecoCusto DECIMAL(18,2);' +
           'Preco DECIMAL(18,2));'

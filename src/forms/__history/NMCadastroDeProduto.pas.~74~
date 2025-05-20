@@ -1,0 +1,471 @@
+unit NMCadastroDeProduto;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, uDataModulePrincipal,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, NMPesquisaDeProduto,
+  Vcl.DBCtrls;
+
+type
+  TNMCadastroProduto = class(TForm)
+    EdNomeProduto: TEdit;
+    EdPreco: TEdit;
+    Label1: TLabel;
+    Label2: TLabel;
+    BtSalvar: TBitBtn;
+    BtEditar: TBitBtn;
+    BtInfo: TBitBtn;
+    BalloonHint: TBalloonHint;
+    LBSucesso: TLabel;
+    Label3: TLabel;
+    EdPrecoCusto: TEdit;
+    Label4: TLabel;
+    DBComboBoxEmpresa: TComboBox;
+    procedure BtSalvarClick(Sender: TObject);
+    procedure BtEditarClick(Sender: TObject);
+    procedure BtInfoClick(Sender: TObject);
+    procedure EdNomeProdutoKeyPress(Sender: TObject; var Key: Char);
+    procedure EdPrecoKeyPress(Sender: TObject; var Key: Char);
+    procedure EdPrecoExit(Sender: TObject);
+    procedure EdPrecoCustoKeyPress(Sender: TObject; var Key: Char);
+    procedure EdPrecoCustoExit(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+  private
+    FStep: integer;
+    FProdutoID: Integer; // Armazena o ID do produto selecionado para edição
+    procedure LimparCampos;
+    procedure CarregarDados();
+    procedure PreencherCamposParaEdicao(ProdutoID: Integer);
+    procedure ShowHintForStep(Step: Integer);
+  public
+    { Public declarations }
+  end;
+
+var
+  NMCadastroProduto: TNMCadastroProduto;
+
+implementation
+
+{$R *.dfm}
+
+procedure TNMCadastroProduto.BtInfoClick(Sender: TObject);
+begin
+  FStep := 1; // Inicia o tutorial com o primeiro passo
+  ShowHintForStep(FStep);
+end;
+
+procedure TNMCadastroProduto.ShowHintForStep(Step: Integer);
+begin
+  case Step of
+
+      1:
+      begin
+        BalloonHint.HideHint;
+        BalloonHint.Title := 'Passo 1: Selecione uma empresa';
+        BalloonHint.Description := 'Agora informe a empresa que o produto vai pertenser "Empresa".';
+        BalloonHint.ShowHint(DBComboBoxEmpresa);
+      end;
+    2:
+      begin
+        BalloonHint.HideHint;
+        BalloonHint.Title := 'Passo 2: Nome do Produto';
+        BalloonHint.Description := 'Agora informe o nome do produto no campo "Nome do Produto".';
+        BalloonHint.ShowHint(EdNomeProduto);
+      end;
+    3:
+      begin
+        BalloonHint.HideHint;
+        BalloonHint.Title := 'Passo 3: Preço de custo do Produto';
+        BalloonHint.Description := 'Agora informe o preço de custo do produto no campo "Preço de custo".';
+        BalloonHint.ShowHint(EdPrecoCusto);
+      end;
+    4:
+      begin
+        BalloonHint.HideHint;
+        BalloonHint.Title := 'Passo 4: Preço do Produto';
+        BalloonHint.Description := 'Agora informe o preço do produto no campo "Preço".';
+        BalloonHint.ShowHint(EdPreco);
+      end;
+    5:
+      begin
+        BalloonHint.HideHint;
+        BalloonHint.Title := 'Passo 5: Salvar Cadastro';
+        BalloonHint.Description := 'Agora clique em "Salvar" para finalizar o cadastro do produto.';
+        BalloonHint.ShowHint(BtSalvar);
+      end;
+  end;
+end;
+
+procedure TNMCadastroProduto.BtSalvarClick(Sender: TObject);
+var
+  IDEmpresaSelecionada: Variant;
+  PrecoCustoValor: Double;
+begin
+  if FStep = 3 then
+  begin
+    BalloonHint.HideHint;
+    FStep := 0;  // Avança para o próximo passo
+  end;
+
+  if Trim(EdNomeProduto.Text) = '' then
+    raise Exception.Create('O nome do produto é obrigatório.');
+
+  if Trim(EdPreco.Text) = '' then
+    raise Exception.Create('O preço do produto é obrigatório.');
+
+
+  try
+
+  // Se estiver vazio, define como 0.00
+    if Trim(EdPrecoCusto.Text) = '' then
+      PrecoCustoValor := 0.00
+    else
+      PrecoCustoValor := StrToFloat(EdPrecoCusto.Text);
+
+  // Pega o IDEmpresa do combo
+    if DBComboBoxEmpresa.ItemIndex = 0 then
+      IDEmpresaSelecionada := Null
+    else
+      IDEmpresaSelecionada := NativeInt(DBComboBoxEmpresa.Items.Objects[DBComboBoxEmpresa.ItemIndex]);
+
+    if FProdutoID = 0 then
+    begin
+      // Inserindo novo produto
+      if dbType = 'SQLite' then
+      begin
+        // Para SQLite, usa FDQuery
+        DataModulePrincipal.FDQueryProduto.SQL.Text := 'INSERT INTO Produto (IDEmpresa, NomeProduto, PrecoCusto, Preco) VALUES (:IDEmpresa, :NomeProduto, :PrecoCusto, :Preco)';
+        if VarIsNull(IDEmpresaSelecionada) then
+          DataModulePrincipal.FDQueryProduto.ParamByName('IDEmpresa').Clear
+        else
+          DataModulePrincipal.FDQueryProduto.ParamByName('IDEmpresa').AsInteger := IDEmpresaSelecionada;
+
+        DataModulePrincipal.FDQueryProduto.ParamByName('NomeProduto').AsString := EdNomeProduto.Text;
+        DataModulePrincipal.FDQueryProduto.ParamByName('PrecoCusto').AsFloat := PrecoCustoValor;
+        DataModulePrincipal.FDQueryProduto.ParamByName('Preco').AsFloat := StrToFloat(EdPreco.Text);
+      end
+      else if dbType = 'SQL Server' then
+      begin
+        // Para SQL Server, usa ADOQuery
+        DataModulePrincipal.ADOQueryProduto.SQL.Text := 'INSERT INTO Produto (IDEmpresa, NomeProduto, PrecoCusto, Preco) VALUES (:IDEmpresa, :NomeProduto, :PrecoCusto, :Preco)';
+        if VarIsNull(IDEmpresaSelecionada) then
+          DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('IDEmpresa').Value := Null
+        else
+          DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('IDEmpresa').Value := IDEmpresaSelecionada;
+
+        DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('NomeProduto').Value := EdNomeProduto.Text;
+        DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('PrecoCusto').Value := PrecoCustoValor ;
+        DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('Preco').Value := StrToFloat(EdPreco.Text);
+      end;
+    end
+    else
+    begin
+      // Editando produto existente
+      if dbType = 'SQLite' then
+      begin
+        // Para SQLite, usa FDQuery
+        DataModulePrincipal.FDQueryProduto.SQL.Text := 'UPDATE Produto SET IDEmpresa = :IDEmpresa, NomeProduto = :NomeProduto, PrecoCusto = :PrecoCusto, Preco = :Preco WHERE IDProduto = :IDProduto';
+         if VarIsNull(IDEmpresaSelecionada) then
+          DataModulePrincipal.FDQueryProduto.ParamByName('IDEmpresa').Values := Null;
+        else
+          DataModulePrincipal.FDQueryProduto.ParamByName('IDEmpresa').AsInteger := IDEmpresaSelecionada;
+
+        DataModulePrincipal.FDQueryProduto.ParamByName('NomeProduto').AsString := EdNomeProduto.Text;
+        DataModulePrincipal.FDQueryProduto.ParamByName('PrecoCusto').AsFloat := PrecoCustoValor;
+        DataModulePrincipal.FDQueryProduto.ParamByName('Preco').AsFloat := StrToFloat(EdPreco.Text);
+        DataModulePrincipal.FDQueryProduto.ParamByName('IDProduto').AsInteger := FProdutoID;
+      end
+      else if dbType = 'SQL Server' then
+      begin
+        // Para SQL Server, usa ADOQuery
+        DataModulePrincipal.ADOQueryProduto.SQL.Text := 'UPDATE Produto SET IDEmpresa = :IDEmpresa, NomeProduto = :NomeProduto, PrecoCusto = :PrecoCusto, Preco = :Preco WHERE IDProduto = :IDProduto';
+
+         if VarIsNull(IDEmpresaSelecionada) then
+          DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('IDEmpresa').Value := Null
+        else
+          DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('IDEmpresa').Value := IDEmpresaSelecionada;
+
+        DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('NomeProduto').Value := EdNomeProduto.Text;
+        DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('PrecoCusto').Value := PrecoCustoValor;
+        DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('Preco').Value := StrToFloat(EdPreco.Text);
+        DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('IDProduto').Value := FProdutoID;
+      end;
+    end;
+
+    // Executa a consulta (tanto para SQLite quanto para SQL Server)
+    if dbType = 'SQLite' then
+      DataModulePrincipal.FDQueryProduto.ExecSQL
+    else if dbType = 'SQL Server' then
+      DataModulePrincipal.ADOQueryProduto.ExecSQL;
+
+    // Limpar campos e exibir mensagem de sucesso
+    LimparCampos;
+    FProdutoID := 0;
+    LBSucesso.font.color := clGreen;
+    LBSucesso.Caption := 'Produto salvo com sucesso';
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Erro ao salvar o produto: ' + E.Message);
+      LBSucesso.Caption := 'Erro ao salvar produto';
+      LBSucesso.font.color := clRed;
+    end;
+  end;
+end;
+
+
+procedure TNMCadastroProduto.BtEditarClick(Sender: TObject);
+var
+  ProdutoID: Integer;
+begin
+  NMPesquisaProduto := TNMPesquisaProduto.Create(Self);
+  try
+    NMPesquisaProduto.ShowModal;
+    // Verifica se o usuário selecionou um cliente
+    if NMPesquisaProduto.DBComboBoxPesquisaProduto.ItemIndex <> -1 then
+    begin
+      // Obtém o ID do cliente selecionado
+      ProdutoID := Integer(NMPesquisaProduto.DBComboBoxPesquisaProduto.Items.Objects[NMPesquisaProduto.DBComboBoxPesquisaProduto.ItemIndex]);
+      // Chama o método para preencher os campos com os dados do cliente
+      PreencherCamposParaEdicao(ProdutoID);
+    end;
+  finally
+    NMPesquisaProduto.Free;
+  end;
+end;
+
+procedure TNMCadastroProduto.PreencherCamposParaEdicao(ProdutoID: Integer);
+var
+  IDEmpresa: Variant;
+  i: Integer;
+  Obj: TObject;
+begin
+  FProdutoID := ProdutoID;  // Armazena o ID do produto em uma variável global
+
+  // Verifica o tipo de banco de dados
+  if dbType = 'SQLite' then
+  begin
+    // Para SQLite, mantém o código original com FDQuery
+    DataModulePrincipal.FDQueryProduto.SQL.Text := 'SELECT * FROM Produto WHERE IDProduto = :IDProduto';
+    DataModulePrincipal.FDQueryProduto.Params.ParamByName('IDProduto').AsInteger := FProdutoID;
+    DataModulePrincipal.FDQueryProduto.Open;
+
+    // Preenche os campos com os dados do produto
+    EdNomeProduto.Text := DataModulePrincipal.FDQueryProduto.FieldByName('NomeProduto').AsString;
+    EdPrecoCusto.Text := DataModulePrincipal.FDQueryProduto.FieldByName('PrecoCusto').AsString;
+    EdPreco.Text := DataModulePrincipal.FDQueryProduto.FieldByName('Preco').AsString;
+    IDEmpresa := DataModulePrincipal.FDQueryProduto.FieldByName('IDEmpresa').Value;
+
+    DataModulePrincipal.FDQueryProduto.Close;
+  end
+  else if dbType = 'SQL Server' then
+  begin
+    // Para SQL Server, usa o ADOQuery e o método Parameters.ParamByName
+    DataModulePrincipal.ADOQueryProduto.SQL.Text := 'SELECT * FROM Produto WHERE IDProduto = :IDProduto';
+    DataModulePrincipal.ADOQueryProduto.Parameters.ParamByName('IDProduto').Value := FProdutoID;
+    DataModulePrincipal.ADOQueryProduto.Open;
+
+    // Preenche os campos com os dados do produto
+    EdNomeProduto.Text := DataModulePrincipal.ADOQueryProduto.FieldByName('NomeProduto').AsString;
+    EdPrecoCusto.Text := DataModulePrincipal.ADOQueryProduto.FieldByName('PrecoCusto').AsString;
+    EdPreco.Text := DataModulePrincipal.ADOQueryProduto.FieldByName('Preco').AsString;
+    IDEmpresa := DataModulePrincipal.ADOQueryProduto.FieldByName('IDEmpresa').Value;
+
+    DataModulePrincipal.ADOQueryProduto.Close;
+  end;
+
+  // Selecionar a empresa no combo
+  if VarIsNull(IDEmpresa) then
+  begin
+    DBComboBoxEmpresa.ItemIndex := 0; // "-- Todos --"
+  end
+  else
+  begin
+    for i := 0 to DBComboBoxEmpresa.Items.Count - 1 do
+    begin
+      Obj := DBComboBoxEmpresa.Items.Objects[i];
+      if Obj <> nil then
+      begin
+        if NativeInt(Obj) = IDEmpresa then
+        begin
+          DBComboBoxEmpresa.ItemIndex := i;
+          Break;
+        end;
+      end;
+    end;
+  end;
+end;
+
+
+procedure TNMCadastroProduto.CarregarDados();
+begin
+   // Seleciona sempre "-- Todos --"
+  // Verifica o tipo de banco de dados
+  if dbType = 'SQLite' then
+  begin
+       DBComboBoxEmpresa.Items.Clear;
+
+      with DataModulePrincipal.FDQueryProduto do
+      begin
+        Close;
+        SQL.Text :=
+          'SELECT NULL AS IDEmpresa, ''-- Todos --'' AS NomeEmpresa ' +
+          'UNION ALL ' +
+          'SELECT IDEmpresa, CAST(IDEmpresa AS TEXT) || '' - '' || NomeEmpresa AS NomeEmpresa ' +
+          'FROM Empresa ' +
+          'ORDER BY IDEmpresa';
+        Open;
+
+        while not Eof do
+        begin
+          if FieldByName('IDEmpresa').IsNull then
+          begin
+            // Opção -- Todos --
+            DBComboBoxEmpresa.Items.AddObject(
+              FieldByName('NomeEmpresa').AsString,
+              nil
+            );
+          end
+          else
+          begin
+            DBComboBoxEmpresa.Items.AddObject(
+              FieldByName('NomeEmpresa').AsString,
+              TObject(FieldByName('IDEmpresa').AsInteger)
+            );
+          end;
+
+          Next;
+        end;
+      end;
+
+      DBComboBoxEmpresa.ItemIndex := 0;
+  end
+  else if dbType = 'SQL Server' then
+  begin
+      DBComboBoxEmpresa.Items.Clear;
+
+      DataModulePrincipal.ADOQueryEmpresa.Close;
+      DataModulePrincipal.ADOQueryEmpresa.SQL.Text :=
+        'SELECT NULL AS IDEmpresa, ''-- Todos --'' AS NomeEmpresa ' +
+        'UNION ' +
+        'SELECT IDEmpresa, CAST(IDEmpresa AS NVARCHAR) + '' - '' + NomeEmpresa AS NomeEmpresa ' +
+        'FROM Empresa ' +
+        'ORDER BY IDEmpresa';
+      DataModulePrincipal.ADOQueryEmpresa.Open;
+
+      while not DataModulePrincipal.ADOQueryEmpresa.Eof do
+      begin
+        if DataModulePrincipal.ADOQueryEmpresa.FieldByName('IDEmpresa').IsNull then
+        begin
+          // Opção -- Todos --
+          DBComboBoxEmpresa.Items.AddObject(
+            DataModulePrincipal.ADOQueryEmpresa.FieldByName('NomeEmpresa').AsString,
+            nil
+          );
+        end
+        else
+        begin
+          // Armazena o IDEmpresa como TObject(ID)
+          DBComboBoxEmpresa.Items.AddObject(
+            DataModulePrincipal.ADOQueryEmpresa.FieldByName('NomeEmpresa').AsString,
+            TObject(DataModulePrincipal.ADOQueryEmpresa.FieldByName('IDEmpresa').AsInteger)
+          );
+        end;
+
+        DataModulePrincipal.ADOQueryEmpresa.Next;
+      end;
+
+      DBComboBoxEmpresa.ItemIndex := 0;
+  end;
+end;
+
+
+procedure TNMCadastroProduto.EdNomeProdutoKeyPress(Sender: TObject;
+  var Key: Char);
+begin
+  if FStep = 1 then
+  begin
+    FStep := 2;  // Avança para o próximo passo
+    ShowHintForStep(FStep);
+  end;
+end;
+
+procedure TNMCadastroProduto.EdPrecoCustoExit(Sender: TObject);
+begin
+  // Substituir ponto por vírgula quando o usuário sair do campo
+  EdPrecoCusto.Text := StringReplace(EdPrecoCusto.Text, '.', ',', [rfReplaceAll]);
+  // Verificar se o valor inserido tem um formato numérico válido
+  try
+    StrToFloat(EdPrecoCusto.Text); // Tenta converter para número
+  except
+    on E: EConvertError do
+    begin
+      ShowMessage('Valor inválido! Insira um preço válido no formato 0,00');
+      EdPrecoCusto.SetFocus;
+    end;
+  end;
+end;
+
+procedure TNMCadastroProduto.EdPrecoCustoKeyPress(Sender: TObject;
+  var Key: Char);
+begin
+  if FStep = 2 then
+  begin
+    FStep := 3;  // Avança para o próximo passo
+    ShowHintForStep(FStep);
+  end;
+    // Permitir apenas números, vírgula e backspace
+  if not (Key in ['0'..'9', ',', #8]) then
+    Key := #0; // Cancela a tecla pressionada, se não for válida
+  // Se o campo já tiver uma vírgula, impedir mais vírgulas
+  if (Key = ',') and (Pos(',', EdPrecoCusto.Text) > 0) then
+    Key := #0; // Impede mais de uma vírgula
+end;
+
+procedure TNMCadastroProduto.EdPrecoExit(Sender: TObject);
+begin
+  // Substituir ponto por vírgula quando o usuário sair do campo
+  EdPreco.Text := StringReplace(EdPreco.Text, '.', ',', [rfReplaceAll]);
+  // Verificar se o valor inserido tem um formato numérico válido
+  try
+    StrToFloat(EdPreco.Text); // Tenta converter para número
+  except
+    on E: EConvertError do
+    begin
+      ShowMessage('Valor inválido! Insira um preço válido no formato 0,00');
+      EdPreco.SetFocus;
+    end;
+  end;
+end;
+
+procedure TNMCadastroProduto.EdPrecoKeyPress(Sender: TObject; var Key: Char);
+begin
+  if FStep = 2 then
+  begin
+    FStep := 3;  // Avança para o próximo passo
+    ShowHintForStep(FStep);
+  end;
+    // Permitir apenas números, vírgula e backspace
+  if not (Key in ['0'..'9', ',', #8]) then
+    Key := #0; // Cancela a tecla pressionada, se não for válida
+  // Se o campo já tiver uma vírgula, impedir mais vírgulas
+  if (Key = ',') and (Pos(',', EdPreco.Text) > 0) then
+    Key := #0; // Impede mais de uma vírgula
+end;
+
+procedure TNMCadastroProduto.FormCreate(Sender: TObject);
+begin
+CarregarDados;
+end;
+
+procedure TNMCadastroProduto.LimparCampos;
+begin
+  CarregarDados;
+  EdNomeProduto.Clear;
+  EdPrecoCusto.Clear;
+  EdPreco.Clear;
+end;
+
+end.
+

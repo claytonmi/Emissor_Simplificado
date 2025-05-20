@@ -8,7 +8,6 @@ object DataModulePrincipal: TDataModulePrincipal
     FetchOptions.AssignedValues = [evAutoClose]
     ResourceOptions.AssignedValues = [rvCmdExecTimeout]
     ResourceOptions.CmdExecTimeout = 30
-    Connected = True
     LoginPrompt = False
     Left = 56
     Top = 24

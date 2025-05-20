@@ -16,8 +16,13 @@ type
     Label1: TLabel;
     LabelCliente: TLabel;
     ComboBoxProduto: TComboBox;
+    Label2: TLabel;
+    ComboBoxEmpresa: TComboBox;
     procedure BtImprimirClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure CarregarEmpresas;
+    procedure CarregarProdutosPorEmpresa(IDEmpresa: Integer);
+    procedure ComboBoxEmpresaChange(Sender: TObject);
   private
     { Private declarations }
   public
@@ -35,18 +40,23 @@ procedure TNMRelatorioFinancas.BtImprimirClick(Sender: TObject);
 var
  DataInicial, DataFim: TDateTime;
  FormRelatorio: TFRelatorioFinancas;
+ IDEmpresa: Integer;
 
 begin
   // Obtém a data inicial do DateTimePicker
   DataInicial := DateTimePickerInicial.Date;
   DataFim :=  DateTimePickerFinal.Date;
 
+  if ComboBoxEmpresa.ItemIndex = 0 then
+    IDEmpresa := -1
+  else
+    IDEmpresa := Integer(ComboBoxEmpresa.Items.Objects[ComboBoxEmpresa.ItemIndex]);
 
   // Instancia o formulário de relatório
   FormRelatorio := TFRelatorioFinancas.Create(Self);
   try
     // Chama a procedure para gerar o relatório passando o ID da empresa (ou 0 caso não tenha sido selecionada)
-    FormRelatorio.GerarRelatorio(DataInicial, DataFim,ComboBoxProduto.Text);
+    FormRelatorio.GerarRelatorio(DataInicial, DataFim,ComboBoxProduto.Text, IDEmpresa);
   finally
     // Libera o formulário da memória
     FormRelatorio.Free;
@@ -58,56 +68,140 @@ begin
   DateTimePickerInicial.Date := Now - 15;
   DateTimePickerFinal.Date := Now + 15;
 
+  CarregarEmpresas;
+  CarregarProdutosPorEmpresa(-1); // -1 indica "Todos"
+end;
+
+
+procedure TNMRelatorioFinancas.CarregarEmpresas;
+begin
+  ComboBoxEmpresa.Items.Clear;
+  ComboBoxEmpresa.Items.Add('--- Todos ---'); // Sempre adiciona primeiro
 
   if dbType = 'SQLite' then
   begin
-    DataModulePrincipal.FDQueryPedido.Close;
-    DataModulePrincipal.FDQueryPedido.SQL.Text :=
-      'SELECT NomeProduto, ' +
-      '  CASE WHEN NomeProduto = ''--- Todos ---'' THEN 0 ELSE 1 END AS Ordem ' +
-      'FROM (' +
-      '  SELECT ''--- Todos ---'' AS NomeProduto ' +
-      '  UNION ' +
-      '  SELECT DISTINCT NomeProduto FROM ItemPedido' +
-      ') ' +
-      'ORDER BY Ordem, NomeProduto';
+    DataModulePrincipal.FDQueryEmpresa.Close;
+    DataModulePrincipal.FDQueryEmpresa.SQL.Text := 'SELECT IDEmpresa, NomeFantasia FROM Empresa ORDER BY NomeFantasia';
+    DataModulePrincipal.FDQueryEmpresa.Open;
 
-    DataModulePrincipal.FDQueryPedido.Open;
-
-    ComboBoxProduto.Items.Clear;
-    while not DataModulePrincipal.FDQueryPedido.Eof do
+    while not DataModulePrincipal.FDQueryEmpresa.Eof do
     begin
-      ComboBoxProduto.Items.Add(DataModulePrincipal.FDQueryPedido.FieldByName('NomeProduto').AsString);
-      DataModulePrincipal.FDQueryPedido.Next;
+      ComboBoxEmpresa.Items.AddObject(
+        DataModulePrincipal.FDQueryEmpresa.FieldByName('NomeFantasia').AsString,
+        TObject(DataModulePrincipal.FDQueryEmpresa.FieldByName('IDEmpresa').AsInteger)
+      );
+      DataModulePrincipal.FDQueryEmpresa.Next;
     end;
-
-    // Seleciona a primeira opção: '--- Todos ---'
-    if ComboBoxProduto.Items.Count > 0 then
-      ComboBoxProduto.ItemIndex := 0;
   end
   else if dbType = 'SQL Server' then
   begin
-    DataModulePrincipal.ADOQueryPedido.Close;
-    DataModulePrincipal.ADOQueryPedido.SQL.Text :=
-      'SELECT NomeProduto FROM (' +
-      '  SELECT ''--- Todos ---'' AS NomeProduto ' +
-      '  UNION ' +
-      '  SELECT DISTINCT NomeProduto FROM ItemPedido' +
-      ') AS Produtos ' +
-      'ORDER BY CASE WHEN NomeProduto = ''--- Todos ---'' THEN 0 ELSE 1 END, NomeProduto';
+    DataModulePrincipal.ADOQueryEmpresa.Close;
+    DataModulePrincipal.ADOQueryEmpresa.SQL.Text := 'SELECT IDEmpresa, NomeFantasia FROM Empresa ORDER BY NomeFantasia';
+    DataModulePrincipal.ADOQueryEmpresa.Open;
 
-    DataModulePrincipal.ADOQueryPedido.Open;
-
-    ComboBoxProduto.Items.Clear;
-    while not DataModulePrincipal.ADOQueryPedido.Eof do
+    while not DataModulePrincipal.ADOQueryEmpresa.Eof do
     begin
-      ComboBoxProduto.Items.Add(DataModulePrincipal.ADOQueryPedido.FieldByName('NomeProduto').AsString);
-      DataModulePrincipal.ADOQueryPedido.Next;
+      ComboBoxEmpresa.Items.AddObject(
+        DataModulePrincipal.ADOQueryEmpresa.FieldByName('NomeFantasia').AsString,
+        TObject(DataModulePrincipal.ADOQueryEmpresa.FieldByName('IDEmpresa').AsInteger)
+      );
+      DataModulePrincipal.ADOQueryEmpresa.Next;
     end;
-    // Seleciona a primeira opção: '--- Todos ---'
-    if ComboBoxProduto.Items.Count > 0 then
-      ComboBoxProduto.ItemIndex := 0;
   end;
+
+  ComboBoxEmpresa.ItemIndex := 0;
+end;
+
+procedure TNMRelatorioFinancas.CarregarProdutosPorEmpresa(IDEmpresa: Integer);
+var
+  SQLBase: string;
+  TemProdutos: Boolean;
+begin
+  ComboBoxProduto.Items.Clear;
+  ComboBoxProduto.Items.Add('--- Todos ---');
+
+  TemProdutos := False;
+
+  if dbType = 'SQLite' then
+  begin
+    SQLBase :=
+      'SELECT DISTINCT IP.NomeProduto ' +
+      'FROM ItemPedido IP ' +
+      'JOIN Produto P ON IP.IDProduto = P.IDProduto ';
+
+    if IDEmpresa <> -1 then
+      SQLBase := SQLBase + 'WHERE P.IDEmpresa = ' + IntToStr(IDEmpresa) + ' ';
+
+    SQLBase := SQLBase + 'ORDER BY IP.NomeProduto';
+
+    with DataModulePrincipal.FDQueryPedido do
+    begin
+      Close;
+      SQL.Text := SQLBase;
+      Open;
+
+      while not Eof do
+      begin
+        ComboBoxProduto.Items.Add(FieldByName('NomeProduto').AsString);
+        Next;
+        TemProdutos := True;
+      end;
+    end;
+  end
+  else if dbType = 'SQL Server' then
+  begin
+    SQLBase :=
+      'SELECT DISTINCT IP.NomeProduto ' +
+      'FROM ItemPedido IP ' +
+      'JOIN Produto P ON IP.IDProduto = P.IDProduto ';
+
+    if IDEmpresa <> -1 then
+      SQLBase := SQLBase + 'WHERE P.IDEmpresa = ' + IntToStr(IDEmpresa) + ' ';
+
+    SQLBase := SQLBase + 'ORDER BY IP.NomeProduto';
+
+    with DataModulePrincipal.ADOQueryPedido do
+    begin
+      Close;
+      SQL.Text := SQLBase;
+      Open;
+
+      while not Eof do
+      begin
+        ComboBoxProduto.Items.Add(FieldByName('NomeProduto').AsString);
+        Next;
+        TemProdutos := True;
+      end;
+    end;
+  end;
+
+  // Se não tiver produtos, informa e reseta os ComboBoxes
+  if not TemProdutos then
+  begin
+    MessageDlg('Não há produtos vendidos para a empresa selecionada.', mtInformation, [mbOK], 0);
+
+    // Resetar ComboBoxEmpresa para '--- Todos ---'
+    if ComboBoxEmpresa.Items.Count > 0 then
+      ComboBoxEmpresa.ItemIndex := 0;
+
+    // Recarregar todos os produtos
+    CarregarProdutosPorEmpresa(-1);
+    Exit;
+  end;
+
+  ComboBoxProduto.ItemIndex := 0;
+end;
+
+procedure TNMRelatorioFinancas.ComboBoxEmpresaChange(Sender: TObject);
+var
+  IDEmpresa: Integer;
+begin
+  if ComboBoxEmpresa.ItemIndex = 0 then
+    IDEmpresa := -1
+  else
+    IDEmpresa := Integer(ComboBoxEmpresa.Items.Objects[ComboBoxEmpresa.ItemIndex]);
+
+  CarregarProdutosPorEmpresa(IDEmpresa);
 end;
 
 end.

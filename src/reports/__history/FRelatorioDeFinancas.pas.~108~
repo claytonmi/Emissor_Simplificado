@@ -1,0 +1,253 @@
+unit FRelatorioDeFinancas;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, uDataModulePrincipal,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, RLReport;
+
+type
+  TFRelatorioFinancas = class(TForm)
+    RLReport: TRLReport;
+    RLBandCabecalho: TRLBand;
+    RLLabelTitulo: TRLLabel;
+    RLLabelPeriodo: TRLLabel;
+    RLGroupVendas: TRLGroup;
+    RLBandColunas: TRLBand;
+    RLBandDetalhes: TRLBand;
+    RLBandTotalFinancas: TRLBand;
+    RLLabelProduto: TRLLabel;
+    RLLabelQuantidade: TRLLabel;
+    RLLabelValorCusto: TRLLabel;
+    RLLabelVenda: TRLLabel;
+    RLLabelTotal: TRLLabel;
+    RLBandRodaPe: TRLBand;
+    RLLabel6: TRLLabel;
+    RLSystemInfo1: TRLSystemInfo;
+    RLDBTextProduto: TRLDBText;
+    RLDBTextQuantidade: TRLDBText;
+    RLDBTextValor: TRLDBText;
+    RLDBTextTotal: TRLDBText;
+    RLLabelMoeda: TRLLabel;
+    RLDBText1: TRLDBText;
+    RLLabelMoedaTotal: TRLLabel;
+    procedure GerarRelatorio(DataInicial: TDateTime; DataFim: TDateTime; NomeProdutoSelecionado: string; IDEmpresa: Integer);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  FRelatorioFinancas: TFRelatorioFinancas;
+
+implementation
+
+{$R *.dfm}
+procedure TFRelatorioFinancas.GerarRelatorio(DataInicial: TDateTime; DataFim: TDateTime; NomeProdutoSelecionado: string; IDEmpresa: Integer);
+var
+  IdiomaRelatorio, MoedaConfigurada, SimboloMoeda: string;
+  TotalGeral: Currency;
+  FiltroProduto, FiltroEmpresa: string;
+begin
+  if (DataInicial <> 0) and (DataFim <> 0) then
+  begin
+
+    if (NomeProdutoSelecionado <> '--- Todos ---') then
+      FiltroProduto := ' AND ip.NomeProduto = :NomeProduto '
+    else
+      FiltroProduto := '';
+
+    if IDEmpresa <> -1 then
+      FiltroEmpresa := ' AND pr.IDEmpresa = :IDEmpresa '
+    else
+      FiltroEmpresa := '';
+
+    // Obtém o idioma do relatório
+    if dbType = 'SQLite' then
+    begin
+      with DataModulePrincipal.FDQueryConfiguracao do
+      begin
+        Close;
+        SQL.Text := 'SELECT Idioma FROM Configuracao WHERE NomeConfiguracao = :Nome';
+        ParamByName('Nome').AsString := 'UsaIdiomaNoRelatorio';
+        Open;
+        IdiomaRelatorio := FieldByName('Idioma').AsString;
+      end;
+      with DataModulePrincipal.FDQueryConfiguracao do
+      begin
+        Close;
+        SQL.Text := 'SELECT UsarMoeda FROM Configuracao WHERE NomeConfiguracao = :Nome';
+        ParamByName('Nome').AsString := 'MoedaApresentadaNoRelatorio';
+        Open;
+        MoedaConfigurada := FieldByName('UsarMoeda').AsString;
+      end;
+    end
+    else if dbType = 'SQL Server' then
+    begin
+      with DataModulePrincipal.ADOQueryConfiguracao do
+      begin
+        Close;
+        SQL.Text := 'SELECT Idioma FROM Configuracao WHERE NomeConfiguracao = :Nome';
+        Parameters.ParamByName('Nome').Value := 'UsaIdiomaNoRelatorio';
+        Open;
+        IdiomaRelatorio := FieldByName('Idioma').AsString;
+      end;
+      with DataModulePrincipal.ADOQueryConfiguracao do
+      begin
+        Close;
+        SQL.Text := 'SELECT UsarMoeda FROM Configuracao WHERE NomeConfiguracao = :Nome';
+        Parameters.ParamByName('Nome').Value := 'MoedaApresentadaNoRelatorio';
+        Open;
+        MoedaConfigurada := FieldByName('UsarMoeda').AsString;
+      end;
+    end;
+    // Definindo o símbolo da moeda com base na configuração
+    if MoedaConfigurada = 'Real Brasileiro' then
+      SimboloMoeda := 'R$'
+    else if MoedaConfigurada = 'Dólar Americano' then
+      SimboloMoeda := '$'
+    else if MoedaConfigurada = 'Euro' then
+      SimboloMoeda := '€'
+    else if MoedaConfigurada = 'Dólar Canadense' then
+      SimboloMoeda := 'C$'
+    else
+      SimboloMoeda := 'R$';  // Valor padrão
+    // Atualiza o RLLabelMoeda com o símbolo da moeda
+    RLLabelMoeda.Caption := SimboloMoeda;
+    RLLabelMoedaTotal.Caption := 'Total ' + SimboloMoeda + ':';
+
+     // Define o filtro do produto, se necessário
+    if (NomeProdutoSelecionado <> '--- Todos ---') then
+      FiltroProduto := ' AND ip.NomeProduto = :NomeProduto '
+    else
+      FiltroProduto := '';
+
+      if dbType = 'SQLite' then
+    begin
+      DataModulePrincipal.FDQueryRelatorioFinancas.Close;
+      DataModulePrincipal.FDQueryRelatorioFinancas.SQL.Text :=
+      'SELECT ip.NomeProduto, ' +
+      '  SUM(ip.Quantidade) AS QuantidadeVendida, ' +
+      '  AVG(ip.Valor) AS PrecoVenda, ' +
+      '  pr.PrecoCusto, ' +
+      '  SUM(CASE WHEN pr.PrecoCusto IS NULL OR pr.PrecoCusto = 0 ' +
+      '           THEN ip.Quantidade * ip.Valor ' +
+      '           ELSE ip.Quantidade * (ip.Valor - pr.PrecoCusto) END) AS LucroTotal, ' +
+      '  (SELECT SUM(CASE WHEN pr2.PrecoCusto IS NULL OR pr2.PrecoCusto = 0 ' +
+      '                   THEN ip2.Quantidade * ip2.Valor ' +
+      '                   ELSE ip2.Quantidade * (ip2.Valor - pr2.PrecoCusto) END) ' +
+      '   FROM ItemPedido ip2 ' +
+      '   JOIN Pedido pd2 ON ip2.IDVenda = pd2.IDVenda ' +
+      '   JOIN Produto pr2 ON ip2.IDProduto = pr2.IDProduto ' +
+      '   WHERE pd2.Data BETWEEN :DataInicial AND :DataFinal) AS TotalGeral ' +
+      'FROM ItemPedido ip ' +
+      'JOIN Pedido pd ON ip.IDVenda = pd.IDVenda ' +
+      'JOIN Produto pr ON ip.IDProduto = pr.IDProduto ' +
+      'WHERE pd.Data BETWEEN :DataInicial AND :DataFinal' + FiltroProduto +
+      ' GROUP BY ip.NomeProduto, pr.PrecoCusto ' +
+      'ORDER BY ip.NomeProduto';
+
+      with DataModulePrincipal.FDQueryRelatorioFinancas do
+      begin
+        ParamByName('DataInicial').AsDate := DataInicial;
+        ParamByName('DataFinal').AsDate := DataFim;
+        if FiltroProduto <> '' then
+        begin
+          // SQLite
+          ParamByName('NomeProduto').AsString := NomeProdutoSelecionado;
+        end;
+        Open;
+      end;
+
+    end
+    else if dbType = 'SQL Server' then
+    begin
+      DataModulePrincipal.ADOQueryRelatorioFinancas.Close;
+      DataModulePrincipal.ADOQueryRelatorioFinancas.SQL.Text :=
+        'SELECT p.NomeProduto, SUM(ip.Quantidade) AS QuantidadeVendida, ' +
+        '       pr.Preco AS PrecoVenda, pr.PrecoCusto, ' +
+        '       SUM(CASE WHEN pr.PrecoCusto IS NULL OR pr.PrecoCusto = 0 ' +
+        '                THEN ip.Quantidade * pr.Preco ' +
+        '                ELSE ip.Quantidade * (pr.Preco - pr.PrecoCusto) END) AS LucroTotal, ' +
+        '       (SELECT SUM(CASE WHEN pr2.PrecoCusto IS NULL OR pr2.PrecoCusto = 0 ' +
+        '                        THEN ip2.Quantidade * pr2.Preco ' +
+        '                        ELSE ip2.Quantidade * (pr2.Preco - pr2.PrecoCusto) END) ' +
+        '        FROM ItemPedido ip2 ' +
+        '        JOIN Pedido pd2 ON ip2.IDVenda = pd2.IDVenda ' +
+        '        JOIN Produto pr2 ON ip2.IDProduto = pr2.IDProduto ' +
+        '        WHERE pd2.Data BETWEEN :DataIniciall AND :DataFinall) AS TotalGeral ' +
+        'FROM ItemPedido ip ' +
+        'JOIN Pedido pd ON ip.IDVenda = pd.IDVenda ' +
+        'JOIN Produto pr ON ip.IDProduto = pr.IDProduto ' +
+        'JOIN Produto p ON p.IDProduto = ip.IDProduto ' +
+        'WHERE pd.Data BETWEEN :DataInicial AND :DataFinal' + FiltroProduto +
+        ' GROUP BY p.NomeProduto, pr.Preco, pr.PrecoCusto ' +
+        'ORDER BY p.NomeProduto';
+
+
+      with DataModulePrincipal.ADOQueryRelatorioFinancas do
+      begin
+        Parameters.ParamByName('DataIniciall').Value := DataInicial;
+        Parameters.ParamByName('DataFinall').Value := DataFim;
+        Parameters.ParamByName('DataInicial').Value := DataInicial;
+        Parameters.ParamByName('DataFinal').Value := DataFim;
+        if FiltroProduto <> '' then
+          Parameters.ParamByName('NomeProduto').Value := NomeProdutoSelecionado;
+        Open;
+      end;
+    end;
+
+    if dbType = 'SQLite' then
+    begin
+      if FiltroProduto = '' then
+      begin
+        TotalGeral := DataModulePrincipal.FDQueryRelatorioFinancas.FieldByName('TotalGeral').AsCurrency;
+      end
+      else
+      begin
+        TotalGeral:= DataModulePrincipal.FDQueryRelatorioFinancas.FieldByName('LucroTotal').AsCurrency;
+      end;
+    end
+    else if dbType = 'SQL Server' then
+    begin
+      if FiltroProduto = '' then
+      begin
+        TotalGeral := DataModulePrincipal.ADOQueryRelatorioFinancas.FieldByName('TotalGeral').AsCurrency;
+      end
+      else
+      begin
+        TotalGeral := DataModulePrincipal.ADOQueryRelatorioFinancas.FieldByName('LucroTotal').AsCurrency;
+      end;
+    end;
+
+
+    if IdiomaRelatorio = 'Inglês' then
+    begin
+      RLLabelTitulo.Caption := 'Financial Report';
+      RLLabelPeriodo.Caption := 'Period: ' + DateToStr(DataInicial) + ' to ' + DateToStr(DataFim);
+      RLLabelProduto.Caption := 'Product';
+      RLLabelQuantidade.Caption := 'Qty Sold';
+      RLLabelValorCusto.Caption := 'Cost Price';
+      RLLabelVenda.Caption := 'Sale Price';
+      RLLabelTotal.Caption := 'Total Profit';
+      RLLabelMoedaTotal.Caption := 'Total Amount ' + SimboloMoeda + ': ' + FormatFloat('0.00', TotalGeral);
+    end
+    else
+    begin
+      RLLabelTitulo.Caption := 'Relatório de Finanças';
+      RLLabelPeriodo.Caption := 'Período: ' + DateToStr(DataInicial) + ' a ' + DateToStr(DataFim);
+      RLLabelProduto.Caption := 'Produto';
+      RLLabelQuantidade.Caption := 'Qtd Vendidas';
+      RLLabelValorCusto.Caption := 'Valor Custo';
+      RLLabelVenda.Caption := 'Valor Venda';
+      RLLabelTotal.Caption := 'Total Lucro';
+      RLLabelMoedaTotal.Caption := 'Total Geral ' + SimboloMoeda + ': ' + FormatFloat('0.00', TotalGeral);
+    end;
+   end;
+
+  RLReport.PreviewModal;
+end;
+end.
+
+

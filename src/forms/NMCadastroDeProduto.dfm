@@ -4,7 +4,7 @@ object NMCadastroProduto: TNMCadastroProduto
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Cadastro de produto'
-  ClientHeight = 193
+  ClientHeight = 223
   ClientWidth = 350
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -269,24 +269,25 @@ object NMCadastroProduto: TNMCadastroProduto
     000000300000E000000000700000F000000000F00000F800000001F00000FC00
     000003F00000FE0000000FF00000FF8000001FF00000FF8000003FF00000}
   Position = poScreenCenter
+  OnCreate = FormCreate
   TextHeight = 15
   object Label1: TLabel
     Left = 8
-    Top = 27
+    Top = 62
     Width = 82
     Height = 15
     Caption = 'Nome Produto:'
   end
   object Label2: TLabel
     Left = 57
-    Top = 99
+    Top = 134
     Width = 33
     Height = 15
     Caption = 'Pre'#231'o:'
   end
   object LBSucesso: TLabel
     Left = 0
-    Top = 178
+    Top = 208
     Width = 350
     Height = 15
     Align = alBottom
@@ -303,14 +304,21 @@ object NMCadastroProduto: TNMCadastroProduto
   end
   object Label3: TLabel
     Left = 8
-    Top = 64
+    Top = 99
     Width = 83
     Height = 15
     Caption = 'Pre'#231'o de Custo:'
   end
+  object Label4: TLabel
+    Left = 42
+    Top = 27
+    Width = 48
+    Height = 15
+    Caption = 'Empresa:'
+  end
   object EdNomeProduto: TEdit
     Left = 96
-    Top = 24
+    Top = 59
     Width = 241
     Height = 23
     TabOrder = 0
@@ -318,7 +326,7 @@ object NMCadastroProduto: TNMCadastroProduto
   end
   object EdPreco: TEdit
     Left = 96
-    Top = 96
+    Top = 131
     Width = 121
     Height = 23
     TabOrder = 1
@@ -327,7 +335,7 @@ object NMCadastroProduto: TNMCadastroProduto
   end
   object BtSalvar: TBitBtn
     Left = 96
-    Top = 138
+    Top = 173
     Width = 75
     Height = 25
     Align = alCustom
@@ -337,7 +345,7 @@ object NMCadastroProduto: TNMCadastroProduto
   end
   object BtEditar: TBitBtn
     Left = 191
-    Top = 138
+    Top = 173
     Width = 75
     Height = 25
     Align = alCustom
@@ -392,15 +400,22 @@ object NMCadastroProduto: TNMCadastroProduto
   end
   object EdPrecoCusto: TEdit
     Left = 96
-    Top = 61
+    Top = 96
     Width = 121
     Height = 23
     TabOrder = 5
     OnExit = EdPrecoCustoExit
     OnKeyPress = EdPrecoCustoKeyPress
   end
+  object DBComboBoxEmpresa: TComboBox
+    Left = 96
+    Top = 24
+    Width = 241
+    Height = 23
+    TabOrder = 6
+  end
   object BalloonHint: TBalloonHint
     Left = 296
-    Top = 64
+    Top = 99
   end
 end

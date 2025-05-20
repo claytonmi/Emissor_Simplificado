@@ -31,7 +31,7 @@ type
     RLLabelMoeda: TRLLabel;
     RLDBText1: TRLDBText;
     RLLabelMoedaTotal: TRLLabel;
-    procedure GerarRelatorio(DataInicial: TDateTime; DataFim: TDateTime; NomeProdutoSelecionado: string);
+    procedure GerarRelatorio(DataInicial: TDateTime; DataFim: TDateTime; NomeProdutoSelecionado: string; IDEmpresa: Integer);
   private
     { Private declarations }
   public
@@ -44,11 +44,11 @@ var
 implementation
 
 {$R *.dfm}
-procedure TFRelatorioFinancas.GerarRelatorio(DataInicial: TDateTime; DataFim: TDateTime; NomeProdutoSelecionado: string);
+procedure TFRelatorioFinancas.GerarRelatorio(DataInicial: TDateTime; DataFim: TDateTime; NomeProdutoSelecionado: string; IDEmpresa: Integer);
 var
   IdiomaRelatorio, MoedaConfigurada, SimboloMoeda: string;
   TotalGeral: Currency;
-  FiltroProduto: string;
+  FiltroProduto, FiltroEmpresa: string;
 begin
   if (DataInicial <> 0) and (DataFim <> 0) then
   begin
@@ -113,6 +113,11 @@ begin
     else
       FiltroProduto := '';
 
+    if IDEmpresa <> -1 then
+      FiltroEmpresa := ' AND pr.IDEmpresa = :IDEmpresa '
+    else
+      FiltroEmpresa := '';
+
       if dbType = 'SQLite' then
     begin
       DataModulePrincipal.FDQueryRelatorioFinancas.Close;
@@ -134,7 +139,7 @@ begin
       'FROM ItemPedido ip ' +
       'JOIN Pedido pd ON ip.IDVenda = pd.IDVenda ' +
       'JOIN Produto pr ON ip.IDProduto = pr.IDProduto ' +
-      'WHERE pd.Data BETWEEN :DataInicial AND :DataFinal' + FiltroProduto +
+      'WHERE pd.Data BETWEEN :DataInicial AND :DataFinal' + FiltroProduto + FiltroEmpresa +
       ' GROUP BY ip.NomeProduto, pr.PrecoCusto ' +
       'ORDER BY ip.NomeProduto';
 
@@ -142,6 +147,8 @@ begin
       begin
         ParamByName('DataInicial').AsDate := DataInicial;
         ParamByName('DataFinal').AsDate := DataFim;
+        if FiltroEmpresa <> '' then
+          ParamByName('IDEmpresa').AsInteger := IDEmpresa;
         if FiltroProduto <> '' then
         begin
           // SQLite
@@ -171,7 +178,7 @@ begin
         'JOIN Pedido pd ON ip.IDVenda = pd.IDVenda ' +
         'JOIN Produto pr ON ip.IDProduto = pr.IDProduto ' +
         'JOIN Produto p ON p.IDProduto = ip.IDProduto ' +
-        'WHERE pd.Data BETWEEN :DataInicial AND :DataFinal' + FiltroProduto +
+        'WHERE pd.Data BETWEEN :DataInicial AND :DataFinal' + FiltroProduto + FiltroEmpresa +
         ' GROUP BY p.NomeProduto, pr.Preco, pr.PrecoCusto ' +
         'ORDER BY p.NomeProduto';
 
@@ -182,6 +189,8 @@ begin
         Parameters.ParamByName('DataFinall').Value := DataFim;
         Parameters.ParamByName('DataInicial').Value := DataInicial;
         Parameters.ParamByName('DataFinal').Value := DataFim;
+        if FiltroEmpresa <> '' then
+          Parameters.ParamByName('IDEmpresa').Value := IDEmpresa;
         if FiltroProduto <> '' then
           Parameters.ParamByName('NomeProduto').Value := NomeProdutoSelecionado;
         Open;

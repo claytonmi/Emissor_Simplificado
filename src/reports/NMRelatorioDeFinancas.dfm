@@ -3,7 +3,7 @@ object NMRelatorioFinancas: TNMRelatorioFinancas
   Top = 0
   BorderStyle = bsSingle
   Caption = 'Relat'#243'rio de Finan'#231'as'
-  ClientHeight = 174
+  ClientHeight = 236
   ClientWidth = 298
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -272,7 +272,7 @@ object NMRelatorioFinancas: TNMRelatorioFinancas
   TextHeight = 15
   object LabelDataInicio: TLabel
     Left = 48
-    Top = 82
+    Top = 137
     Width = 86
     Height = 17
     Caption = 'Data de in'#237'cio'
@@ -285,7 +285,7 @@ object NMRelatorioFinancas: TNMRelatorioFinancas
   end
   object LabelDataFim: TLabel
     Left = 159
-    Top = 82
+    Top = 137
     Width = 75
     Height = 17
     Caption = 'Data de Fim'
@@ -314,7 +314,7 @@ object NMRelatorioFinancas: TNMRelatorioFinancas
   end
   object LabelCliente: TLabel
     Left = 48
-    Top = 30
+    Top = 85
     Width = 50
     Height = 17
     Caption = 'Produto'
@@ -325,9 +325,22 @@ object NMRelatorioFinancas: TNMRelatorioFinancas
     Font.Style = [fsBold]
     ParentFont = False
   end
+  object Label2: TLabel
+    Left = 48
+    Top = 30
+    Width = 52
+    Height = 17
+    Caption = 'Empresa'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 18
+    Font.Name = 'Segoe UI'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
   object BtImprimir: TButton
     Left = 112
-    Top = 137
+    Top = 189
     Width = 89
     Height = 25
     Caption = 'Gerar relat'#243'rio'
@@ -342,7 +355,7 @@ object NMRelatorioFinancas: TNMRelatorioFinancas
   end
   object DateTimePickerInicial: TDateTimePicker
     Left = 48
-    Top = 105
+    Top = 160
     Width = 105
     Height = 23
     Date = 45676.000000000000000000
@@ -357,7 +370,7 @@ object NMRelatorioFinancas: TNMRelatorioFinancas
   end
   object DateTimePickerFinal: TDateTimePicker
     Left = 159
-    Top = 105
+    Top = 160
     Width = 105
     Height = 23
     Date = 45676.000000000000000000
@@ -372,7 +385,7 @@ object NMRelatorioFinancas: TNMRelatorioFinancas
   end
   object ComboBoxProduto: TComboBox
     Left = 48
-    Top = 53
+    Top = 108
     Width = 216
     Height = 23
     Font.Charset = DEFAULT_CHARSET
@@ -382,5 +395,19 @@ object NMRelatorioFinancas: TNMRelatorioFinancas
     Font.Style = []
     ParentFont = False
     TabOrder = 3
+  end
+  object ComboBoxEmpresa: TComboBox
+    Left = 48
+    Top = 53
+    Width = 216
+    Height = 23
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 15
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 4
+    OnChange = ComboBoxEmpresaChange
   end
 end
