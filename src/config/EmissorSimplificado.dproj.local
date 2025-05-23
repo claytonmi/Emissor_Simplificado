@@ -119,12 +119,12 @@
     <File Path="..\forms\FrmMigrarSQLiteParaSQLServer.pas"/>
     <File Path="..\forms\FrmMigrarSQLiteParaSQLServer.dfm"/>
     <File Path="..\reports"/>
+    <File Path="..\reports\FRelatorioDeFinancas.pas"/>
+    <File Path="..\reports\FRelatorioDeFinancas.dfm"/>
     <File Path="..\reports\FRelatorioReportSemanal.pas"/>
     <File Path="..\reports\FRelatorioReportSemanal.dfm"/>
     <File Path="..\reports\MNRelatorioSemanal.pas"/>
     <File Path="..\reports\MNRelatorioSemanal.dfm"/>
-    <File Path="..\reports\FRelatorioDeFinancas.pas"/>
-    <File Path="..\reports\FRelatorioDeFinancas.dfm"/>
     <File Path="..\reports\NMRelatorioDeFinancas.pas"/>
     <File Path="..\reports\NMRelatorioDeFinancas.dfm"/>
   </ProjectSortOrder>
